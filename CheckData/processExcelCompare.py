@@ -100,3 +100,6 @@ def main():
     
     
     createExcel(diff_data, OUTPUT_FILE)
+    
+if __name__ == "__main__":
+    main()
