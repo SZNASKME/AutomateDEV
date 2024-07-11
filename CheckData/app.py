@@ -1,4 +1,4 @@
-import processCompare as pc
+import CheckData.processExcelCompare as pc
 
 
 pc.main()
