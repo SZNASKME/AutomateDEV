@@ -29,7 +29,10 @@ def readExcelMultipleSheet(pathfile, sheetname=None):
         return None
 
 def selectSheet(dfs, sheetname):
-    return dfs if sheetname is None else dfs.get(sheetname, dfs[SHEET_NAME])
+    if sheetname == None:
+        return dfs[SHEET_NAME]
+    else:
+        return dfs[sheetname]
 
 def compareData(dfm, dfc, compare_column = None):
     main_columns = dfm.columns.tolist()
