@@ -19,7 +19,7 @@ task_configs = {
 task_adv_configs = {
     'taskname': '*',
     'type': 'Timer',
-    'updatedTime': '-10d',
+    'updatedTime': '-5d',
 }
 
 auth = ('ops.admin','p@ssw0rd')
