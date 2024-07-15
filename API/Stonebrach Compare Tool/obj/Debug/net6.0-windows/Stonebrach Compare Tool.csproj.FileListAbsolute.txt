@@ -1,0 +1,23 @@
+D:\DotNet Project\Stonebrach Compare Tool\bin\Debug\net6.0-windows\Stonebrach Compare Tool.exe
+D:\DotNet Project\Stonebrach Compare Tool\bin\Debug\net6.0-windows\Stonebrach Compare Tool.deps.json
+D:\DotNet Project\Stonebrach Compare Tool\bin\Debug\net6.0-windows\Stonebrach Compare Tool.runtimeconfig.json
+D:\DotNet Project\Stonebrach Compare Tool\bin\Debug\net6.0-windows\Stonebrach Compare Tool.dll
+D:\DotNet Project\Stonebrach Compare Tool\bin\Debug\net6.0-windows\Stonebrach Compare Tool.pdb
+D:\DotNet Project\Stonebrach Compare Tool\bin\Debug\net6.0-windows\RestSharp.dll
+D:\DotNet Project\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach Compare Tool.csproj.AssemblyReference.cache
+D:\DotNet Project\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach_Compare_Tool.Form1.resources
+D:\DotNet Project\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach Compare Tool.csproj.GenerateResource.cache
+D:\DotNet Project\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach Compare Tool.GeneratedMSBuildEditorConfig.editorconfig
+D:\DotNet Project\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach Compare Tool.AssemblyInfoInputs.cache
+D:\DotNet Project\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach Compare Tool.AssemblyInfo.cs
+D:\DotNet Project\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach Compare Tool.csproj.CoreCompileInputs.cache
+D:\DotNet Project\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach Compare Tool.csproj.CopyComplete
+D:\DotNet Project\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach Compare Tool.dll
+D:\DotNet Project\Stonebrach Compare Tool\obj\Debug\net6.0-windows\refint\Stonebrach Compare Tool.dll
+D:\DotNet Project\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach Compare Tool.pdb
+D:\DotNet Project\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach Compare Tool.genruntimeconfig.cache
+D:\DotNet Project\Stonebrach Compare Tool\obj\Debug\net6.0-windows\ref\Stonebrach Compare Tool.dll
+D:\DotNet Project\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach_Compare_Tool.Setting_Frm.resources
+D:\DotNet Project\Stonebrach Compare Tool\bin\Debug\net6.0-windows\EPPlus.dll
+D:\DotNet Project\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach_Compare_Tool.main.resources
+D:\DotNet Project\Stonebrach Compare Tool\bin\Debug\net6.0-windows\Newtonsoft.Json.dll
