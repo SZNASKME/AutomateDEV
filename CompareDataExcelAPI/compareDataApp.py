@@ -34,7 +34,7 @@ def main():
 
     CompareExcel = pcd.compareDataExcelAPI(Exceldata, APIdata, api_compare_column = API_COMPARE_COLUMN, compare_column = EXCEL_COMPARE_COLUMN)
     #print(CompareExcel)
-    #pcd.createExcel(CompareExcel, OUTPUT_FILE)
+    pcd.createExcel(CompareExcel, OUTPUT_FILE)
 
 
 

@@ -18,12 +18,14 @@ def compareDataExcelAPI(excel_data, API_data, api_compare_column = None, compare
     #main_columns_compare = [col for col in main_columns if col not in compare_column]
     
     dfsys = ListJSON_to_DataFrame(API_data)
+    new_order = ['name', 'type', 'description','sysId','version']
+    dfsys = dfsys[new_order]
     dfsys = dfsys.rename(columns={api_compare_column: compare_column})
     dfex = excel_data
     print(f"Excel: {len(dfex)}")
     print(f"API: {len(dfsys)}")
-    new = dfsys[~dfsys[compare_column].isin(dfex[compare_column])]
-    delete = dfex[~dfex[compare_column].isin(dfsys[compare_column])]
+    new = dfex[~dfex[compare_column].isin(dfsys[compare_column])]
+    delete = dfsys[~dfsys[compare_column].isin(dfex[compare_column])]
     
     print(f"New: {len(new)}")
     print(f"Delete: {len(delete)}")
