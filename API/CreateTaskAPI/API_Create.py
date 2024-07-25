@@ -37,8 +37,6 @@ new_order = ['name', 'type', 'description','sysId','version']
 def createURI(uri, configs):
     uri += "?"
     for key, value in configs.items():
-        #if type(value) == str:
-        #    value = value.replace(' ', '%20')
         uri += f"{key}={value}"
         if key != list(configs.keys())[-1]:
             uri += "&"
@@ -52,7 +50,7 @@ def getListTaskAPI():
 
 def getListTaskAdvancedAPI():
     uri = createURI(LIST_TASK_ADV_URI, task_adv_configs)
-    print(uri)
+    #print(uri)
     response = requests.get(url = uri, auth = auth, headers={'Accept': 'application/json'})
     return response
 
@@ -208,9 +206,6 @@ def add_action_to_task(data):
         
 def main():
     APIdata = getData(1)
-    #df = createDataFrame(APIdata)
-    #data_list = APIdata
-    #print(json.dumps(APIdata, indent=4))
     print("Number of Response:",len(APIdata),"\n")
     print("create variable")
     create_variable(APIdata)
