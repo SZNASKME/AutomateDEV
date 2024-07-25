@@ -5,16 +5,16 @@ import pandas as pd
 LIST_TASK_URI = "http://172.16.1.85:8080/uc/resources/task/list"
 LIST_TASK_ADV_URI = "http://172.16.1.85:8080/uc/resources/task/listadv"
 
-OUTPUT_FILE = 'Excel_API_Difference.xlsx'
+OUTPUT_FILE = 'Excel_API.xlsx'
 
 task_configs = {
     'name': '*',
-    'type':  'Universal',
+    'type':  'Task Monitor',
 }
 
 task_adv_configs = {
     'taskname': '*',
-    'type': 'Timer',
+    'type': 'Task Monitor',
     'updatedTime': '-10d',
 }
 
@@ -71,7 +71,7 @@ def createExcel(API_data, outputfile):
         with pd.ExcelWriter(outputfile) as writer:
             API_data.to_excel(writer, sheet_name='Sheet', index=False)
 
-        print("Difference file created successfully")
+        print("File created successfully")
     except Exception as e:
         print(f"Error creating {outputfile}: {e}")
         
@@ -80,7 +80,8 @@ def main():
     APIdata = getDataAPI()
     df = createDataFrame(APIdata)
     df = df[new_order]
-    createExcel(df, OUTPUT_FILE)
+    #createExcel(df, OUTPUT_FILE)
+    print(df)
     
 if __name__ == "__main__":
     main()

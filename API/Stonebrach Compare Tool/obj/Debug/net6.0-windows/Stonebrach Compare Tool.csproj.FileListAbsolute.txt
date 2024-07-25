@@ -21,3 +21,27 @@ D:\DotNet Project\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach_Co
 D:\DotNet Project\Stonebrach Compare Tool\bin\Debug\net6.0-windows\EPPlus.dll
 D:\DotNet Project\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach_Compare_Tool.main.resources
 D:\DotNet Project\Stonebrach Compare Tool\bin\Debug\net6.0-windows\Newtonsoft.Json.dll
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\bin\Debug\net6.0-windows\Stonebrach Compare Tool.exe
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\bin\Debug\net6.0-windows\Stonebrach Compare Tool.deps.json
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\bin\Debug\net6.0-windows\Stonebrach Compare Tool.runtimeconfig.json
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\bin\Debug\net6.0-windows\Stonebrach Compare Tool.dll
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\bin\Debug\net6.0-windows\Stonebrach Compare Tool.pdb
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\bin\Debug\net6.0-windows\EPPlus.dll
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\bin\Debug\net6.0-windows\Newtonsoft.Json.dll
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\bin\Debug\net6.0-windows\RestSharp.dll
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach Compare Tool.csproj.AssemblyReference.cache
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach_Compare_Tool.Form1.resources
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach_Compare_Tool.main.resources
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach_Compare_Tool.Setting_Frm.resources
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach Compare Tool.csproj.GenerateResource.cache
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach Compare Tool.GeneratedMSBuildEditorConfig.editorconfig
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach Compare Tool.AssemblyInfoInputs.cache
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach Compare Tool.AssemblyInfo.cs
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach Compare Tool.csproj.CoreCompileInputs.cache
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach Compare Tool.sourcelink.json
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebra.71002847.Up2Date
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach Compare Tool.dll
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\obj\Debug\net6.0-windows\refint\Stonebrach Compare Tool.dll
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach Compare Tool.pdb
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\obj\Debug\net6.0-windows\Stonebrach Compare Tool.genruntimeconfig.cache
+C:\Dev\AutomateDEV\API\Stonebrach Compare Tool\obj\Debug\net6.0-windows\ref\Stonebrach Compare Tool.dll
