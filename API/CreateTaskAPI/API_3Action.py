@@ -1,8 +1,6 @@
 import requests
 from requests.auth import HTTPBasicAuth
 import http
-import pandas as pd
-import json
 import urllib.parse 
 
 LIST_TASK_URI = "http://172.16.1.85:8080/uc/resources/task/list"
