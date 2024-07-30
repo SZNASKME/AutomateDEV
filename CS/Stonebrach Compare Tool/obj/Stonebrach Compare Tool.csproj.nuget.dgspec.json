@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Dev\\AutomateDEV\\API\\Stonebrach Compare Tool\\Stonebrach Compare Tool.csproj": {}
+    "C:\\Dev\\AutomateDEV\\CS\\Stonebrach Compare Tool\\Stonebrach Compare Tool.csproj": {}
   },
   "projects": {
-    "C:\\Dev\\AutomateDEV\\API\\Stonebrach Compare Tool\\Stonebrach Compare Tool.csproj": {
+    "C:\\Dev\\AutomateDEV\\CS\\Stonebrach Compare Tool\\Stonebrach Compare Tool.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Dev\\AutomateDEV\\API\\Stonebrach Compare Tool\\Stonebrach Compare Tool.csproj",
+        "projectUniqueName": "C:\\Dev\\AutomateDEV\\CS\\Stonebrach Compare Tool\\Stonebrach Compare Tool.csproj",
         "projectName": "Stonebrach Compare Tool",
-        "projectPath": "C:\\Dev\\AutomateDEV\\API\\Stonebrach Compare Tool\\Stonebrach Compare Tool.csproj",
+        "projectPath": "C:\\Dev\\AutomateDEV\\CS\\Stonebrach Compare Tool\\Stonebrach Compare Tool.csproj",
         "packagesPath": "C:\\Users\\SuphawitSanitphon\\.nuget\\packages\\",
-        "outputPath": "C:\\Dev\\AutomateDEV\\API\\Stonebrach Compare Tool\\obj\\",
+        "outputPath": "C:\\Dev\\AutomateDEV\\CS\\Stonebrach Compare Tool\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\SuphawitSanitphon\\AppData\\Roaming\\NuGet\\NuGet.Config",

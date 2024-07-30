@@ -15,8 +15,8 @@ def inputMethod():
             path, sheetname = input_value, None
         return path, sheetname
     
-    path_m, sheetname_m = get_path_and_sheetname("Enter PATH of the main file and sheetname [pathfile/sheetname]: ")
-    path_c, sheetname_c = get_path_and_sheetname("Enter PATH of the compare file and sheetname [pathfile/sheetname]: ")
+    path_m, sheetname_m = get_path_and_sheetname("Enter PATH of the newer file and sheetname [pathfile/sheetname]: ")
+    path_c, sheetname_c = get_path_and_sheetname("Enter PATH of the older file and sheetname [pathfile/sheetname]: ")
     
     return {'path_m': path_m, 'sheetname_m': sheetname_m, 'path_c': path_c, 'sheetname_c': sheetname_c}
     

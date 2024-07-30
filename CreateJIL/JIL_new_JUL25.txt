@@ -1,0 +1,350 @@
+
+
+/* ----------------- BSL_MAP.M.PROVISION8_C ----------------- */ 
+
+insert_job: BSL_MAP.M.PROVISION8_C   job_type: CMD
+box_name: BSL_MAP_M_PROVISION_B
+command: $SCPPTH/common/ssh.sh $DBSCPPTH/sh/BSL_EXECUTE_PROC_STG.sh MAP_PROVISIONS_CVA.MAIN
+machine: bslapp_v
+owner: b3oper@bslapp_v
+permission: gx
+date_conditions: 0
+condition: s(BSL_MAP.M.PROVISION7_C)
+alarm_if_fail: 1
+std_out_file: > /home/b3oper/app/AutoSys/atslog/$AUTO_JOB_NAME.out
+std_err_file: > /home/b3oper/app/AutoSys/atslog/$AUTO_JOB_NAME.err
+group: BSL_MTHLY_B
+profile: /home/b3oper/app/AutoSys/autoscp/b3oper.ats.profile
+
+
+/* ----------------- BSL_MAP.M.PRVSNCNT_CVA_C ----------------- */ 
+
+insert_job: BSL_MAP.M.PRVSNCNT_CVA_C   job_type: CMD
+box_name: BSL_MAP_M_PRVSNCNT_B
+command: $SCPPTH/common/ssh.sh $DBSCPPTH/sh/BSL_EXECUTE_PROC_STG.sh MAP_PROVISION_CONTX_CVA.MAIN
+machine: bslapp_v
+owner: b3oper@bslapp_v
+permission: gx
+date_conditions: 0
+condition: s(BSL_MAP.M.PRVSNCNT4_C)
+alarm_if_fail: 1
+std_out_file: > /home/b3oper/app/AutoSys/atslog/$AUTO_JOB_NAME.out
+std_err_file: > /home/b3oper/app/AutoSys/atslog/$AUTO_JOB_NAME.err
+group: BSL_MTHLY_B
+profile: /home/b3oper/app/AutoSys/autoscp/b3oper.ats.profile
+
+
+/* ----------------- DWH_P_RM_KYC_UBO_INF_B ----------------- */ 
+
+insert_job: DWH_P_RM_KYC_UBO_INF_B   job_type: BOX
+box_name: DWH_P_KYC_WEEKLY_B
+owner: dwhoper@dwhprod_vr
+date_conditions: 0
+alarm_if_fail: 1
+group: DWH_SCHEDULER
+
+
+/* ----------------- DWH_P_TX_WTRMKCUOIF1_CTUORL_01_D_C ----------------- */ 
+
+insert_job: DWH_P_TX_WTRMKCUOIF1_CTUORL_01_D_C   job_type: CMD
+box_name: DWH_P_RM_KYC_UBO_INF_B
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME =>'P_TX_WTRMKCUOIF1_CTUORL_01_D',P_RUN_DATE  =>ADMINTMB.TMB_DWH_PARAM_DATE,P_RUN_TYPE  =>'R')"
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+permission: gx
+date_conditions: 0
+alarm_if_fail: 1
+description: "PRCS_ID=10628,VX_WTRMKCUOIF1_CTUORL_01, ${STDPTH}/CALL_PROCEDURE.sh \ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME =>'P_TX_WTRMKCUOIF1_CTUORL_01_D',P_RUN_DATE  =>ADMINTMB.TMB_DWH_PARAM_DATE,P_RUN_TYPE  =>'R')\"
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+group: DWH_SCHEDULER
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+n_retrys: 3
+
+
+/* ----------------- DWH_P_TX_WTRMKCUOIF_WTUOIF1_01_D_C ----------------- */ 
+
+insert_job: DWH_P_TX_WTRMKCUOIF_WTUOIF1_01_D_C   job_type: CMD
+box_name: DWH_P_RM_KYC_UBO_INF_B
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME =>'P_TX_WTRMKCUOIF_WTUOIF1_01_D',P_RUN_DATE  =>ADMINTMB.TMB_DWH_PARAM_DATE,P_RUN_TYPE  =>'R')"
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+permission: gx
+date_conditions: 0
+condition: s(DWH_P_TX_WTRMKCUOIF1_CTUORL_01_D_C)
+alarm_if_fail: 1
+description: "PRCS_ID=10629,VX_WTRMKCUOIF_WTUOIF1_01, ${STDPTH}/CALL_PROCEDURE.sh \ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME =>'P_TX_WTRMKCUOIF_WTUOIF1_01_D',P_RUN_DATE  =>ADMINTMB.TMB_DWH_PARAM_DATE,P_RUN_TYPE  =>'R')\"
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+group: DWH_SCHEDULER
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+n_retrys: 3
+
+
+/* ----------------- DWH_P_EX_CXM_HL_APPROVE_WVHL_01_D_C.MAIL_C ----------------- */ 
+
+insert_job: DWH_P_EX_CXM_HL_APPROVE_WVHL_01_D_C.MAIL_C   job_type: CMD
+box_name: DWH_P_CXM_HL_APPROVE_D_B
+command: $SC_PATH/atsmail.sh "56975@ttbbank.com,52012@ttbbank.com,57875@ttbbank.com,60905@ttbbank.com,41135@ttbbank.com,47684@ttbbank.com,58644@ttbbank.com,57972@ttbbank.com,55178@ttbbank.com,58368@ttbbank.com,48783@ttbbank.com,60962@ttbbank.com,60877@ttbbank.com,56531@ttbbank.com,57402@ttbbank.com,23813@ttbbank.com" "File CXM_MIS_HL_APPROVE is Finished" "Dear All,\n\n  Process Send File CXM_MIS_HL_APPROVE is Finished.\n\nSend by AutoSys Mail" "AutoSys"
+machine: stmatsp_vr
+owner: atssup@stmatsp_vr
+permission: gx
+date_conditions: 0
+condition: s(DWH_P_EX_CXM_HL_APPROVE_WVHL_01_D_C.CTRL_FTP_C)
+alarm_if_fail: 1
+group: DWH_AFTER
+application: DWH_DAILY
+profile: /home/atsusr01/script/setenv.sh
+
+
+/* ----------------- DWH_P_TX_SGCCTS30_CCTND_01_D_C ----------------- */ 
+
+insert_job: DWH_P_TX_SGCCTS30_CCTND_01_D_C   job_type: CMD
+box_name: DWH_P_CXM_HL_CAMPAIGN_D_B
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_SGCCTS30_CCTND_01_D', P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE, P_RUN_TYPE => 'R')"
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+permission: gx
+date_conditions: 0
+alarm_if_fail: 1
+description: "PRCS_ID = 10507, VX = VX_SGCCTS30_CCTND_01, TMBSTG.STG_CC_TRANS_30"
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+group: DWH_AFTER
+application: DWH_DAILY
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+
+
+/* ----------------- DWH_P_TX_SGHICPWH01_CCTND_01_D_C ----------------- */ 
+
+insert_job: DWH_P_TX_SGHICPWH01_CCTND_01_D_C   job_type: CMD
+box_name: DWH_P_CXM_HL_CAMPAIGN_D_B
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_SGHICPWH01_CCTND_01_D', P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE, P_RUN_TYPE => 'R')"
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+permission: gx
+date_conditions: 0
+condition: s(DWH_P_TX_SGCCTS30_CCTND_01_D_C)
+alarm_if_fail: 1
+description: "PRCS_ID = 10521, VX = VX_SGHICPWH01_CCTND_01, TMBSTG.STG_HILI_CAMP_WEALTH_01"
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+group: DWH_AFTER
+application: DWH_DAILY
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+
+
+/* ----------------- DWH_P_TX_SGHICPWH_SGHICPWH01_01_D_C ----------------- */ 
+
+insert_job: DWH_P_TX_SGHICPWH_SGHICPWH01_01_D_C   job_type: CMD
+box_name: DWH_P_CXM_HL_CAMPAIGN_D_B
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_SGHICPWH_SGHICPWH01_01_D', P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE, P_RUN_TYPE => 'R')"
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+permission: gx
+date_conditions: 0
+condition: s(DWH_P_TX_SGHICPWH01_CCTND_01_D_C)
+alarm_if_fail: 1
+description: "PRCS_ID = 10522, VX = VX_SGHICPWH_SGHICPWH01_01, TMBSTG.STG_HILI_CAMP_WEALTH"
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+group: DWH_AFTER
+application: DWH_DAILY
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+
+
+/* ----------------- DWH_P_EX_CXM_HLCAMP_SGHICPWH_01_D_C ----------------- */ 
+
+insert_job: DWH_P_EX_CXM_HLCAMP_SGHICPWH_01_D_C   job_type: CMD
+box_name: DWH_P_CXM_HL_CAMPAIGN_D_B
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_EX_CXM_HLCAMP_SGHICPWH_01_D', P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE, P_RUN_TYPE => 'R')"
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+permission: gx
+date_conditions: 0
+condition: s(DWH_P_TX_SGHICPWH_SGHICPWH01_01_D_C)
+alarm_if_fail: 1
+description: "PRCS_ID = 10524, VX = VE_CMMSHTCP_SGHICPWH_01, FILE_ID = 2718, CXM_MIS_HILIGHT_CAMP_YYYYMMDD.TXT"
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+group: DWH_AFTER
+application: DWH_DAILY
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+
+
+/* ----------------- DWH_P_TX_ASHICPEL_SGHICPWH_01_D_C ----------------- */ 
+
+insert_job: DWH_P_TX_ASHICPEL_SGHICPWH_01_D_C   job_type: CMD
+box_name: DWH_P_CXM_HL_CAMPAIGN_D_B
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASHICPEL_SGHICPWH_01_D', P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE, P_RUN_TYPE => 'R')"
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+permission: gx
+date_conditions: 0
+condition: s(DWH_P_EX_CXM_HLCAMP_SGHICPWH_01_D_C)
+alarm_if_fail: 1
+description: "PRCS_ID = 10523, VX = VX_ASHICPEL_SGHICPWH_01, TMBACS.ACS_HILI_CAMP_EXCL"
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+group: DWH_AFTER
+application: DWH_DAILY
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+
+
+/* ----------------- DWH_P_TX_ASHICPWH_SGHICPWH_01_D_C ----------------- */ 
+
+insert_job: DWH_P_TX_ASHICPWH_SGHICPWH_01_D_C   job_type: CMD
+box_name: DWH_P_CXM_HL_CAMPAIGN_D_B
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASHICPWH_SGHICPWH_01_D', P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE, P_RUN_TYPE => 'R')"
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+permission: gx
+date_conditions: 0
+condition: s(DWH_P_TX_ASHICPEL_SGHICPWH_01_D_C)
+alarm_if_fail: 1
+description: "PRCS_ID = 10626, VX = VX_ASHICPWH_SGHICPWH_01, TMBACS.ACS_HILI_CAMP_WEALTH"
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+group: DWH_AFTER
+application: DWH_DAILY
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+
+
+/* ----------------- DWH_P_EX_CXM_HLCAMP_SGHICPWH_01_D_C.FTP_C ----------------- */ 
+
+insert_job: DWH_P_EX_CXM_HLCAMP_SGHICPWH_01_D_C.FTP_C   job_type: CMD
+box_name: DWH_P_CXM_HL_CAMPAIGN_D_B
+command: ${STDPTH}/DWH_SFTP.sh CXM_HL_CAMP_PUT
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+permission: gx
+date_conditions: 0
+condition: s(DWH_P_EX_CXM_HLCAMP_SGHICPWH_01_D_C)
+alarm_if_fail: 1
+description: "FTP File CXM_MIS_HILIGHT_CAMP_YYYYMMDD.TXT"
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+group: DWH_AFTER
+application: DWH_DAILY
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+n_retrys: 3
+
+
+/* ----------------- DWH_P_EX_CXM_HLCAMP_SGHICPWH_01_D_C.BACKUP_C ----------------- */ 
+
+insert_job: DWH_P_EX_CXM_HLCAMP_SGHICPWH_01_D_C.BACKUP_C   job_type: CMD
+box_name: DWH_P_CXM_HL_CAMPAIGN_D_B
+command: ${STDPTH}/BACKUP_SRC_FILE.sh ${FRMWRK_EXP_PTH}/CXM_MIS_HILIGHT_CAMP_$(date -d '1 day ago' +'%Y%m%d').TXT DEL
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+date_conditions: 0
+condition: s(DWH_P_EX_CXM_HLCAMP_SGHICPWH_01_D_C.FTP_C)
+alarm_if_fail: 1
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+group: DWH_AFTER
+application: DWH_DAILY
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+
+
+/* ----------------- DWH_P_EX_CXM_HLCAMP_SGHICPWH_01_D_C.CTRL_FTP_C ----------------- */ 
+
+insert_job: DWH_P_EX_CXM_HLCAMP_SGHICPWH_01_D_C.CTRL_FTP_C   job_type: CMD
+box_name: DWH_P_CXM_HL_CAMPAIGN_D_B
+command: ${STDPTH}/DWH_SFTP.sh CXM_HL_CAMP_CTL
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+permission: gx
+date_conditions: 0
+condition: s(DWH_P_EX_CXM_HLCAMP_SGHICPWH_01_D_C.FTP_C)
+alarm_if_fail: 1
+description: "FTP File CXM_MIS_HILIGHT_CAMP_YYYYMMDD.CTRL"
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+group: DWH_AFTER
+application: DWH_DAILY
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+n_retrys: 3
+
+
+/* ----------------- DWH_P_EX_CXM_HLCAMP_SGHICPWH_01_D_C.CTRL_BACKUP_C ----------------- */ 
+
+insert_job: DWH_P_EX_CXM_HLCAMP_SGHICPWH_01_D_C.CTRL_BACKUP_C   job_type: CMD
+box_name: DWH_P_CXM_HL_CAMPAIGN_D_B
+command: ${STDPTH}/BACKUP_SRC_FILE.sh ${FRMWRK_EXP_PTH}/CXM_MIS_HILIGHT_CAMP_$(date -d '1 day ago' +'%Y%m%d').CTRL DEL
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+date_conditions: 0
+condition: s(DWH_P_EX_CXM_HLCAMP_SGHICPWH_01_D_C.CTRL_FTP_C)
+alarm_if_fail: 1
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+group: DWH_AFTER
+application: DWH_DAILY
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+
+
+/* ----------------- DWH_P_EX_CXM_HLCAMP_SGHICPWH_01_D_C.MAIL_C ----------------- */ 
+
+insert_job: DWH_P_EX_CXM_HLCAMP_SGHICPWH_01_D_C.MAIL_C   job_type: CMD
+box_name: DWH_P_CXM_HL_CAMPAIGN_D_B
+command: $SC_PATH/atsmail.sh "56975@ttbbank.com,52012@ttbbank.com,57875@ttbbank.com,60905@ttbbank.com,41135@ttbbank.com,47684@ttbbank.com,58644@ttbbank.com,57972@ttbbank.com,55178@ttbbank.com,58368@ttbbank.com,48783@ttbbank.com,60962@ttbbank.com,60877@ttbbank.com,56531@ttbbank.com,57402@ttbbank.com,23813@ttbbank.com" "File CXM_MIS_HILIGHT_CAMP is Finished" "Dear All,\n\n  Process Send File CXM_MIS_HILIGHT_CAMP is Finished.\n\nSend by AutoSys Mail" "AutoSys"
+machine: stmatsp_vr
+owner: atssup@stmatsp_vr
+permission: gx
+date_conditions: 0
+condition: s(DWH_P_EX_CXM_HLCAMP_SGHICPWH_01_D_C.CTRL_FTP_C)
+alarm_if_fail: 1
+group: DWH_AFTER
+application: DWH_DAILY
+profile: /home/atsusr01/script/setenv.sh
+
+
+/* ----------------- DWH_AMLO_ELECTXN_AML_CIB_02_D_B ----------------- */ 
+
+insert_job: DWH_AMLO_ELECTXN_AML_CIB_02_D_B   job_type: BOX
+box_name: DI_DWH_AMLO_02_DAILY_B
+owner: dwhoper@dwhprod_vr
+permission: gx
+date_conditions: 1
+days_of_week: all
+start_times:  7:30
+condition: s(DWH_AMLO_ELECTXN_AML_CIB_D_B) & s(DWH_DAILY_BATCH.TRIG1_C)
+alarm_if_fail: 1
+description: "AMLO Daily Job Flow for new CIB. Run after account relation complete."
+application: DWH_DAILY
+
+
+/* ----------------- DI_DWH_AMLO_DAILY.GENDATA_03_CIB_C ----------------- */ 
+
+insert_job: DI_DWH_AMLO_DAILY.GENDATA_03_CIB_C   job_type: CMD
+box_name: DWH_AMLO_ELECTXN_AML_CIB_02_D_B
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME =>'P_TX_ENAODYXL_CLTRTNCRSG_01_D',P_RUN_DATE=>ADMINTMB.TMB_DWH_PARAM_DATE,P_RUN_TYPE=>'R')"
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+permission: gx
+date_conditions: 0
+alarm_if_fail: 1
+description: "AMLO Daily Job Flow for new CIB. Run after account relation complete."
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+application: DWH_DAILY
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+
+
+/* ----------------- DWH_P_TX_ENAODYXL_BPCIB_02_D_C ----------------- */ 
+
+insert_job: DWH_P_TX_ENAODYXL_BPCIB_02_D_C   job_type: CMD
+box_name: DWH_AMLO_ELECTXN_AML_CIB_02_D_B
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ENAODYXL_BPCIB_01_D',P_RUN_DATE => ADMINTMB.TMB_DWH_PARAM_DATE,P_RUN_TYPE => 'R')"
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+permission: gx
+date_conditions: 0
+condition: s(DI_DWH_AMLO_DAILY.GENDATA_03_CIB_C)
+alarm_if_fail: 1
+description: "AMLO Daily Job Flow for new CIB. Run after account relation complete."
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+application: DWH_DAILY
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
