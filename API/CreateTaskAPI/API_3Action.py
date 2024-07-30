@@ -16,7 +16,7 @@ OUTPUT_FILE = 'Excel_API.xlsx'
 
 task_configs = {
     'name': '*',
-    'type':  12,
+    'type':  12, # 12 is the task monitor type
     'businessServices': 'A0417 - AML MANAGEMENT SYSTEM',
 }
 
@@ -29,8 +29,6 @@ task_adv_configs = {
 
 
 auth = HTTPBasicAuth('ops.admin','p@ssw0rd')
-
-new_order = ['name', 'type', 'description','sysId','version']
 
 def createURI(uri, configs):
     uri += "?"
