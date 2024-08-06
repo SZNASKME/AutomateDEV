@@ -39,6 +39,7 @@ def getDataExcel():
         print('Error reading excel file')
         return None
     
+    
     if isinstance(dfs, dict):
         print('selecting sheet . . .')
         dfs_sheet = selectSheet(dfs, excel_configs['sheetname'])
