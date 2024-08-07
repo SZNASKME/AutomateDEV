@@ -27,6 +27,8 @@ def readExcelMultipleSheet(pathfile, sheetname=None):
 def selectSheet(dfs, sheetname):
     if sheetname == None:
         return dfs[SHEET_NAME]
+    elif isinstance(dfs, pd.DataFrame):
+        return dfs
     else:
         return dfs[sheetname]
 
@@ -40,7 +42,7 @@ def getDataExcel():
         return None
     
     
-    if isinstance(dfs, dict):
+    if isinstance(dfs, dict) and excel_configs['sheetname'] is not None:
         print('selecting sheet . . .')
         dfs_sheet = selectSheet(dfs, excel_configs['sheetname'])
     else:

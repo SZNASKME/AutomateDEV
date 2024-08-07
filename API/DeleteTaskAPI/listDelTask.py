@@ -6,6 +6,7 @@ from readExcel import getDataExcel
 import http
 import pandas as pd
 import multiprocessing
+from delProcess import deleteProcess
 
 TASK_URI = "http://172.16.1.86:8080/uc/resources/task"
 LIST_TASK_ADV_URI = "http://172.16.1.86:8080/uc/resources/task/listadv"
@@ -15,6 +16,7 @@ LIST_TRIGGER_URI = "http://172.16.1.86:8080/uc/resources/trigger/list"
 
 BUSINESS_SERVICES = "A0417 - AML Management System"
 
+TASK_TYPE = ['taskWorkflow','taskUniversal','taskSleep','taskMonitor','taskFileMonitor']
 
 task_adv_configs_temp = {
     'taskname': '*',
@@ -141,9 +143,9 @@ def getDeleteTaskTriggerMultiProcessing(del_list, prefix_list = [], num_process=
     task_list_api = []
     trigger_list_api = []
     del_list_wildcard = addWildCardSuffix(del_list)
-    task_configs_list = addDataToConfigs(del_list_wildcard, task_configs_temp, col_name = 'name')
+    task_configs_list = addDataToConfigs(del_list_wildcard, task_adv_configs_temp, col_name = 'taskname')
     with multiprocessing.Pool(num_process) as pool_task:
-        result_task = pool_task.map(multiGetListTaskAPI, task_configs_list)
+        result_task = pool_task.map(multiGetListTaskAdvancedAPI, task_configs_list)
         #result_task = async_result_task.get()
         print("Waiting for all subprocesses done...")
     pool_task.close()
@@ -151,18 +153,10 @@ def getDeleteTaskTriggerMultiProcessing(del_list, prefix_list = [], num_process=
     trigger_configs = trigger_configs_temp.copy()
     trigger_configs['name'] = '*'
     result_trigger = getListTriggerAPI(trigger_configs)
-    #with multiprocessing.Pool(num_process) as pool_trigger:
-    #    result_trigger = pool_trigger.map(multiGetListTriggerAPI, trigger_configs_list)
-    #    result_trigger = async_result_trigger.get()
-    #    print("Waiting for all subprocesses done...")
-    #pool_trigger.close()
-    #pool_trigger.join()
 
     print("All subprocesses done.")
     for result in result_task:
         if result.status_code == 200:
-            if len(result.json()) > 1000:
-                print(len(result.json()))
             for task in result.json():
                 if task['name'] not in task_list_api and startWithAny(prefix_list, task['name']):
                     task_list_api.append(task)
@@ -173,6 +167,19 @@ def getDeleteTaskTriggerMultiProcessing(del_list, prefix_list = [], num_process=
                 trigger_list_api.append(trigger)
     
     return task_list_api, trigger_list_api
+
+def separateTaskType(task_list, task_type_list):
+    task_type_dict = {}
+    for task_type in task_type_list:
+        task_type_dict[task_type] = []
+    
+    for task in task_list:
+        if task['type'] in task_type_list:
+            task_type_dict[task['type']].append(task)
+    
+    return task_type_dict
+
+
 
 #################################    utils      ###########################################
 
@@ -194,7 +201,7 @@ def addWildCardSuffix(data_list):
         new_list.append(data_list[i] + '*')
     return new_list
 
-def getDeleteTaskExcel(df, col_name = 'jobName'):
+def getListExcel(df, col_name = 'jobName'):
     del_list = []
     for index, row in df.iterrows():
         del_list.append(row[col_name])
@@ -224,11 +231,11 @@ def getUniqueList(list):
             new_list.append(item)
     return new_list
 
-def createExcel(outputfile, data1, data2):
+def createExcel(outputfile, *data):
     try:
         with pd.ExcelWriter(outputfile) as writer:
-            data1.to_excel(writer, sheet_name='Task', index=False)
-            data2.to_excel(writer, sheet_name='Trigger', index=False)
+            for df, sheetname in data:
+                df.to_excel(writer, sheet_name=sheetname, index=False)
         print("Delete file created successfully")
     except Exception as e:
         print(f"Error creating {outputfile}: {e}")
@@ -245,28 +252,41 @@ def addDataToConfigs(data_list, configs, col_name = 'name'):
 def main():
     df = getDataExcel()
     
-    del_list_excel = getDeleteTaskExcel(df)
+    del_list_excel = getListExcel(df)
     print(len(del_list_excel))
     group_task_list = groupingName(del_list_excel)
     print(len(group_task_list))
     
-    #del_task_list_api, del_trigger_list_api = getDeleteTaskTrigger(group_task_list, del_list_excel)
-    #del_task_list_api, del_trigger_list_api = getDeleteTaskTrigger(del_list_excel, del_list_excel)
-    
     del_task_list_api, del_trigger_list_api = getDeleteTaskTriggerMultiProcessing(del_list_excel, del_list_excel, num_process=4)
     #del_task_list_api, del_trigger_list_api = getDeleteTaskTriggerMultiProcessing(group_task_list, del_list_excel, num_process=4)
-    
-    #del_task_list_api = getFieldFromList(del_list_api, 'task')
-    #del_trigger_list_api = getFieldFromList(del_list_api, 'trigger')
     print(len(del_task_list_api), len(del_trigger_list_api))
     del_task_list_clean = getUniqueList(del_task_list_api)
     del_trigger_list_clean = getUniqueList(del_trigger_list_api)
     print(len(del_task_list_clean), len(del_trigger_list_clean))
-    
+    del_task_type_dict = separateTaskType(del_task_list_clean, TASK_TYPE)
     #print(json.dumps(compared_del_task_list, indent=4))
-    dftask = pd.DataFrame(del_task_list_clean)
+    
+    dfworkflow = pd.DataFrame(del_task_type_dict['taskWorkflow'])
+    dfuniversal = pd.DataFrame(del_task_type_dict['taskUniversal'])
+    dfsleep = pd.DataFrame(del_task_type_dict['taskSleep'])
+    dfmonitor = pd.DataFrame(del_task_type_dict['taskMonitor'])
+    dffilemonitor = pd.DataFrame(del_task_type_dict['taskFileMonitor'])
     dftrigger = pd.DataFrame(del_trigger_list_clean)
-    createExcel('delete_task_trigger.xlsx', dftask, dftrigger)
+    
+    createExcel('delete_task_trigger.xlsx', (dfworkflow, 'Workflow'), (dfuniversal, 'Universal'), (dfsleep, 'Timer'), (dfmonitor, 'TaskMonitor'), (dffilemonitor, 'AgentFileMonitor'), (dftrigger, 'Trigger'))
+    dftask_dict = {
+        'taskWorkflow': dfworkflow,
+        'taskUniversal': dfuniversal,
+        'taskSleep': dfsleep,
+        'taskMonitor': dfmonitor,
+        'taskFileMonitor': dffilemonitor,
+    }
+    print("Do you want to delete these tasks and triggers? (y/n)")
+    choice = input().lower()
+    if choice == 'y':
+        confirm = input("confirm to continue delete? (confirm/...)").lower()
+        if confirm == 'confirm':
+            deleteProcess(dftask_dict, dftrigger)
     
 if __name__ == "__main__":
     main()
