@@ -1,3 +1,0 @@
-[10:46 AM] Pornthip Kanchanahuta (Unverified)
-${_replaceAll('kwanhatai.suk@ttbbank.com orawan.siv@ttbbank.com patamas.the@ttbbank.com sumalee.kan@ttbbank.com uthaiwan.rat@ttbbank.com borripart.tan@ttbbank.com pasanee.man@ttbbank.com reavadee.siv@ttbbank.com rochana.rat@ttbbank.com somjai.dee@ttbbank.com sontad.kho@ttbbank.com sunisa.sang@ttbbank.com tansita.wit@ttbbank.com wannaprapa.isa@ttbbank.com warinee.jea@ttbbank.com kansinee.kon@ttbbank.com punyadawi.mee@ttbbank.com woraluck.rod@ttbbank.com lapatrada.ban@ttbbank.com nawaporn.kae@ttbbank.com arunya.kon@ttbbank.com witchaya.cho@ttbbank.com
-', ' ', ',')}
