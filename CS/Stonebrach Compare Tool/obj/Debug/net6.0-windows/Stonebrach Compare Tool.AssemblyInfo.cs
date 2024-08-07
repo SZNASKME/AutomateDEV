@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Stonebrach Compare Tool")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+aac9024cb3f589c8617a76bdac32dfd5be511e63")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b9a559c001960229afd48f895ae9664838db5afe")]
 [assembly: System.Reflection.AssemblyProductAttribute("Stonebrach Compare Tool")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Stonebrach Compare Tool")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
