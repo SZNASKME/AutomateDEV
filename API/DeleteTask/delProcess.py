@@ -61,13 +61,13 @@ def delTask(df):
         task_configs = task_configs_temp.copy()
         task_configs['taskname'] = row['name']
         print(json.dumps(task_configs, indent=4))
-        #response = deleteTaskAPI(task_configs)
-        #status = http.HTTPStatus(response.status_code)
-        #if response.status_code == 200:
-        #    del_count += 1
-        #if response.status_code == 404:
-        #    print("Task not found")
-        #print(f"{del_count}/{del_max} {response.status_code} - {status.phrase}: {status.description}")
+        response = deleteTaskAPI(task_configs)
+        status = http.HTTPStatus(response.status_code)
+        if response.status_code == 200:
+            del_count += 1
+        if response.status_code == 404:
+            print("Task not found")
+        print(f"{del_count}/{del_max} {response.status_code} - {status.phrase}: {status.description}")
 
 def delTrigger(df):
     del_count = 0
@@ -76,11 +76,11 @@ def delTrigger(df):
         trigger_configs = trigger_configs_temp.copy()
         trigger_configs['triggername'] = row['name']
         print(json.dumps(trigger_configs, indent=4))
-        #response = deleteTriggerAPI(trigger_configs)
-        #status = http.HTTPStatus(response.status_code)
-        #if response.status_code == 200:
-        #    del_count += 1
-        #print(f"{del_count}/{del_max} {response.status_code} - {status.phrase}: {status.description}")
+        response = deleteTriggerAPI(trigger_configs)
+        status = http.HTTPStatus(response.status_code)
+        if response.status_code == 200:
+            del_count += 1
+        print(f"{del_count}/{del_max} {response.status_code} - {status.phrase}: {status.description}")
 
 
 def updateEmptyWorkflow(df):
@@ -92,9 +92,9 @@ def updateEmptyWorkflow(df):
         task_configs['workflowEdges'] = []
         task_configs['workflowVertices'] = []
         print(json.dumps(task_configs, indent=4))
-        #response = updateTaskAPI(task_configs)
-        #status = http.HTTPStatus(response.status_code)
-        #print(f"{response.status_code} - {status.phrase}: {status.description}")
+        response = updateTaskAPI(task_configs)
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
     return None
 
 ##########################################################################################
