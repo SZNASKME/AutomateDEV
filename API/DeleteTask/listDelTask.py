@@ -8,11 +8,11 @@ import pandas as pd
 import multiprocessing
 from delProcess import deleteProcess
 
-TASK_URI = "http://172.16.1.86:8080/uc/resources/task"
-LIST_TASK_ADV_URI = "http://172.16.1.86:8080/uc/resources/task/listadv"
-LIST_TASK_URI = "http://172.16.1.86:8080/uc/resources/task/list"
-LIST_TRIGGER_ADV_URI = "http://172.16.1.86:8080/uc/resources/trigger/listadv"
-LIST_TRIGGER_URI = "http://172.16.1.86:8080/uc/resources/trigger/list"
+TASK_URI = "http://172.16.1.85:8080/uc/resources/task"
+LIST_TASK_ADV_URI = "http://172.16.1.85:8080/uc/resources/task/listadv"
+LIST_TASK_URI = "http://172.16.1.85:8080/uc/resources/task/list"
+LIST_TRIGGER_ADV_URI = "http://172.16.1.85:8080/uc/resources/trigger/listadv"
+LIST_TRIGGER_URI = "http://172.16.1.85:8080/uc/resources/trigger/list"
 
 BUSINESS_SERVICES = "A0417 - AML Management System"
 
@@ -71,7 +71,10 @@ def multiGetListTaskAdvancedAPI(task_adv_configs):
     uri = createURI(LIST_TASK_ADV_URI, task_adv_configs)
     response = requests.get(url = uri, auth = auth, headers={'Accept': 'application/json'})
     status = http.HTTPStatus(response.status_code)
-    print(f"{response.status_code} - {status.phrase}: {status.description} - {task_adv_configs['taskname']}")
+    if response.status_code == 200:
+        with count.get_lock():
+            count.value += 1
+    print(f"{count.value} {response.status_code} - {status.phrase}: {status.description} - {task_adv_configs['taskname']}")
     return response
 
 
@@ -144,7 +147,8 @@ def getDeleteTaskTriggerMultiProcessing(del_list, prefix_list = [], num_process=
     trigger_list_api = []
     del_list_wildcard = addWildCardSuffix(del_list)
     task_configs_list = addDataToConfigs(del_list_wildcard, task_adv_configs_temp, col_name = 'taskname')
-    with multiprocessing.Pool(num_process) as pool_task:
+    count = multiprocessing.Value('i', 0)
+    with multiprocessing.Pool(num_process, initializer, (count,)) as pool_task:
         result_task = pool_task.map(multiGetListTaskAdvancedAPI, task_configs_list)
         #result_task = async_result_task.get()
         print("Waiting for all subprocesses done...")
@@ -165,7 +169,7 @@ def getDeleteTaskTriggerMultiProcessing(del_list, prefix_list = [], num_process=
         for trigger in result_trigger.json():
             if trigger['name'] not in trigger_list_api and startWithAny(prefix_list, trigger['name']):
                 trigger_list_api.append(trigger)
-    
+    print(count)
     return task_list_api, trigger_list_api
 
 def separateTaskType(task_list, task_type_list):
@@ -182,6 +186,10 @@ def separateTaskType(task_list, task_type_list):
 
 
 #################################    utils      ###########################################
+
+def initializer(cnt):
+    global count
+    count = cnt
 
 def startWithAny(prefix_list, string: str):
     for prefix in prefix_list:

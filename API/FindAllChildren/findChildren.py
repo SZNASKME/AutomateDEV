@@ -5,10 +5,10 @@ from requests.auth import HTTPBasicAuth
 import http
 from collections import OrderedDict
 
-TASK_URI = "http://172.16.1.85:8080/uc/resources/task"
+TASK_URI = "http://172.16.1.86:8080/uc/resources/task"
 
 
-TASK_NAME = "IFRS_MONTHLY_B"
+TASK_NAME = "MRM_MTHLY_B"
 
 auth = HTTPBasicAuth('ops.admin','p@ssw0rd')
 
@@ -46,19 +46,17 @@ def findChildren(task_name, next_node = []):
     status = http.HTTPStatus(response.status_code)
     if response.status_code == 200:
         task_data = json.loads(response.text)
-        #print(json.dumps(task_data, indent=5))
         if task_data['type'] == "taskWorkflow":
             for child in task_data['workflowVertices']:
                 child_name = child['task']['value']
-                next_node_list = findNextNode(child_name, task_data['workflowEdges'])
-                children["Children"][child_name] = findChildren(child_name, next_node_list)
-        #else:
+                child_next_node = findNextNode(child_name, task_data['workflowEdges'])
+                children["Children"][child_name] = findChildren(child_name, child_next_node)
         if len(next_node) > 0:
             children["Next Node"] = next_node
         else:
-            children["Next Node"] = "End of workflow"
+            children["Next Node"] = []
     
-    print(f"{response.status_code} - {status.phrase}: {status.description}")
+    #print(f"{response.status_code} - {status.phrase}: {status.description}")
 
     return children
 
@@ -75,34 +73,29 @@ def findNextNode(task_name, workflowEdges):
 import tkinter as tk
 from tkinter import ttk
 
-def populate_tree(tree, parent, dictionary):
-    for key, value in dictionary.items():
-        if isinstance(value, dict):
-            node = tree.insert(parent, 'end', text=key)
-            populate_tree(tree, node, value)
-        else:
-            tree.insert(parent, 'end', text=key, values=(value,))
+def insert_items(parent, children, tree):
+    for key, value in children.items():
+        item_id = tree.insert(parent, 'end', text=key)
+        insert_items(item_id, value['Children'])
+        for next_node in value.get('Next Node', []):
+            tree.insert(item_id, 'end', text=next_node)
 
-def create_tree_view(data):
+def createTreeView(data):
     root = tk.Tk()
-    root.title("Multi-level Dictionary Tree View")
-    
+    root.title("GUI Tree Workflow")
+
+    # Create the Treeview widget
     tree = ttk.Treeview(root)
-    
-    # Define columns
-    tree['columns'] = ('Value')
-    tree.column('#0', width=150, minwidth=150, stretch=tk.NO)
-    tree.column('Value', width=100, minwidth=100, stretch=tk.NO)
-    
-    # Define headings
-    tree.heading('#0', text='Key', anchor=tk.W)
-    tree.heading('Value', text='Value', anchor=tk.W)
-    
-    # Populate tree
-    populate_tree(tree, '', data)
-    
-    tree.pack(expand=True, fill=tk.BOTH)
-    
+    tree.heading("#0", text="Workflow", anchor='w')
+
+    # Insert the root item
+    root_item = tree.insert('', 'end', text='ROOT')
+    insert_items(root_item, data['Children'], tree)
+
+    # Pack the Treeview widget
+    tree.pack(fill='both', expand=True)
+
+    # Run the application
     root.mainloop()
 
 ############################################      graph         ############################################
@@ -112,34 +105,29 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 
-def add_nodes_edges(graph, workflow_dict, parent=None):
-    if isinstance(workflow_dict, dict):
-        for key, value in workflow_dict.items():
-            if key == 'Children':
-                for child_key, child_value in value.items():
-                    graph.add_node(child_key)
-                    if parent:
-                        graph.add_edge(parent, child_key)
-                    add_nodes_edges(graph, child_value, child_key)
-            elif key == 'Next Node':
-                if isinstance(value, list):
-                    for next_node in value:
-                        graph.add_edge(parent, next_node)
-                        if next_node not in graph:
-                            graph.add_node(next_node)
-                else:
-                    graph.add_edge(parent, value)
-                    if value not in graph:
-                        graph.add_node(value)
+def add_nodes_and_edges(graph, parent, data):
+    for node, info in data['Children'].items():
+        graph.add_node(node)
+        graph.add_edge(parent, node)
+        add_nodes_and_edges(graph, node, info)
+        for next_node in info.get("Next Node", []):
+            graph.add_node(next_node)
+            graph.add_edge(node, next_node)
 
 # Function to create and visualize the workflow graph
-def visualize_workflow(workflow_dict):
-    graph = nx.DiGraph()  # Create a directed graph
-    add_nodes_edges(graph, workflow_dict)
+def visualizeWorkflow(workflow_dict):
+    G = nx.DiGraph()
+    root = "ROOT"
+    G.add_node(root)
 
-    pos = nx.spring_layout(graph)  # Layout for nodes
-    plt.figure(figsize=(15, 10))  # Size of the plot
-    nx.draw(graph, pos, with_labels=True, node_size=3000, node_color="skyblue", font_size=10, font_weight="bold", arrowsize=20)
+    # Build the graph
+    add_nodes_and_edges(G, root, workflow_dict)
+
+    # Draw the graph
+    plt.figure(figsize=(20, 15))
+    pos = nx.spring_layout(G, k=0.5, iterations=50)
+    nx.draw(G, pos, with_labels=True, node_size=3000, node_color="skyblue", font_size=10, font_weight="bold", arrows=True)
+    plt.title("Visual Graph GUI Workflow")
     plt.show()
 
 
@@ -147,10 +135,13 @@ def visualize_workflow(workflow_dict):
 
 
 def main():
+    print("Finding all children of a task in the workflow")
     children = findChildren(TASK_NAME)
+    print("Showing the children of the task in a tree view")
     print(json.dumps(children, indent=10))
     
-    visualize_workflow(children)
+    #visualizeWorkflow(children)
+    createTreeView(children)
 
 if __name__ == "__main__":
     main()
