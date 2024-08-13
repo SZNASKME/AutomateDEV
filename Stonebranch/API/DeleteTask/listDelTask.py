@@ -1,31 +1,24 @@
-import requests
-from requests.auth import HTTPBasicAuth
-import urllib.parse
-import json
 from readExcel import getDataExcel
-import http
+from stbAPI import getListTaskAPI, getListTriggerAPI, getListTaskAdvancedAPI
+from delProcess import deleteProcess
 import pandas as pd
 import multiprocessing
-from delProcess import deleteProcess
+import json
 
-TASK_URI = "http://172.16.1.85:8080/uc/resources/task"
-LIST_TASK_ADV_URI = "http://172.16.1.85:8080/uc/resources/task/listadv"
-LIST_TASK_URI = "http://172.16.1.85:8080/uc/resources/task/list"
-LIST_TRIGGER_ADV_URI = "http://172.16.1.85:8080/uc/resources/trigger/listadv"
-LIST_TRIGGER_URI = "http://172.16.1.85:8080/uc/resources/trigger/list"
+
 
 BUSINESS_SERVICES = "A0417 - AML Management System"
 
 TASK_TYPE = ['taskWorkflow','taskUniversal','taskSleep','taskMonitor','taskFileMonitor']
 
 task_adv_configs_temp = {
-    'taskname': '*',
+    'taskname': None,
     #'type': None,
     #'businessServices': None,
 }
 
 task_configs_temp = {
-    'name': '*',
+    'name': None,
     #'type': None,
     #'businessServices': None,
     'updatedTime': 'd',
@@ -39,73 +32,7 @@ trigger_adv_configs_temp = {
     'triggername': None,
 }
 
-auth = HTTPBasicAuth('ops.admin','p@ssw0rd')
 
-def createURI(uri, configs):
-    uri += "?"
-    for key, value in configs.items():
-        uri += f"{key}={value}"
-        if key != list(configs.keys())[-1]:
-            uri += "&"
-    uri = urllib.parse.quote(uri, safe=':/&?=*')
-    return uri
-
-
-def getListTaskAPI(task_configs):
-    response = requests.post(url=LIST_TASK_URI, json = task_configs, auth=auth, headers={'Accept': 'application/json'})
-    return response
-
-def multiGetListTaskAPI(task_configs):
-    response = requests.post(url=LIST_TASK_URI, json = task_configs, auth=auth, headers={'Accept': 'application/json'})
-    status = http.HTTPStatus(response.status_code)
-    print(f"{response.status_code} - {status.phrase}: {status.description} - {task_configs['name']}")
-    return response
-
-
-def getListTaskAdvancedAPI(task_adv_configs):
-    uri = createURI(LIST_TASK_ADV_URI, task_adv_configs)
-    response = requests.get(url = uri, auth = auth, headers={'Accept': 'application/json'})
-    return response
-
-def multiGetListTaskAdvancedAPI(task_adv_configs):
-    uri = createURI(LIST_TASK_ADV_URI, task_adv_configs)
-    response = requests.get(url = uri, auth = auth, headers={'Accept': 'application/json'})
-    status = http.HTTPStatus(response.status_code)
-    if response.status_code == 200:
-        with count.get_lock():
-            count.value += 1
-    print(f"{count.value} {response.status_code} - {status.phrase}: {status.description} - {task_adv_configs['taskname']}")
-    return response
-
-
-def getListTriggerAPI(trigger_configs):
-    response = requests.post(url = LIST_TRIGGER_URI, json = trigger_configs, auth = auth, headers={'Accept': 'application/json'})
-    return response
-
-def multiGetListTriggerAPI(trigger_configs):
-    response = requests.post(url = LIST_TRIGGER_URI, json = trigger_configs, auth = auth, headers={'Accept': 'application/json'})
-    status = http.HTTPStatus(response.status_code)
-    print(f"{response.status_code} - {status.phrase}: {status.description} - {trigger_configs['name']}")
-    return response
-
-
-def getListTriggerAdvancedAPI(trigger_configs):
-    uri = createURI(LIST_TRIGGER_URI, trigger_configs)
-    response = requests.get(url = uri, auth = auth, headers={'Accept': 'application/json'})
-    return response
-
-def multiGetListTriggerAdvancedAPI(trigger_configs):
-    uri = createURI(LIST_TRIGGER_URI, trigger_configs)
-    response = requests.get(url = uri, auth = auth, headers={'Accept': 'application/json'})
-    status = http.HTTPStatus(response.status_code)
-    print(f"{response.status_code} - {status.phrase}: {status.description} - {trigger_configs['triggername']}")
-    return response
-
-
-def deleteTask(task_configs):
-    uri = createURI(TASK_URI, task_configs)
-    response = requests.delete(url = uri, auth = auth)
-    return response
 
 
 ###########################################################################################
@@ -149,7 +76,7 @@ def getDeleteTaskTriggerMultiProcessing(del_list, prefix_list = [], num_process=
     task_configs_list = addDataToConfigs(del_list_wildcard, task_adv_configs_temp, col_name = 'taskname')
     count = multiprocessing.Value('i', 0)
     with multiprocessing.Pool(num_process, initializer, (count,)) as pool_task:
-        result_task = pool_task.map(multiGetListTaskAdvancedAPI, task_configs_list)
+        result_task = pool_task.map(getListTaskAdvancedAPI, task_configs_list)
         #result_task = async_result_task.get()
         print("Waiting for all subprocesses done...")
     pool_task.close()

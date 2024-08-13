@@ -8,7 +8,7 @@ from collections import OrderedDict
 TASK_URI = "http://172.16.1.86:8080/uc/resources/task"
 
 
-TASK_NAME = "MRM_MTHLY_B"
+TASK_NAME = "DWH_DAILY_B"
 CHILDREN_FIELD = "Children"
 CHILD_TYPE = "Child Type"
 CHILD_LEVEL = "Child Level"
@@ -44,7 +44,7 @@ def getTaskAPI(task_configs):
 
 #########################################     find children    ################################################
 
-def findChildren(task_name, next_node = [], level = 1):
+def findChildren(task_name, next_node = [], level = 0):
     children = {CHILD_TYPE: None, CHILD_LEVEL: level, CHILDREN_FIELD: OrderedDict(), NEXT_NODE: None}
     task_configs = task_configs_temp.copy()
     task_configs['taskname'] = task_name
@@ -71,7 +71,7 @@ def findNextNode(task_name, workflowEdges):
     next_node = []
     for edge in workflowEdges:
         if edge['sourceId']['taskName'] == task_name:
-            next_node.append(edge['targetId']['taskName'])
+            next_node.append(f"{edge['targetId']['taskName']} | {edge['condition']['value']}")
     return next_node
 
 def countChildren(children_dict):
@@ -155,7 +155,12 @@ def main():
     total_children = countChildren(children)
     print(f"Total children: {total_children}")
     #visualizeWorkflow(children)
-    createTreeView(children)
+    #createTreeView(children)
+    save_choice = input("Do you want to save the children to a file? (y/n): ")
+    if save_choice.lower() == "y":
+        with open(f"./WF/{TASK_NAME}_children.json", "w") as file:
+            json.dump(children, file, indent=4)
+        print(f"Children saved to '{TASK_NAME}_children.json'")
 
 if __name__ == "__main__":
     main()

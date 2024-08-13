@@ -1,17 +1,11 @@
 from readExcel import getDataExcel, selectSheet
-import requests
-from requests.auth import HTTPBasicAuth
-import urllib.parse
-import http
+from stbAPI import deleteTaskAPI, deleteTriggerAPI, updateTaskAPI
 import json
 import math
 import ast
 import multiprocessing
 
-TASK_URI = "http://172.16.1.85:8080/uc/resources/task"
-TRIGGER_URI = "http://172.16.1.85:8080/uc/resources/trigger"
 
-auth = HTTPBasicAuth('ops.admin','p@ssw0rd')
 
 
 task_configs_temp = {
@@ -25,62 +19,6 @@ trigger_configs_temp = {
 }
 
 
-def createURI(uri, configs):
-    uri += "?"
-    for key, value in configs.items():
-        uri += f"{key}={value}"
-        if key != list(configs.keys())[-1]:
-            uri += "&"
-    uri = urllib.parse.quote(uri, safe=':/&?=*')
-    return uri
-
-def getTaskAPI(task_configs):
-    response = requests.get(url = TASK_URI, json = task_configs, auth = auth, headers = {'Accept': 'application/json'})
-    return response
-
-def updateTaskAPI(task_configs):
-    response = requests.put(url = TASK_URI, json = task_configs, auth = auth, headers = {'Content-Type': 'application/json'})
-    return response
-
-def multiUpdateTaskAPI(task_configs):
-    response = requests.put(url = TASK_URI, json = task_configs, auth = auth, headers = {'Content-Type': 'application/json'})
-    status = http.HTTPStatus(response.status_code)
-    if response.status_code == 200:
-        with count.get_lock():
-            count.value += 1
-    print(f"{count.value} {response.status_code} - {response.text}")
-    return response
-
-def deleteTaskAPI(task_configs):
-    uri = createURI(TASK_URI, task_configs)
-    response = requests.delete(url = uri, auth = auth)
-    return response
-
-def multiDeleteTaskAPI(task_configs):
-    uri = createURI(TASK_URI, task_configs)
-    response = requests.delete(url = uri , auth = auth)
-    status = http.HTTPStatus(response.status_code)
-    if response.status_code == 200:
-        with count.get_lock():
-            count.value += 1
-    print(f"{count.value} {response.status_code} - {response.text}")
-    return response
-
-def deleteTriggerAPI(trigger_configs):
-    uri = createURI(TRIGGER_URI, trigger_configs)
-    response = requests.delete(url = uri, auth = auth)
-    return response
-
-def multiDeleteTriggerAPI(trigger_configs):
-    uri = createURI(TRIGGER_URI, trigger_configs)
-    response = requests.delete(url = uri, auth = auth)
-    status = http.HTTPStatus(response.status_code)
-    if response.status_code == 200:
-        with count.get_lock():
-            count.value += 1
-    print(f"{count.value} {response.status_code} - {response.text}")
-    return response 
-
 ##########################################################################################
 
 def delTask(df, num_process = 4):
@@ -90,7 +28,7 @@ def delTask(df, num_process = 4):
     not_found = []
     task_configs_list = addDataToConfigs(df, task_configs_temp, col_name = 'taskid', df_col_name = 'sysId')
     with multiprocessing.Pool(num_process, initializer, (count,)) as pool_task:
-        result_task = pool_task.map(multiDeleteTaskAPI, task_configs_list)
+        result_task = pool_task.map(deleteTaskAPI, task_configs_list)
     
     pool_task.close()
     pool_task.join()
@@ -117,7 +55,7 @@ def delTrigger(df, num_process = 4):
     not_found = []
     trigger_configs_list = addDataToConfigs(df, trigger_configs_temp, col_name = 'triggerid', df_col_name = 'sysId')
     with multiprocessing.Pool(num_process, initializer, (count,)) as pool_trigger:
-        result_trigger = pool_trigger.map(multiDeleteTriggerAPI, trigger_configs_list)
+        result_trigger = pool_trigger.map(deleteTriggerAPI, trigger_configs_list)
     
     pool_trigger.close()
     pool_trigger.join()
@@ -151,7 +89,7 @@ def updateEmptyWorkflow(df, num_process = 4):
         workflow_configs_list.append(task_configs)
         
     with multiprocessing.Pool(num_process, initializer, (count,)) as pool_workflow:
-        result_workflow = pool_workflow.map(multiUpdateTaskAPI, workflow_configs_list)
+        result_workflow = pool_workflow.map(updateTaskAPI, workflow_configs_list)
         
     pool_workflow.close()
     pool_workflow.join()
