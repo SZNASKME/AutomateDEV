@@ -3,7 +3,7 @@ import requests
 import urllib.parse
 import http
 
-DOMAIN = "http://172.16.1.85:8080/uc/resources"
+DOMAIN = "http://172.16.1.86:8080/uc/resources"
 
 
 TASK_URI = f"{DOMAIN}/task"
@@ -15,6 +15,7 @@ TRIGGER_URI = f"{DOMAIN}/trigger"
 LIST_TRIGGER_URI = f"{DOMAIN}/trigger/list"
 LIST_TRIGGER_ADV_URI = f"{DOMAIN}/trigger/listadv"
 
+BUNDLE_URI = f"{DOMAIN}/bundle"
 PROMOTE_BUNDLE_URI = f"{DOMAIN}/bundle/promote"
 
 
@@ -127,6 +128,13 @@ def getListTriggerAdvancedAPI(trigger_configs, show_response = True):
 
 ###########################################################################################
 
+def getBundleAPI(bundle_configs, show_response = True):
+    uri = createURI(BUNDLE_URI, bundle_configs)
+    response = requests.get(url = uri, auth = auth, headers={'Accept': 'application/json'})
+    if show_response:
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
+    return response
 
 def promoteBundleAPI(bundle_configs, show_response = True):
     response = requests.post(url = PROMOTE_BUNDLE_URI, json = bundle_configs, auth = auth, headers = {'Content-Type': 'application/json'})
@@ -134,3 +142,4 @@ def promoteBundleAPI(bundle_configs, show_response = True):
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
+
