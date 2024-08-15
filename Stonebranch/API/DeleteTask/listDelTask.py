@@ -1,5 +1,5 @@
 from readExcel import getDataExcel
-from stbAPI import getListTaskAPI, getListTriggerAPI, getListTaskAdvancedAPI
+from stbAPI import getListTaskAPI, getListTriggerAPI, getListTaskAdvancedAPI, getListTriggerAdvancedAPI
 from delProcess import deleteProcess
 import pandas as pd
 import multiprocessing
@@ -11,14 +11,24 @@ BUSINESS_SERVICES = "A0417 - AML Management System"
 
 TASK_TYPE = ['taskWorkflow','taskUniversal','taskSleep','taskMonitor','taskFileMonitor']
 
+API_TASK_TYPE = [1,99,2,12,6]
+
+BUSSINESS_SERVICE_LIST = [
+    "A0127 - Market and Liquidity Risk Management  -  Ambit Focus",
+    "A0341 - Core GL System",
+    "A0357 - IFRS9 system",
+    "A0357-1 - IFRS9 (HP) system",
+    "A0455 - Core Hire Purchase"
+]
+
 task_adv_configs_temp = {
-    'taskname': None,
+    'taskname': '*',
     #'type': None,
-    #'businessServices': None,
+    'businessServices': None,
 }
 
 task_configs_temp = {
-    'name': None,
+    'name': '*',
     #'type': None,
     #'businessServices': None,
     'updatedTime': 'd',
@@ -29,7 +39,7 @@ trigger_configs_temp = {
 }
 
 trigger_adv_configs_temp = {
-    'triggername': None,
+    'triggername': '*',
 }
 
 
@@ -99,6 +109,33 @@ def getDeleteTaskTriggerMultiProcessing(del_list, prefix_list = [], num_process=
     print(count)
     return task_list_api, trigger_list_api
 
+
+def getDeleteTaskTriggerbyBusinessService(api_task_type, bussiness_service_list = []):
+    task_list_api_type_dict = { type: [] for type in api_task_type }
+    trigger_list_api = []
+    
+    for business_service in bussiness_service_list:
+        for api_type in api_task_type:
+            task_configs = task_configs_temp.copy()
+            task_configs['type'] = api_type
+            task_configs['businessServices'] = business_service
+            response_task_list = getListTaskAPI(task_configs)
+            if response_task_list.status_code == 200:
+                for task in response_task_list.json():
+                    if task['name'] not in task_list_api_type_dict[api_type]:
+                        task_list_api_type_dict[api_type].append(task)
+                        
+        trigger_configs = trigger_adv_configs_temp.copy()
+        trigger_configs['businessServices'] = business_service
+        response_trigger_list = getListTriggerAdvancedAPI(trigger_configs)
+        if response_trigger_list.status_code == 200:
+            for trigger in response_trigger_list.json():
+                if trigger['name'] not in trigger_list_api:
+                    trigger_list_api.append(trigger)
+                    
+    return task_list_api_type_dict, trigger_list_api
+
+
 def separateTaskType(task_list, task_type_list):
     task_type_dict = {}
     for task_type in task_type_list:
@@ -110,6 +147,26 @@ def separateTaskType(task_list, task_type_list):
     
     return task_type_dict
 
+def prepareTaskType(task_type_dict, task_type_list = TASK_TYPE):
+    new_task_type_dict = {}
+    for key, value in task_type_dict.items():
+        compared_task_type = compareTaskType(key, task_type_list)
+        new_task_type_dict[compared_task_type] = value
+    return new_task_type_dict
+        
+def compareTaskType(task_type_key, task_type_list):
+    if task_type_key == 1 or task_type_key == 'Workflow':
+        return task_type_list[0]
+    elif task_type_key == 99 or task_type_key == 'Universal':
+        return task_type_list[1]
+    elif task_type_key == 2 or task_type_key == 'Timer':
+        return task_type_list[2]
+    elif task_type_key == 12 or task_type_key == 'Task Monitor':
+        return task_type_list[3]
+    elif task_type_key == 6 or task_type_key == 'Agent File Monitor':
+        return task_type_list[4]
+    else:
+        return task_type_key
 
 
 #################################    utils      ###########################################
@@ -185,20 +242,21 @@ def addDataToConfigs(data_list, configs, col_name = 'name'):
 
 ###########################################################################################
 def main():
-    df = getDataExcel()
+    #df = getDataExcel()
     
-    del_list_excel = getListExcel(df)
-    print(len(del_list_excel))
-    group_task_list = groupingName(del_list_excel)
-    print(len(group_task_list))
+    #del_list_excel = getListExcel(df)
+    #print(len(del_list_excel))
+    #group_task_list = groupingName(del_list_excel)
+    #print(len(group_task_list))
     
-    del_task_list_api, del_trigger_list_api = getDeleteTaskTriggerMultiProcessing(del_list_excel, del_list_excel, num_process=4)
+    #del_task_list_api, del_trigger_list_api = getDeleteTaskTriggerMultiProcessing(del_list_excel, del_list_excel, num_process=4)
     #del_task_list_api, del_trigger_list_api = getDeleteTaskTriggerMultiProcessing(group_task_list, del_list_excel, num_process=4)
-    print(len(del_task_list_api), len(del_trigger_list_api))
-    del_task_list_clean = getUniqueList(del_task_list_api)
-    del_trigger_list_clean = getUniqueList(del_trigger_list_api)
-    print(len(del_task_list_clean), len(del_trigger_list_clean))
-    del_task_type_dict = separateTaskType(del_task_list_clean, TASK_TYPE)
+    del_task_list_api_type_dict, del_trigger_list_api = getDeleteTaskTriggerbyBusinessService(API_TASK_TYPE, BUSSINESS_SERVICE_LIST)
+    #del_task_list_clean = getUniqueList(del_task_list_api)
+    #del_trigger_list_clean = getUniqueList(del_trigger_list_api)
+    #print(len(del_task_list_clean), len(del_trigger_list_clean))
+    #del_task_type_dict = separateTaskType(del_task_list_api, TASK_TYPE)
+    del_task_type_dict = prepareTaskType(del_task_list_api_type_dict)
     #print(json.dumps(compared_del_task_list, indent=4))
     
     dfworkflow = pd.DataFrame(del_task_type_dict['taskWorkflow'])
@@ -206,7 +264,8 @@ def main():
     dfsleep = pd.DataFrame(del_task_type_dict['taskSleep'])
     dfmonitor = pd.DataFrame(del_task_type_dict['taskMonitor'])
     dffilemonitor = pd.DataFrame(del_task_type_dict['taskFileMonitor'])
-    dftrigger = pd.DataFrame(del_trigger_list_clean)
+    #dftask = pd.DataFrame(del_task_list_api)
+    dftrigger = pd.DataFrame(del_trigger_list_api)
     
     createExcel('delete_task_trigger.xlsx', (dfworkflow, 'Workflow'), (dfuniversal, 'Universal'), (dfsleep, 'Timer'), (dfmonitor, 'TaskMonitor'), (dffilemonitor, 'AgentFileMonitor'), (dftrigger, 'Trigger'))
     dftask_dict = {
@@ -216,6 +275,8 @@ def main():
         'taskMonitor': dfmonitor,
         'taskFileMonitor': dffilemonitor,
     }
+    for key, value in dftask_dict.items():
+        print(key, len(value))
     print("Do you want to delete these tasks and triggers? (y/n)")
     choice = input().lower()
     if choice == 'y':

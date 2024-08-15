@@ -1,10 +1,9 @@
 from readExcel import getDataExcel, selectSheet
-from stbAPI import deleteTaskAPI, deleteTriggerAPI, updateTaskAPI
+from stbAPI import deleteTaskAPI, deleteTriggerAPI, updateTaskAPI, getTaskAPI
 import json
 import math
 import ast
 import multiprocessing
-
 
 
 
@@ -76,17 +75,21 @@ def delTrigger(df, num_process = 4):
 
 
 def updateEmptyWorkflow(df, num_process = 4):
-    dfworkflow = df[df['type'] == 'taskWorkflow']
+    dfworkflow = df[df['type'] == 'Workflow']
     count = multiprocessing.Value('i', 0)
     success = 0
     cannot_delete = []
     not_found = []
     workflow_configs_list = []
     for index, row in dfworkflow.iterrows():
-        task_configs = getConfigs(row)
-        task_configs['workflowEdges'] = []
-        task_configs['workflowVertices'] = []
-        workflow_configs_list.append(task_configs)
+        task_id = row['sysId']
+        response_workflow = getTaskAPI({'taskid': task_id})
+        if response_workflow.status_code == 200:
+            workflow = response_workflow.json()
+            task_configs = getConfigs(workflow)
+            task_configs['workflowEdges'] = []
+            task_configs['workflowVertices'] = []
+            workflow_configs_list.append(task_configs)
         
     with multiprocessing.Pool(num_process, initializer, (count,)) as pool_workflow:
         result_workflow = pool_workflow.map(updateTaskAPI, workflow_configs_list)
@@ -175,6 +178,22 @@ def viewResult(result_dict):
                     print(json.dumps(value, indent = 4))
 
 
+def countResult(result_dict):
+    _200 = 0
+    _403 = 0
+    _404 = 0
+    for key_res, res in result_dict.items():
+        for key_value, value in res.items():
+            if key_value == '200':
+                _200 += 1
+            if key_value == '403':
+                _403 += 1
+            if key_value == '404':
+                _404 += 1
+    print(f"200: {_200}")
+    print(f"403: {_403}")
+    print(f"404: {_404}")
+
 
 def deleteProcess(dftask_dict, dftrigger):
     print("Delete Process ...")
@@ -204,7 +223,7 @@ def deleteProcess(dftask_dict, dftrigger):
         "timer": result_timer_task,
         "workflow": result_workflow
     }
-    
+    countResult(result)
     viewResult(result)
     
 def main():

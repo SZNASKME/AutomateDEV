@@ -8,7 +8,7 @@ DOMAIN = "http://172.16.1.85:8080/uc/resources"
 
 TASK_URI = f"{DOMAIN}/task"
 LIST_TASK_URI = f"{DOMAIN}/task/list"
-LIST_TASK_ADV_URI = f"{DOMAIN}/task/listadv"
+LIST_TASK_ADV_URI = f"{DOMAIN}/listadv"
 
 
 TRIGGER_URI = f"{DOMAIN}/trigger"
@@ -32,8 +32,7 @@ def createURI(uri, configs):
 ###########################################################################################
 
 def getTaskAPI(task_configs, show_response = True):
-    uri = createURI(TASK_URI, task_configs)
-    response = requests.get(url = uri, json = task_configs, auth = auth, headers = {'Accept': 'application/json'})
+    response = requests.get(url = TASK_URI, json = task_configs, auth = auth, headers = {'Accept': 'application/json'})
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
@@ -119,7 +118,7 @@ def getListTriggerAPI(trigger_configs, show_response = True):
     return response
 
 def getListTriggerAdvancedAPI(trigger_configs, show_response = True):
-    uri = createURI(LIST_TRIGGER_ADV_URI, trigger_configs)
+    uri = createURI(LIST_TRIGGER_URI, trigger_configs)
     response = requests.get(url = uri, auth = auth, headers={'Accept': 'application/json'})
     if show_response:
         status = http.HTTPStatus(response.status_code)
