@@ -21,6 +21,12 @@ trigger_configs_temp = {
 ##########################################################################################
 
 def delTask(df, num_process = 4):
+    if df.empty:
+        return {
+            "200": 0,
+            "403": [],
+            "404": []
+        }
     count = multiprocessing.Value('i', 0)
     success = 0
     cannot_delete = []
@@ -48,6 +54,12 @@ def delTask(df, num_process = 4):
         
 
 def delTrigger(df, num_process = 4):
+    if df.empty:
+        return {
+            "200": 0,
+            "403": [],
+            "404": []
+        }
     count = multiprocessing.Value('i', 0)
     success = 0
     cannot_delete = []
@@ -75,6 +87,12 @@ def delTrigger(df, num_process = 4):
 
 
 def updateEmptyWorkflow(df, num_process = 4):
+    if df.empty:
+        return {
+            "200": 0,
+            "403": [],
+            "404": []
+        }
     dfworkflow = df[df['type'] == 'Workflow']
     count = multiprocessing.Value('i', 0)
     success = 0
@@ -87,6 +105,7 @@ def updateEmptyWorkflow(df, num_process = 4):
         if response_workflow.status_code == 200:
             workflow = response_workflow.json()
             task_configs = getConfigs(workflow)
+            task_configs['runCriteria']= []
             task_configs['workflowEdges'] = []
             task_configs['workflowVertices'] = []
             workflow_configs_list.append(task_configs)
@@ -201,27 +220,84 @@ def deleteProcess(dftask_dict, dftrigger):
     print("Delete Trigger ...")
     result_trigger = delTrigger(dftrigger)
     print("Empty Workflow ...")
-    result_empty_workflow = updateEmptyWorkflow(dftask_dict['taskWorkflow'])
-    print("Delete Task Monitor ...")
-    result_task_monitor = delTask(dftask_dict['taskMonitor'])
+    result_empty_workflow = updateEmptyWorkflow(dftask_dict['Workflow'])
+
     print("Delete File Monitor ...")
-    result_file_monitor = delTask(dftask_dict['taskFileMonitor'])
-    print("Delete Univerasl Task ...")
-    result_universal_task = delTask(dftask_dict['taskUniversal'])
+    result_file_monitor = delTask(dftask_dict['Agent File Monitor'])
+    print("Delete Remote Monitor ...")
+    result_remote_monitor = delTask(dftask_dict['Remote File Monitor'])
+    print("Delete Task Monitor ...")
+    result_task_monitor = delTask(dftask_dict['Task Monitor'])
+    print("Delete System Monitor ...")
+    result_system_monitor = delTask(dftask_dict['System Monitor'])
+    print("Delete Variable Monitor ...")
+    result_variable_monitor = delTask(dftask_dict['Variable Monitor'])
+    print("Delete Email Monitor ...")
+    result_email_monitor = delTask(dftask_dict['Email Monitor'])
+    print("Delete Universal Monitor ...")
+    result_universal_monitor = delTask(dftask_dict['Universal Monitor'])
+    
     print("Delete Timer Task ...")
-    result_timer_task = delTask(dftask_dict['taskSleep'])
+    result_timer_task = delTask(dftask_dict['Timer'])
+    print("Delete Windows Task ...")
+    result_window = delTask(dftask_dict['Windows'])
+    print("Delete Linux Unix Task ...")
+    result_linux = delTask(dftask_dict['Linux Unix'])
+    print("Delete zOS Task ...")
+    result_zos = delTask(dftask_dict['zOS'])
+    print("Delete Manual Task ...")
+    result_manual = delTask(dftask_dict['Manual'])
+    print("Delete Email Task ...")
+    result_email = delTask(dftask_dict['Email'])
+    print("Delete File Transfer Task ...")
+    result_file_transfer = delTask(dftask_dict['File Transfer'])
+    print("Delete SQL Task ...")
+    result_sql = delTask(dftask_dict['SQL'])
+    print("Delete Stored Procedure Task ...")
+    result_stored = delTask(dftask_dict['Stored Procedure'])
+    print("Delete Application Control Task ...")
+    result_appcontrol = delTask(dftask_dict['Application Control'])
+    print("Delete SAP Task ...")
+    result_sap = delTask(dftask_dict['SAP'])
+    print("Delete Web Service Task ...")
+    result_webservice = delTask(dftask_dict['Web Service'])
+    print("Delete PeopleSoft Task ...")
+    result_peoplesoft = delTask(dftask_dict['PeopleSoft'])
+    print("Delete Recurring Task ...")
+    result_recurring = delTask(dftask_dict['Recurring'])
+    print("Delete Universal Task ...")
+    result_universal_task = delTask(dftask_dict['Universal'])
+
     print("Delete Workflow Task ...")
-    result_workflow = delTask(dftask_dict['taskWorkflow'])
+    result_workflow = delTask(dftask_dict['Workflow'])
 
     print("Complete Process ...")
     result = {
-        "trigger": result_trigger,
-        "emptyWorkflow": result_empty_workflow,
-        "taskMonitor": result_task_monitor,
-        "fileMonitor": result_file_monitor,
-        "universal": result_universal_task,
-        "timer": result_timer_task,
-        "workflow": result_workflow
+        'Trigger': result_trigger,
+        'Empty Workflow': result_empty_workflow,
+        'Agent File Monitor': result_file_monitor,
+        'Remote File Monitor': result_remote_monitor,
+        'Task Monitor': result_task_monitor,
+        'System Monitor': result_system_monitor,
+        'Variable Monitor': result_variable_monitor,
+        'Email Monitor': result_email_monitor,
+        'Universal Monitor': result_universal_monitor,
+        'Timer': result_timer_task,
+        'Windows': result_window,
+        'Linux Unix': result_linux,
+        'zOS': result_zos,
+        'Manual': result_manual,
+        'Email': result_email,
+        'File Transfer': result_file_transfer,
+        'SQL': result_sql,
+        'Stored Procedure': result_stored,
+        'Application Control': result_appcontrol,
+        'SAP': result_sap,
+        'Web Service': result_webservice,
+        'PeopleSoft': result_peoplesoft,
+        'Recurring': result_recurring,
+        'Universal': result_universal_task,
+        'Workflow': result_workflow,
     }
     countResult(result)
     viewResult(result)
@@ -229,17 +305,55 @@ def deleteProcess(dftask_dict, dftrigger):
 def main():
     df = getDataExcel()
     dfworkflow = selectSheet(df, 'Workflow')
+    dftimer = selectSheet(df, 'Timer')
+    dfwindow = selectSheet(df, 'Windows')
+    dflinux = selectSheet(df, 'Linux Unix')
+    dfzos = selectSheet(df, 'zOS')
+    dffilemonitor = selectSheet(df, 'Agent File Monitor')
+    dfmanual = selectSheet(df, 'Manual')
+    dfemail = selectSheet(df, 'Email')
+    dffiletransfer = selectSheet(df, 'File Transfer')
+    dfsql = selectSheet(df, 'SQL')
+    dfremote = selectSheet(df, 'Remote File Monitor')
+    dfmonitor = selectSheet(df, 'Task Monitor')
+    dfstored = selectSheet(df, 'Stored Procedure')
+    dfuniversal = selectSheet(df, 'Universal Command')
+    dfsystem = selectSheet(df, 'System Monitor')
+    dfappcontrol = selectSheet(df, 'Application Control')
+    dfsap = selectSheet(df, 'SAP')
+    dfvariable = selectSheet(df, 'Variable Monitor')
+    dfwebservice = selectSheet(df, 'Web Service')
+    dfemailmonitor = selectSheet(df, 'Email Monitor')
+    dfpeople = selectSheet(df, 'PeopleSoft')
+    dfrecurring = selectSheet(df, 'Recurring')
+    dfuniversalmonitor = selectSheet(df, 'Universal Monitor')
     dfuniversal = selectSheet(df, 'Universal')
-    dfsleep = selectSheet(df, 'Timer')
-    dfmonitor = selectSheet(df, 'TaskMonitor')
-    dffilemonitor = selectSheet(df, 'AgentFileMonitor')
     
     dftask_dict = {
-        'taskWorkflow': dfworkflow,
-        'taskUniversal': dfuniversal,
-        'taskSleep': dfsleep,
-        'taskMonitor': dfmonitor,
-        'taskFileMonitor': dffilemonitor,
+        'Workflow': dfworkflow,
+        'Timer': dftimer,
+        'Windows': dfwindow,
+        'Linux Unix': dflinux,
+        'zOS': dfzos,
+        'Agent File Monitor': dffilemonitor,
+        'Manual': dfmanual,
+        'Email': dfemail,
+        'File Transfer': dffiletransfer,
+        'SQL': dfsql,
+        'Remote File Monitor': dfremote,
+        'Task Monitor': dfmonitor,
+        'Stored Procedure': dfstored,
+        'Universal Command': dfuniversal,
+        'System Monitor': dfsystem,
+        'Application Control': dfappcontrol,
+        'SAP': dfsap,
+        'Variable Monitor': dfvariable,
+        'Web Service': dfwebservice,
+        'Email Monitor': dfemailmonitor,
+        'PeopleSoft': dfpeople,
+        'Recurring': dfrecurring,
+        'Universal Monitor': dfuniversalmonitor,
+        'Universal': dfuniversal,
     }
     dftrigger = selectSheet(df, 'Trigger')
     deleteProcess(dftask_dict, dftrigger)

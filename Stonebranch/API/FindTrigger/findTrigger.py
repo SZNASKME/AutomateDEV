@@ -1,0 +1,136 @@
+from readExcel import getDataExcel, selectSheet
+from stbAPI import getListTriggerAPI
+import json
+
+trigger_configs_temp = {
+    "name": '*',
+}
+
+TRIIGER_TYPE = ['Cron','Time','Agent File Monitor','Temporary','Task Monitor','Manual','Application Monitor','Composite','Variable Monitor','Email Monitor','Universal Monitor']
+
+API_TRIGGER_TYPE = [1,2,3,4,5,6,8,9,10,11,12]
+
+
+BUSSINESS_SERVICES = ['A0076 - Data Warehouse ETL']
+
+
+def getTriggerListByBussinessServices(api_trigger_type, bussiness_service_list):
+    trigger_list_type_dict = { type: [] for type in api_trigger_type}
+    for type in api_trigger_type:
+        for bussiness_service in bussiness_service_list:
+            trigger_configs = trigger_configs_temp.copy()
+            trigger_configs['businessServices'] = bussiness_service
+            trigger_configs['type'] = type
+            response_trigger_list = getListTriggerAPI(trigger_configs)
+            if response_trigger_list.status_code == 200:
+                for trigger in response_trigger_list.json():
+                    if trigger['name'] not in trigger_list_type_dict[type]:
+                        trigger_list_type_dict[type].append(trigger)
+
+    return trigger_list_type_dict
+
+def compareTriggerType(trigger_type_key, trigger_type_list):
+    if trigger_type_key == 1 or trigger_type_key == 'Cron':
+        return trigger_type_list[0]
+    elif trigger_type_key == 2 or trigger_type_key == 'Time':
+        return trigger_type_list[1]
+    elif trigger_type_key == 3 or trigger_type_key == 'File Trigger':
+        return trigger_type_list[2]
+    elif trigger_type_key == 4 or trigger_type_key == 'Temporary':
+        return trigger_type_list[3]
+    elif trigger_type_key == 5 or trigger_type_key == 'Task Monitor':
+        return trigger_type_list[4]
+    elif trigger_type_key == 6 or trigger_type_key == 'Manual':
+        return trigger_type_list[5]
+    elif trigger_type_key == 8 or trigger_type_key == 'Application Monitor':
+        return trigger_type_list[6]
+    elif trigger_type_key == 9 or trigger_type_key == 'Composite':
+        return trigger_type_list[7]
+    elif trigger_type_key == 10 or trigger_type_key == 'Variable Monitor':
+        return trigger_type_list[8]
+    elif trigger_type_key == 11 or trigger_type_key == 'Email Monitor':
+        return trigger_type_list[9]
+    elif trigger_type_key == 12 or trigger_type_key == 'Universal Monitor':
+        return trigger_type_list[10]
+    else:
+        return trigger_type_key
+
+def changeTriggerTypeKey(trigger_dict, trigger_type):
+    new_dict = {}
+    for key, value in trigger_dict.items():
+        new_key = compareTriggerType(key, trigger_type)
+        new_dict[new_key] = value
+    return new_dict
+
+
+
+###########################################################################################
+
+def startWithAny(prefix_list, string: str):
+    for prefix in prefix_list:
+        if string.startswith(prefix):
+            return True
+    return False
+
+def filterListByDataFrame(list_api, df, col_name):
+    trigger_list = []
+    for trigger in list_api:
+        if startWithAny(df[col_name], trigger['name']):
+            trigger_list.append(trigger)
+    return trigger_list
+
+def filterDictListNameByDataFrame(list_api, df, col_name):
+    new_dict_api = { key: [] for key in list_api.keys()}
+    for key, value in list_api.items():
+        type_list = filterListByDataFrame(value, df, col_name)
+        new_type_list = getSelectedList(type_list, 'name')
+        new_dict_api[key] = new_type_list
+    return new_dict_api
+
+def getSelectedList(list, key):
+    new_list = []
+    for item in list:
+        new_list.append(item[key])
+    return new_list
+
+
+def getUniqueList(list):
+    new_list = []
+    for item in list:
+        if item not in new_list:
+            new_list.append(item)
+    return new_list
+
+def countDictList(dict_list):
+    count = 0
+    for key, value in dict_list.items():
+        count += len(value)
+    return count
+
+def countEachDictList(dict_list):
+    count_dict = {}
+    for key, value in dict_list.items():
+        count_dict[key] = len(value)
+    return count_dict
+
+###########################################################################################
+
+def main():
+    df = getDataExcel()
+    print(df)
+    trigger_list_api = getTriggerListByBussinessServices(API_TRIGGER_TYPE, BUSSINESS_SERVICES)
+    trigger_type_list = filterDictListNameByDataFrame(trigger_list_api, df, 'jobName')
+    trigger_type_list_name = changeTriggerTypeKey(trigger_type_list, TRIIGER_TYPE)
+    trigger_count = countDictList(trigger_type_list_name)
+    trigger_count_each = countEachDictList(trigger_type_list_name)
+    print(json.dumps(trigger_type_list_name, indent = 4))
+    for key, value in trigger_count_each.items():
+        print(f"Number of {key} : {value}")
+    print(f"Number of All Type Trigger : {trigger_count}")
+    
+    
+    
+    
+    
+if __name__ == '__main__':
+    main()
