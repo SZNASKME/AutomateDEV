@@ -298,7 +298,6 @@ def main():
     #del_task_type_dict = separateTaskType(del_task_list_api, TASK_TYPE)
     del_task_type_dict = prepareTaskType(del_task_list_api_type_dict)
     #print(json.dumps(compared_del_task_list, indent=4))
-    
     dfworkflow = pd.DataFrame(del_task_type_dict['Workflow'])
     dftimer = pd.DataFrame(del_task_type_dict['Timer'])
     dfwindow = pd.DataFrame(del_task_type_dict['Windows'])
@@ -323,8 +322,6 @@ def main():
     dfrecurring = pd.DataFrame(del_task_type_dict['Recurring'])
     dfuniversalmonitor = pd.DataFrame(del_task_type_dict['Universal Monitor'])  
     dfuniversal = pd.DataFrame(del_task_type_dict['Universal'])
-
-    #dftask = pd.DataFrame(del_task_list_api)
     dftrigger = pd.DataFrame(del_trigger_list_api)
     
     createExcel('delete_task_trigger.xlsx', (dfworkflow, 'Workflow'), (dftimer, 'Timer'), 
