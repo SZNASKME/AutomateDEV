@@ -26,7 +26,7 @@ BUSSINESS_SERVICE_LIST = [
 task_adv_configs_temp = {
     'taskname': '*',
     #'type': None,
-    'businessServices': None,
+    #'businessServices': None,
 }
 
 task_configs_temp = {

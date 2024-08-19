@@ -1,9 +1,13 @@
 from readExcel import getDataExcel, selectSheet
-from stbAPI import getListTriggerAPI
+from stbAPI import getListTriggerAPI, getListTriggerAdvancedAPI
 import json
 
 trigger_configs_temp = {
     "name": '*',
+}
+
+trigger_adv_configs_temp = {
+    "triggername": '*',
 }
 
 TRIIGER_TYPE = ['Cron','Time','Agent File Monitor','Temporary','Task Monitor','Manual','Application Monitor','Composite','Variable Monitor','Email Monitor','Universal Monitor']
@@ -19,14 +23,14 @@ def getTriggerListByBussinessServices(api_trigger_type, bussiness_service_list):
     for type in api_trigger_type:
         for bussiness_service in bussiness_service_list:
             trigger_configs = trigger_configs_temp.copy()
-            trigger_configs['businessServices'] = bussiness_service
+            #trigger_configs['businessServices'] = bussiness_service
             trigger_configs['type'] = type
             response_trigger_list = getListTriggerAPI(trigger_configs)
             if response_trigger_list.status_code == 200:
                 for trigger in response_trigger_list.json():
                     if trigger['name'] not in trigger_list_type_dict[type]:
                         trigger_list_type_dict[type].append(trigger)
-
+        print(len(trigger_list_type_dict[type]),type)
     return trigger_list_type_dict
 
 def compareTriggerType(trigger_type_key, trigger_type_list):
@@ -72,17 +76,17 @@ def startWithAny(prefix_list, string: str):
             return True
     return False
 
-def filterListByDataFrame(list_api, df, col_name):
-    trigger_list = []
-    for trigger in list_api:
-        if startWithAny(df[col_name], trigger['name']):
-            trigger_list.append(trigger)
-    return trigger_list
+def filterListByDataFrame(list_api, df, col_name, value_name):
+    new_list = []
+    for value in list_api:
+        if startWithAny(df[col_name], value[value_name]):
+            new_list.append(value)
+    return new_list
 
 def filterDictListNameByDataFrame(list_api, df, col_name):
     new_dict_api = { key: [] for key in list_api.keys()}
     for key, value in list_api.items():
-        type_list = filterListByDataFrame(value, df, col_name)
+        type_list = filterListByDataFrame(value, df, col_name, 'name')
         new_type_list = getSelectedList(type_list, 'name')
         new_dict_api[key] = new_type_list
     return new_dict_api
@@ -127,7 +131,6 @@ def main():
     for key, value in trigger_count_each.items():
         print(f"Number of {key} : {value}")
     print(f"Number of All Type Trigger : {trigger_count}")
-    
     
     
     
