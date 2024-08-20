@@ -29,6 +29,16 @@ def createURI(uri, configs):
     uri = urllib.parse.quote(uri, safe=':/&?=*')
     return uri
 
+def updateURI(changed_domain):
+    global TASK_URI, LIST_TASK_URI, LIST_TASK_ADV_URI, TRIGGER_URI, LIST_TRIGGER_URI, LIST_TRIGGER_ADV_URI, PROMOTE_BUNDLE_URI
+    TASK_URI = f"{changed_domain}/task"
+    LIST_TASK_URI = f"{changed_domain}/task/list"
+    LIST_TASK_ADV_URI = f"{changed_domain}/task/listadv"
+    TRIGGER_URI = f"{changed_domain}/trigger"
+    LIST_TRIGGER_URI = f"{changed_domain}/trigger/list"
+    LIST_TRIGGER_ADV_URI = f"{changed_domain}/trigger/listadv"
+    PROMOTE_BUNDLE_URI = f"{changed_domain}/bundle/promote"
+
 ###########################################################################################
 
 def getTaskAPI(task_configs, show_response = True):

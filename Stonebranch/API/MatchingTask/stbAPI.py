@@ -3,7 +3,7 @@ import requests
 import urllib.parse
 import http
 
-DOMAIN = "http://172.16.1.85:8080/uc/resources"
+DOMAIN = "http://172.16.1.86:8080/uc/resources"
 
 
 TASK_URI = f"{DOMAIN}/task"
@@ -38,6 +38,7 @@ def updateURI(changed_domain):
     LIST_TRIGGER_URI = f"{changed_domain}/trigger/list"
     LIST_TRIGGER_ADV_URI = f"{changed_domain}/trigger/listadv"
     PROMOTE_BUNDLE_URI = f"{changed_domain}/bundle/promote"
+
 
 ###########################################################################################
 
@@ -74,6 +75,7 @@ def deleteTaskAPI(task_configs, show_response = True):
 ###########################################################################################
 
 def getListTaskAPI(task_configs, show_response = True):
+    print(LIST_TASK_URI)
     response = requests.post(url=LIST_TASK_URI, json = task_configs, auth=auth, headers={'Accept': 'application/json'})
     if show_response:
         status = http.HTTPStatus(response.status_code)

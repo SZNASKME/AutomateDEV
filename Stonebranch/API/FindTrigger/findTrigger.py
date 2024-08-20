@@ -15,10 +15,24 @@ TRIIGER_TYPE = ['Cron','Time','Agent File Monitor','Temporary','Task Monitor','M
 API_TRIGGER_TYPE = [1,2,3,4,5,6,8,9,10,11,12]
 
 
-BUSSINESS_SERVICES = ['A0076 - Data Warehouse ETL']
-
+BUSSINESS_SERVICES = ['A0329 - Data Warehouse ETL (ODS)']
 
 def getTriggerListByBussinessServices(api_trigger_type, bussiness_service_list):
+    trigger_list_type_dict = { type: [] for type in api_trigger_type}
+    for type in api_trigger_type:
+        for bussiness_service in bussiness_service_list:
+            trigger_configs = trigger_adv_configs_temp.copy()
+            trigger_configs['businessServices'] = bussiness_service
+            trigger_configs['type'] = type
+            response_trigger_list = getListTriggerAdvancedAPI(trigger_configs)
+            if response_trigger_list.status_code == 200:
+                for trigger in response_trigger_list.json():
+                    if trigger['name'] not in trigger_list_type_dict[type]:
+                        trigger_list_type_dict[type].append(trigger)
+        print(len(trigger_list_type_dict[type]),type)
+    return trigger_list_type_dict
+
+def getTriggerListByType(api_trigger_type, bussiness_service_list):
     trigger_list_type_dict = { type: [] for type in api_trigger_type}
     for type in api_trigger_type:
         for bussiness_service in bussiness_service_list:
@@ -83,6 +97,15 @@ def filterListByDataFrame(list_api, df, col_name, value_name):
             new_list.append(value)
     return new_list
 
+def filterDataFrameByList(list_api, df, col_name, value_name):
+    new_list = []
+    for index, row in df.iterrows():
+        if startWithAny(list_api, row[col_name]):
+            new_list.append(row)
+    return new_list
+    
+
+
 def filterDictListNameByDataFrame(list_api, df, col_name):
     new_dict_api = { key: [] for key in list_api.keys()}
     for key, value in list_api.items():
@@ -91,12 +114,24 @@ def filterDictListNameByDataFrame(list_api, df, col_name):
         new_dict_api[key] = new_type_list
     return new_dict_api
 
+def filterNonIntersectionDictListName(dict, list_api):
+    non_intersection_dict = { key: [] for key in dict.keys()}
+    
+    for key, value_list in dict.items():
+        value2_list = list_api[key]
+        new_value_list = getSelectedList(value2_list, 'name')
+        non_intersection_dict[key] = [value for value in value_list if value not in new_value_list]
+                    
+    return non_intersection_dict
+
 def getSelectedList(list, key):
     new_list = []
     for item in list:
         new_list.append(item[key])
     return new_list
 
+def getSelectedDataframe(df, key):
+    return df[key].tolist()
 
 def getUniqueList(list):
     new_list = []
@@ -122,15 +157,26 @@ def countEachDictList(dict_list):
 def main():
     df = getDataExcel()
     print(df)
-    trigger_list_api = getTriggerListByBussinessServices(API_TRIGGER_TYPE, BUSSINESS_SERVICES)
+    
+    trigger_list_api = getTriggerListByType(API_TRIGGER_TYPE, BUSSINESS_SERVICES)
+    trigger_business_service_list_api = getTriggerListByBussinessServices(API_TRIGGER_TYPE, BUSSINESS_SERVICES)
     trigger_type_list = filterDictListNameByDataFrame(trigger_list_api, df, 'jobName')
+    other_type_list = filterNonIntersectionDictListName(trigger_type_list, trigger_business_service_list_api)
     trigger_type_list_name = changeTriggerTypeKey(trigger_type_list, TRIIGER_TYPE)
+    other_type_list_name = changeTriggerTypeKey(other_type_list, TRIIGER_TYPE)
     trigger_count = countDictList(trigger_type_list_name)
     trigger_count_each = countEachDictList(trigger_type_list_name)
+    other_count = countDictList(other_type_list_name)
+    other_count_each = countEachDictList(other_type_list_name)
     print(json.dumps(trigger_type_list_name, indent = 4))
     for key, value in trigger_count_each.items():
         print(f"Number of {key} : {value}")
     print(f"Number of All Type Trigger : {trigger_count}")
+    print('---------------------------------')
+    print(json.dumps(other_type_list_name, indent = 4))
+    for key, value in other_count_each.items():
+        print(f"Number of {key} : {value}")
+    print(f"Number of All Type Other : {other_count}")
     
     
     
