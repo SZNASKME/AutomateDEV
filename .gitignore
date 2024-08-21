@@ -1,5 +1,4 @@
 # Ignore Excel files
-__pycache__/
 *.xls
 *.xlsx
 *.xlsm
