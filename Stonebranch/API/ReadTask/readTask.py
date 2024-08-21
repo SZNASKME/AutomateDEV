@@ -1,5 +1,5 @@
-from readExcel import getDataExcel
-from stbAPI import getListTaskAdvancedAPI
+from Stonebranch.API.utils.readExcel import getDataExcel
+from Stonebranch.API.utils.stbAPI import getListTaskAdvancedAPI
 import multiprocessing
 
 task_adv_configs_temp = {

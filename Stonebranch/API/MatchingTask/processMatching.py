@@ -1,8 +1,9 @@
-import stbAPI as API
+from Stonebranch.API.utils.stbAPI import getListTaskAPI, updateURI, updateAuth
+from Stonebranch.API.utils.loadFile import load_json
 import json
 import pandas as pd
 import math
-from utils import load_json
+
 
 
 task_configs_temp = {
@@ -67,7 +68,7 @@ def getTaskListByType(api_task_type, bussiness_service_list):
             task_configs = task_configs_temp.copy()
             task_configs['businessServices'] = bussiness_service
             task_configs['type'] = type
-            response_task_list = API.getListTaskAPI(task_configs)
+            response_task_list = getListTaskAPI(task_configs)
             if response_task_list.status_code == 200:
                 for task in response_task_list.json():
                     if task['name'] not in task_list_type_dict[type]:
@@ -114,27 +115,25 @@ def analysisCase(compared_dict):
 # https://ttbdevstb.stonebranch.cloud/resources
 
 def main():
-    original_DOMAIN = API.DOMAIN
     try:
         origin_domain = 'http://172.16.1.86:8080/uc/resources'
-        API.updateURI(origin_domain)
+        updateURI(origin_domain)
         #print(API.LIST_TASK_URI)
         ori_task_type_dict = getTaskListByType(API_TASK_TYPE, ORIGINAL_BUSSINESS_SERVICES)
 
         destination_domain = 'https://ttbdevstb.stonebranch.cloud/resources'
-        API.updateURI(destination_domain)
+        updateURI(destination_domain)
         Auth = load_json('../../../Auth.json')
         userpass = Auth['TTB']
-        API.updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
+        updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
         
         #print(API.LIST_TASK_URI)
         des_task_type_dict = getTaskListByType(API_TASK_TYPE, DESTINATION_BUSSINESS_SERVICES)
         compared_dict = compareTaskTypeDict(ori_task_type_dict, des_task_type_dict)
     finally:
-        API.DOMAIN = original_DOMAIN
         
-    print(json.dumps(compared_dict['err'], indent=4))
-    analysisCase(compared_dict['err'])
+        print(json.dumps(compared_dict['err'], indent=4))
+        analysisCase(compared_dict['err'])
     
     
     
