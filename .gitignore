@@ -7,5 +7,10 @@
 *.json
 
 
-*.py[cod]
-*$py.class
+/.pytest_cache
+/.pytest_cache/
+.pytest_cache/
+
+/_pycache_
+/_pycache_/
+pycache/
