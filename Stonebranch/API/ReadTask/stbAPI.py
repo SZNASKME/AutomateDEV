@@ -39,6 +39,10 @@ def updateURI(changed_domain):
     LIST_TRIGGER_ADV_URI = f"{changed_domain}/trigger/listadv"
     PROMOTE_BUNDLE_URI = f"{changed_domain}/bundle/promote"
 
+def updateAuth(username, password):
+    global auth
+    auth = HTTPBasicAuth(username, password)
+
 ###########################################################################################
 
 def getTaskAPI(task_configs, show_response = True):

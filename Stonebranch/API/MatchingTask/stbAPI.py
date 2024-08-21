@@ -39,6 +39,9 @@ def updateURI(changed_domain):
     LIST_TRIGGER_ADV_URI = f"{changed_domain}/trigger/listadv"
     PROMOTE_BUNDLE_URI = f"{changed_domain}/bundle/promote"
 
+def updateAuth(username, password):
+    global auth
+    auth = HTTPBasicAuth(username, password)
 
 ###########################################################################################
 
@@ -75,7 +78,6 @@ def deleteTaskAPI(task_configs, show_response = True):
 ###########################################################################################
 
 def getListTaskAPI(task_configs, show_response = True):
-    print(LIST_TASK_URI)
     response = requests.post(url=LIST_TASK_URI, json = task_configs, auth=auth, headers={'Accept': 'application/json'})
     if show_response:
         status = http.HTTPStatus(response.status_code)
