@@ -1,9 +1,15 @@
-from readExcel import getDataExcel
-from stbAPI import getListTaskAPI, getListTriggerAPI, getListTaskAdvancedAPI, getListTriggerAdvancedAPI
-from delProcess import deleteProcess
+import sys
+import os
 import pandas as pd
 import multiprocessing
 import json
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+from utils.readExcel import getDataExcel
+from utils.stbAPI import getListTaskAPI, getListTriggerAPI, getListTaskAdvancedAPI, getListTriggerAdvancedAPI
+from delProcess import deleteProcess
+
 
 
 

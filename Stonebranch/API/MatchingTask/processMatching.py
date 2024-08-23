@@ -1,9 +1,13 @@
-from Stonebranch.API.utils.stbAPI import getListTaskAPI, updateURI, updateAuth
-from Stonebranch.API.utils.loadFile import load_json
+import sys
+import os
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
 import json
 import pandas as pd
 import math
-
+from utils.loadFile import load_json
+from utils.stbAPI import updateURI, updateAuth, getListTaskAPI
 
 
 task_configs_temp = {

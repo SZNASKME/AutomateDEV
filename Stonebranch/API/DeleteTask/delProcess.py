@@ -1,11 +1,14 @@
-from readExcel import getDataExcel, selectSheet
-from stbAPI import deleteTaskAPI, deleteTriggerAPI, updateTaskAPI, getTaskAPI
 import json
 import math
 import ast
 import multiprocessing
+import sys
+import os
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
+from utils.readExcel import getDataExcel, selectSheet
+from utils.stbAPI import deleteTaskAPI, deleteTriggerAPI, updateTaskAPI, getTaskAPI
 
 task_configs_temp = {
    'taskid': None,

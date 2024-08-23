@@ -1,18 +1,15 @@
-import requests
-from requests.auth import HTTPBasicAuth
+
+import sys
+import os
 import http
-import urllib.parse
 import json
-from readExcel import getDataExcel
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+from utils.readExcel import getDataExcel
+from utils.stbAPI import createTaskAPI, updateTaskAPI, getTaskAPI, createDependencyInWorkflowAPI, getListTaskAPI, getListTaskAdvancedAPI
 from prefix import prefix_businessService
 from collections import OrderedDict
-
-TASK_URI = "http://172.16.1.151:8080/uc/resources/task"
-TASK_IN_WORKFLOW_URI = "http://172.16.1.151:8080/uc/resources/workflow/vertices"
-DEPEN_IN_WORKFLOW_URI = "http://172.16.1.151:8080/uc/resources/workflow/edges"
-LIST_TASK_ADV_URI = "http://172.16.1.151:8080/uc/resources/task/listadv"
-LIST_TASK_URI = "http://172.16.1.151:8080/uc/resources/task/list"
-LIST_BUSINESS_SERVICES_URI = "http://172.16.1.151:8080/uc/resources/businessservice/list"
 
 BUSINESS_SERVICES = "A0417 - AML Management System"
 
@@ -50,72 +47,6 @@ vertex_configs_temp = {
     "vertexX": None,
     "vertexY": None,
 }
-
-auth = HTTPBasicAuth('ops.admin','p@ssw0rd')
-
-############################################################################################################
-
-
-def authCheck(auth):
-    return auth
-
-def createURI(uri, configs):
-    uri += "?"
-    for key, value in configs.items():
-        uri += f"{key}={value}"
-        if key != list(configs.keys())[-1]:
-            uri += "&"
-    uri = urllib.parse.quote(uri, safe=':/&?=*')
-    return uri
-
-def getListTaskAPI(task_configs):
-    response = requests.post(url=LIST_TASK_URI, json = task_configs, auth=auth, headers={'Accept': 'application/json'})
-    return response
-
-def getListTaskAdvancedAPI(task_adv_configs):
-    uri = createURI(LIST_TASK_ADV_URI, task_adv_configs)
-    print(uri)
-    response = requests.get(url = uri, auth = auth, headers={'Accept': 'application/json'})
-    return response
-
-def createTaskAPI(task_configs):
-    response = requests.post(url = TASK_URI, json = task_configs, auth = auth, headers = {'Content-Type': 'application/json'})
-    return response
-
-def getTaskAPI(task_configs):
-    uri = createURI(TASK_URI, task_configs)
-    response = requests.get(url = uri, auth = auth, headers={'Accept': 'application/json'})
-    return response
-
-def updateTaskAPI(task_configs):
-    response = requests.put(url = TASK_URI, json = task_configs, auth = auth, headers = {'Content-Type': 'application/json'})
-    return response
-
-def deleteTaskAPI(task_configs):
-    uri = createURI(TASK_URI, task_configs)
-    response = requests.delete(url = uri, auth = auth)
-    return response
-
-def createTaskInWorkflowAPI(task_configs, workflow_configs):
-    uri = createURI(TASK_IN_WORKFLOW_URI, workflow_configs)
-    #print(uri)
-    response = requests.post(url = uri, json = task_configs, auth = auth, headers = {'Content-Type': 'application/json'})
-    return response
-
-def updateTaskInWorkflowAPI(task_configs, workflow_configs):
-    uri = createURI(TASK_IN_WORKFLOW_URI, workflow_configs)
-    response = requests.put(url = uri, json = task_configs, auth = auth, headers = {'Content-Type': 'application/json'})
-    return response
-
-def createDependencyInWorkflowAPI(dependency_configs, workflow_configs):
-    uri = createURI(DEPEN_IN_WORKFLOW_URI, workflow_configs)
-    response = requests.post(url = uri, json = dependency_configs, auth = auth, headers = {'Content-Type': 'application/json'})
-    return response
-
-def updateDependencyInWorkflowAPI(dependency_configs, workflow_configs):
-    uri = createURI(DEPEN_IN_WORKFLOW_URI, workflow_configs)
-    response = requests.put(url = uri, json = dependency_configs, auth = auth, headers = {'Content-Type': 'application/json'})
-    return response
 
 ###################################      workflow processing        ##############################################
 

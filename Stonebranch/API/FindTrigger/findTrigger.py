@@ -1,5 +1,10 @@
-from Stonebranch.API.utils.stbAPI import getListTriggerAPI, getListTriggerAdvancedAPI
-from Stonebranch.API.utils.readExcel import getDataExcel
+import sys
+import os
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+from utils.stbAPI import getListTriggerAPI, getListTriggerAdvancedAPI
+from utils.readExcel import getDataExcel
 import json
 
 trigger_configs_temp = {

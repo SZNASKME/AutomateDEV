@@ -1,12 +1,11 @@
-import requests
-from requests.auth import HTTPBasicAuth
 import http
-import urllib.parse 
 
-LIST_TASK_URI = "http://172.16.1.85:8080/uc/resources/task/list"
-LIST_TASK_ADV_URI = "http://172.16.1.85:8080/uc/resources/task/listadv"
-TASK_URI = "http://172.16.1.85:8080/uc/resources/task"
-VARIABLE_URI = "http://172.16.1.85:8080/uc/resources/variable"
+import sys
+import os
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+from utils.stbAPI import getListTaskAPI, getListTaskAdvancedAPI, createVariableAPI, createTaskAPI, updateTaskAPI
 
 TASK_MONITOR_SUBFIX = '-TM'
 VARIABLE_SUBFIX = '_ST_FLAG'
@@ -27,42 +26,6 @@ task_adv_configs = {
     #'updatedTime': '-100d',
 }
 
-
-auth = HTTPBasicAuth('ops.admin','p@ssw0rd')
-
-def createURI(uri, configs):
-    uri += "?"
-    for key, value in configs.items():
-        uri += f"{key}={value}"
-        if key != list(configs.keys())[-1]:
-            uri += "&"
-    uri = urllib.parse.quote(uri, safe=':/&?=*')
-    return uri
-
-
-def getListTaskAPI():
-    response = requests.post(url=LIST_TASK_URI, json = task_configs, auth=auth, headers={'Accept': 'application/json'})
-    return response
-
-def getListTaskAdvancedAPI():
-    uri = createURI(LIST_TASK_ADV_URI, task_adv_configs)
-    #print(uri)
-    response = requests.get(url = uri, auth = auth, headers={'Accept': 'application/json'})
-    return response
-
-
-def createVariableMonitorAPI(variable_monitor_configs):
-    response = requests.post(url = TASK_URI, json = variable_monitor_configs, auth = auth, headers = {'Content-Type': 'application/json'})
-    return response
-
-def createVariableAPI(variable_configs):
-    response = requests.post(url = VARIABLE_URI, json = variable_configs, auth = auth, headers = {'Content-Type': 'application/json'})
-    return response
-
-def modifyTaskAPI(task_modify_configs_list):
-    response = requests.put(url = TASK_URI, json = task_modify_configs_list, auth = auth, headers = {'Content-Type': 'application/json'})
-    return response
-    
 
 ################################################################
 
@@ -93,18 +56,18 @@ def getData(mode = 0):
 #        return None 
 ############################################################
 
-def get_variable_name_custom_trim(source_str, trim_str, replace_str):
+def getVariableNameCustomTrim(source_str, trim_str, replace_str):
     new_str = source_str.replace(trim_str, replace_str)
     new_str = new_str.strip()
     new_str = new_str.replace('.', '_')
     return new_str
 
-def get_task_name_custom_trim(source_str, trim_str):
+def getTaskNameCustomTrim(source_str, trim_str):
     new_str = source_str.replace(trim_str, '')
     new_str = new_str.strip()
     return new_str
 
-def get_task_data(data, task_name):
+def getTaskData(data, task_name):
     for value in data:
         if value['name'] == task_name:
             return value
@@ -115,14 +78,14 @@ def get_task_data(data, task_name):
 
 
 
-def create_variable(data):
+def createVariable(data):
     successful_count = 0
     number_of_variable = 0
     for value in data:
         #print(value['opswiseGroups'])
         if value['name'].find(TASK_MONITOR_SUBFIX) != -1:
             number_of_variable += 1
-            name = get_variable_name_custom_trim(value['name'], TASK_MONITOR_SUBFIX, VARIABLE_SUBFIX)
+            name = getVariableNameCustomTrim(value['name'], TASK_MONITOR_SUBFIX, VARIABLE_SUBFIX)
             json_data = {
                 "name": name,
                 "opswiseGroups": value['opswiseGroups'],
@@ -138,14 +101,14 @@ def create_variable(data):
     return None
 
 
-def create_variable_monitor(data):
+def createVariableMonitor(data):
     successful_count = 0
     number_of_task = 0
     for value in data:
         if value['name'].find(TASK_MONITOR_SUBFIX) != -1:
             number_of_task += 1
-            task_name = get_variable_name_custom_trim(value['name'], TASK_MONITOR_SUBFIX, VARIABLE_MONITOR_SUBFIX)
-            var_name = get_variable_name_custom_trim(value['name'], TASK_MONITOR_SUBFIX, VARIABLE_SUBFIX)
+            task_name = getVariableNameCustomTrim(value['name'], TASK_MONITOR_SUBFIX, VARIABLE_MONITOR_SUBFIX)
+            var_name = getVariableNameCustomTrim(value['name'], TASK_MONITOR_SUBFIX, VARIABLE_SUBFIX)
             json_data = {
                 "type": "taskVariableMonitor",
                 "name": task_name,
@@ -155,7 +118,7 @@ def create_variable_monitor(data):
                 "value": "success",
             }
             #print(json_data)
-            response = createVariableMonitorAPI(json_data)
+            response = createTaskAPI(json_data)
             status = http.HTTPStatus(response.status_code)
             if response.status_code == 200:
                 successful_count += 1
@@ -164,14 +127,14 @@ def create_variable_monitor(data):
     return None
 
 
-def add_action_to_task(data):
+def addActionToTask(data):
     number_of_task = 0
     successful_count = 0
     for value in data:
         if value['name'].find(TASK_MONITOR_SUBFIX) != -1:
             number_of_task += 1
-            task_data = get_task_data(data, value['taskMonName'])
-            var_name = get_variable_name_custom_trim(value['name'], TASK_MONITOR_SUBFIX, VARIABLE_SUBFIX)
+            task_data = getTaskData(data, value['taskMonName'])
+            var_name = getVariableNameCustomTrim(value['name'], TASK_MONITOR_SUBFIX, VARIABLE_SUBFIX)
             task_data["actions"]["setVariableActions"] = [
                 {
                     "notificationOption": "Operation Failure",
@@ -188,7 +151,7 @@ def add_action_to_task(data):
                     "variableValue": "success"
                 }
             ]
-            response = modifyTaskAPI(task_data)
+            response = updateTaskAPI(task_data)
             status = http.HTTPStatus(response.status_code)
             if response.status_code == 200:
                 successful_count += 1
@@ -204,11 +167,11 @@ def main():
     APIdata = getData(1)
     print("Number of Response:",len(APIdata),"\n")
     print("create variable")
-    create_variable(APIdata)
+    createVariable(APIdata)
     print("create variable monitor")
-    create_variable_monitor(APIdata)
+    createVariableMonitor(APIdata)
     print("add action to task")
-    add_action_to_task(APIdata)
+    addActionToTask(APIdata)
 
 
 
