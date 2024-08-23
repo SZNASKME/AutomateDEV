@@ -156,30 +156,55 @@ def promoteBundleAPI(bundle_configs, show_response = True):
 
 ###########################################################################################
 
-def createTaskInWorkflowAPI(task_configs, workflow_configs):
+def createTaskInWorkflowAPI(task_configs, workflow_configs, show_response = True):
     uri = createURI(TASK_IN_WORKFLOW_URI, workflow_configs)
-    #print(uri)
     response = requests.post(url = uri, json = task_configs, auth = auth, headers = {'Content-Type': 'application/json'})
+    if show_response:
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
-def updateTaskInWorkflowAPI(task_configs, workflow_configs):
+def updateTaskInWorkflowAPI(task_configs, workflow_configs, show_response = True):
     uri = createURI(TASK_IN_WORKFLOW_URI, workflow_configs)
     response = requests.put(url = uri, json = task_configs, auth = auth, headers = {'Content-Type': 'application/json'})
-    return response
-
-def createDependencyInWorkflowAPI(dependency_configs, workflow_configs):
-    uri = createURI(DEPEN_IN_WORKFLOW_URI, workflow_configs)
-    response = requests.post(url = uri, json = dependency_configs, auth = auth, headers = {'Content-Type': 'application/json'})
-    return response
-
-def updateDependencyInWorkflowAPI(dependency_configs, workflow_configs):
-    uri = createURI(DEPEN_IN_WORKFLOW_URI, workflow_configs)
-    response = requests.put(url = uri, json = dependency_configs, auth = auth, headers = {'Content-Type': 'application/json'})
+    if show_response:
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
 
 ###########################################################################################
 
-def createVariableAPI(variable_configs):
+def getListDependencyInWorkflowAPI(workflow_configs, show_response = True):
+    uri = createURI(DEPEN_IN_WORKFLOW_URI, workflow_configs)
+    response = requests.get(url = uri, auth = auth, headers = {'Accept': 'application/json'})
+    if show_response:
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
+    return response
+
+def createDependencyInWorkflowAPI(dependency_configs, workflow_configs, show_response = True):
+    uri = createURI(DEPEN_IN_WORKFLOW_URI, workflow_configs)
+    response = requests.post(url = uri, json = dependency_configs, auth = auth, headers = {'Content-Type': 'application/json'})
+    if show_response:
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
+    return response
+
+def updateDependencyInWorkflowAPI(dependency_configs, workflow_configs, show_response = True):
+    uri = createURI(DEPEN_IN_WORKFLOW_URI, workflow_configs)
+    response = requests.put(url = uri, json = dependency_configs, auth = auth, headers = {'Content-Type': 'application/json'})
+    if show_response:
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
+    return response
+
+
+###########################################################################################
+
+def createVariableAPI(variable_configs, show_response = True):
     response = requests.post(url = VARIABLE_URI, json = variable_configs, auth = auth, headers = {'Content-Type': 'application/json'})
+    if show_response:
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
