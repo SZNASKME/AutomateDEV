@@ -2,12 +2,13 @@ import os
 import json
 from pathlib import Path
 
-def load_json(filename='config.json'):
-    # Determine the default path based on the script's directory
-    relative_path = Path(f'{filename}')
-    base_dir = Path(__file__).resolve().parent
-    json_path = base_dir / relative_path
-    default_path = os.path.join(os.path.dirname(__file__), filename)
+def loadJson(filename='config.json'):
+    # Determine the relative path to the repository root
+    repo_root = Path(__file__).resolve().parent.parent.parent  # Adjust the number of '.parent' as needed to reach the repo root
+    
+    # Construct the full path to the JSON file
+    json_path = repo_root / filename
+    
     # Open and load the JSON file
     with open(json_path, 'r') as file:
         config_data = json.load(file)
