@@ -50,7 +50,8 @@ def updateAuth(username, password):
 ###########################################################################################
 
 def getTaskAPI(task_configs, show_response = True):
-    response = requests.get(url = TASK_URI, json = task_configs, auth = auth, headers = {'Accept': 'application/json'})
+    uri = createURI(TASK_URI, task_configs)
+    response = requests.get(url = uri, auth = auth, headers = {'Accept': 'application/json'})
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")

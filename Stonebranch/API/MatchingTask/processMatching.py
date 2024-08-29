@@ -6,7 +6,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 import json
 import pandas as pd
 import math
-from utils.loadFile import load_json
+from utils.loadFile import loadJson
 from utils.stbAPI import updateURI, updateAuth, getListTaskAPI
 
 
@@ -127,7 +127,7 @@ def main():
 
         destination_domain = 'https://ttbdevstb.stonebranch.cloud/resources'
         updateURI(destination_domain)
-        Auth = load_json('../../../Auth.json')
+        Auth = loadJson('../../../Auth.json')
         userpass = Auth['TTB']
         updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
         
