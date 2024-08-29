@@ -5,7 +5,7 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from utils.stbAPI import getListTaskAPI, getListTaskAdvancedAPI, createVariableAPI, createTaskAPI, updateTaskAPI
+from utils.stbAPI import getListTaskAdvancedAPI, createVariableAPI, createTaskAPI, updateTaskAPI, updateURI
 
 TASK_MONITOR_SUBFIX = '-TM'
 VARIABLE_SUBFIX = '_ST_FLAG'
@@ -13,15 +13,10 @@ VARIABLE_MONITOR_SUBFIX = '-VM'
 
 OUTPUT_FILE = 'Excel_API.xlsx'
 
-task_configs = {
-    'name': '*',
-    'type':  12, # 12 is the task monitor type
-    'businessServices': 'A0417 - AML MANAGEMENT SYSTEM',
-}
 
 task_adv_configs = {
     'taskname': '*',
-    #'type': 12,
+    'type': 12,
     'businessServices': 'A0417 - AML MANAGEMENT SYSTEM',
     #'updatedTime': '-100d',
 }
@@ -29,12 +24,9 @@ task_adv_configs = {
 
 ################################################################
 
-def getData(mode = 0):
+def getData():
     
-    if mode == 0:
-        response = getListTaskAPI()
-    else:
-        response = getListTaskAdvancedAPI()
+    response = getListTaskAdvancedAPI()
         
     status = http.HTTPStatus(response.status_code)
     print(f"{response.status_code} - {status.phrase}: {status.description}")
@@ -164,14 +156,16 @@ def addActionToTask(data):
 ################################################################
         
 def main():
-    APIdata = getData(1)
+    domain = "http://172.16.1.161:8080/uc/resources"
+    updateURI(domain)
+    APIdata = getData()
     print("Number of Response:",len(APIdata),"\n")
     print("create variable")
-    createVariable(APIdata)
+    #createVariable(APIdata)
     print("create variable monitor")
-    createVariableMonitor(APIdata)
+    #createVariableMonitor(APIdata)
     print("add action to task")
-    addActionToTask(APIdata)
+    #addActionToTask(APIdata)
 
 
 

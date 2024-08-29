@@ -6,11 +6,10 @@ import json
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
+from utils.createExcel import createExcel
 from utils.readExcel import getDataExcel
 from utils.stbAPI import getListTaskAPI, getListTriggerAPI, getListTaskAdvancedAPI, getListTriggerAdvancedAPI
 from delProcess import deleteProcess
-
-
 
 
 BUSINESS_SERVICES = "A0417 - AML Management System"
@@ -268,15 +267,6 @@ def getUniqueList(list):
         if item not in new_list:
             new_list.append(item)
     return new_list
-
-def createExcel(outputfile, *data):
-    try:
-        with pd.ExcelWriter(outputfile) as writer:
-            for df, sheetname in data:
-                df.to_excel(writer, sheet_name=sheetname, index=False)
-        print("Delete file created successfully")
-    except Exception as e:
-        print(f"Error creating {outputfile}: {e}")
 
 def addDataToConfigs(data_list, configs, col_name = 'name'):
     new_list = []

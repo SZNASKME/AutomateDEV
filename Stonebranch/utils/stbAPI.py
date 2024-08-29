@@ -3,7 +3,7 @@ import requests
 import urllib.parse
 import http
 
-DOMAIN = "http://172.16.1.85:8080/uc/resources"
+DOMAIN = "http://172.16.?.?:8080/uc/resources"
 
 
 TASK_URI = f"{DOMAIN}/task"

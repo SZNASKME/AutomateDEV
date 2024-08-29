@@ -2,7 +2,7 @@ import pandas as pd
 
 SHEET_NAME = "Sheet"
 
-def inputMethod():
+def inputMethod(prompt):
     def get_path_and_sheetname(prompt):
         print(prompt)
         input_value = input().strip()
@@ -12,7 +12,7 @@ def inputMethod():
             path, sheetname = input_value, None
         return path, sheetname
     
-    path, sheetname = get_path_and_sheetname("Enter PATH of the file and sheetname [pathfile/sheetname]: ")
+    path, sheetname = get_path_and_sheetname(prompt)
     
     return {'path': path, 'sheetname': sheetname }
     
@@ -33,8 +33,8 @@ def selectSheet(dfs, sheetname):
         return dfs[sheetname]
 
 
-def getDataExcel():
-    excel_configs = inputMethod()
+def getDataExcel(prompt="Enter PATH of the file and sheetname [pathfile/sheetname]: "):
+    excel_configs = inputMethod(prompt)
     print('Reading excel file...')
     dfs = readExcelMultipleSheet(excel_configs['path'], excel_configs['sheetname'])
     if dfs is None:

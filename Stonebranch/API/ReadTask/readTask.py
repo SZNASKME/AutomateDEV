@@ -1,5 +1,13 @@
-from utils.readExcel import getDataExcel
+import sys
+import os
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
 from utils.stbAPI import getListTaskAdvancedAPI
+from utils.readExcel import getDataExcel
+
+
+
 import multiprocessing
 
 task_adv_configs_temp = {

@@ -25,14 +25,3 @@ def compareDataStatus(dfm, dfc):
             'compare': compare_same_df
             }
             
-
-
-
-def createExcel(data, outputfile):
-    try:
-        with pd.ExcelWriter(outputfile) as writer:
-            data['main'].to_excel(writer, sheet_name='main', index=False)
-            data['compare'].to_excel(writer, sheet_name='compare', index=False)
-        print("Difference file created successfully")
-    except Exception as e:
-        print(f"Error creating {outputfile}: {e}")

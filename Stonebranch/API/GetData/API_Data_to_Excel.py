@@ -1,9 +1,12 @@
-import requests
 import http
 import pandas as pd
+import sys
+import os
 
-LIST_TASK_URI = "http://172.16.1.85:8080/uc/resources/task/list"
-LIST_TASK_ADV_URI = "http://172.16.1.85:8080/uc/resources/task/listadv"
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+from utils.stbAPI import getListTaskAdvancedAPI
+from utils.createExcel import createExcel
 
 OUTPUT_FILE = 'Excel_API.xlsx'
 
@@ -22,31 +25,10 @@ auth = ('ops.admin','p@ssw0rd')
 
 new_order = ['name', 'type', 'description','sysId','version']
 
-def createURI(uri, configs):
-    uri += "?"
-    for key, value in configs.items():
-        uri += f"{key}={value}"
-        if key != list(configs.keys())[-1]:
-            uri += "&"
-    return uri
 
-
-def getListTask():
-    response = requests.post(url=LIST_TASK_URI, json=task_configs, auth=auth, headers={'Accept': 'application/json'})
-    return response
-
-def getListTaskAdvanced():
-    uri = createURI(LIST_TASK_ADV_URI, task_adv_configs)
-    print(uri)
-    response = requests.get(url=uri, auth=auth, headers={'Accept': 'application/json'})
-    return response
-
-def getDataAPI(mode = 0):
+def getData():
     
-    if mode == 0:
-        response = getListTask()
-    else:
-        response = getListTaskAdvanced()
+    response = getListTaskAdvancedAPI()
         
     status = http.HTTPStatus(response.status_code)
     print(f"{response.status_code} - {status.phrase}: {status.description}")
@@ -65,22 +47,13 @@ def createDataFrame(API_data):
             return None
     else:
         return None 
-    
-def createExcel(API_data, outputfile):
-    try:
-        with pd.ExcelWriter(outputfile) as writer:
-            API_data.to_excel(writer, sheet_name='Sheet', index=False)
-
-        print("File created successfully")
-    except Exception as e:
-        print(f"Error creating {outputfile}: {e}")
         
         
 def main():
-    APIdata = getDataAPI()
+    APIdata = getData()
     df = createDataFrame(APIdata)
     df = df[new_order]
-    #createExcel(df, OUTPUT_FILE)
+    #createExcel(OUTPUT_FILE,(df, 'Sheet'))
     print(df)
     
 if __name__ == "__main__":
