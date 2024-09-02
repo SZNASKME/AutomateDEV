@@ -14,6 +14,7 @@ LIST_TASK_ADV_URI = f"{DOMAIN}/listadv"
 TRIGGER_URI = f"{DOMAIN}/trigger"
 LIST_TRIGGER_URI = f"{DOMAIN}/trigger/list"
 LIST_TRIGGER_ADV_URI = f"{DOMAIN}/trigger/listadv"
+LIST_QUALIFYING_TRIGGER_URI = f"{DOMAIN}/trigger/qualifyingtimes"
 
 PROMOTE_BUNDLE_URI = f"{DOMAIN}/bundle/promote"
 
@@ -21,6 +22,8 @@ TASK_IN_WORKFLOW_URI = f"{DOMAIN}/workflow/vertices"
 DEPEN_IN_WORKFLOW_URI = f"{DOMAIN}/workflow/edges"
 
 VARIABLE_URI = f"{DOMAIN}/variable"
+
+LIST_PARENT_TASK_URI = f"{DOMAIN}/task/parent/list"
 
 auth = HTTPBasicAuth('ops.admin','p@ssw0rd')
 
@@ -34,14 +37,20 @@ def createURI(uri, configs):
     return uri
 
 def updateURI(changed_domain):
-    global TASK_URI, LIST_TASK_URI, LIST_TASK_ADV_URI, TRIGGER_URI, LIST_TRIGGER_URI, LIST_TRIGGER_ADV_URI, PROMOTE_BUNDLE_URI
+    global TASK_URI, LIST_TASK_URI, LIST_TASK_ADV_URI, TRIGGER_URI, LIST_TRIGGER_URI, LIST_TRIGGER_ADV_URI, LIST_QUALIFYING_TRIGGER_URI, PROMOTE_BUNDLE_URI, TASK_IN_WORKFLOW_URI, DEPEN_IN_WORKFLOW_URI, VARIABLE_URI, LIST_PARENT_TASK_URI
     TASK_URI = f"{changed_domain}/task"
     LIST_TASK_URI = f"{changed_domain}/task/list"
     LIST_TASK_ADV_URI = f"{changed_domain}/task/listadv"
     TRIGGER_URI = f"{changed_domain}/trigger"
     LIST_TRIGGER_URI = f"{changed_domain}/trigger/list"
     LIST_TRIGGER_ADV_URI = f"{changed_domain}/trigger/listadv"
+    LIST_QUALIFYING_TRIGGER_URI = f"{changed_domain}/trigger/qualifyingtimes"
     PROMOTE_BUNDLE_URI = f"{changed_domain}/bundle/promote"
+    TASK_IN_WORKFLOW_URI = f"{changed_domain}/workflow/vertices"
+    DEPEN_IN_WORKFLOW_URI = f"{changed_domain}/workflow/edges"
+    VARIABLE_URI = f"{changed_domain}/variable"
+    LIST_PARENT_TASK_URI = f"{changed_domain}/task/parent/list"
+    
 
 def updateAuth(username, password):
     global auth
@@ -127,6 +136,14 @@ def deleteTriggerAPI(trigger_configs, show_response = True):
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
+def getListQualifyingTriggerAPI(trigger_configs, show_response = True):
+    uri = createURI(LIST_QUALIFYING_TRIGGER_URI, trigger_configs)
+    response = requests.get(url = uri, auth = auth, headers = {'Accept': 'application/json'})
+    if show_response:
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
+    return response
+
 ###########################################################################################
 
 def getListTriggerAPI(trigger_configs, show_response = True):
@@ -137,7 +154,7 @@ def getListTriggerAPI(trigger_configs, show_response = True):
     return response
 
 def getListTriggerAdvancedAPI(trigger_configs, show_response = True):
-    uri = createURI(LIST_TRIGGER_URI, trigger_configs)
+    uri = createURI(LIST_TRIGGER_ADV_URI, trigger_configs)
     response = requests.get(url = uri, auth = auth, headers={'Accept': 'application/json'})
     if show_response:
         status = http.HTTPStatus(response.status_code)
@@ -173,6 +190,15 @@ def updateTaskInWorkflowAPI(task_configs, workflow_configs, show_response = True
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
+###########################################################################################
+
+def viewParentTaskAPI(task_configs, show_response = True):
+    uri = createURI(LIST_PARENT_TASK_URI, task_configs)
+    response = requests.get(url = uri, auth = auth, headers = {'Accept': 'application/json'})
+    if show_response:
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
+    return response
 
 ###########################################################################################
 
