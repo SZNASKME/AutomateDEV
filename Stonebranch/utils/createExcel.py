@@ -5,6 +5,6 @@ def createExcel(outputfile, *data):
         with pd.ExcelWriter(outputfile) as writer:
             for df, sheetname in data:
                 df.to_excel(writer, sheet_name=sheetname, index=False)
-        print("Delete file created successfully")
+        print("File created successfully")
     except Exception as e:
         print(f"Error creating {outputfile}: {e}")

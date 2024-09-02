@@ -1,12 +1,14 @@
 import sys
 import os
 import json
-
+import pandas as pd
 
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from utils.stbAPI import getListTriggerAdvancedAPI, getListTriggerAPI, getTaskAPI, updateURI, updateAuth, getListQualifyingTriggerAPI, getListTaskAPI, viewParentTaskAPI
+from utils.stbAPI import getListTriggerAdvancedAPI, getTaskAPI, updateURI, updateAuth, getListQualifyingTriggerAPI, getListTaskAPI, viewParentTaskAPI
+from utils.loadFile import loadJson
+from utils.createExcel import createExcel
 from datetime import datetime, timedelta
 from dateutil import parser
 
@@ -45,6 +47,8 @@ SUFFIX = '-TM'
 DATETIME_FORMAT = '%d/%m/%y-%H:%M:%S'
 DAY_PERIOD = 7
 
+######################################################################################################################
+
 def getListTrigger():
     response = getListTriggerAdvancedAPI(trigger_adv_configs_temp)
     if response.status_code == 200:
@@ -77,6 +81,13 @@ def getTriggerNameFromTask(task_name, trigger_list):
             trigger_name_list.append(trigger['name'])
     return trigger_name_list
 
+def transformTime(time_string:str) -> str:
+    date_object = parser.parse(time_string)
+    formatted_date = date_object.strftime("%d/%m/%y-%H:%M:%S")
+    return formatted_date
+
+######################################################################################################################
+
 def checkTimeDifference(task_monitor_qualifying_time, trigger_qualifying_time):
     
     task_monitor_qualifying_datetime = [datetime.strptime(date_str, DATETIME_FORMAT) for date_str in task_monitor_qualifying_time]
@@ -94,7 +105,7 @@ def checkTimeDifference(task_monitor_qualifying_time, trigger_qualifying_time):
             task_monitor_datetime = task_monitor_qualifying_datetime[task_monitor_index]
             trigger_datetime = trigger_qualifying_datetime[trigger_index]
         
-        if task_monitor_datetime - trigger_datetime > period:
+        if (task_monitor_datetime - trigger_datetime) > period:
             return True
         
         if task_monitor_datetime <= trigger_datetime:
@@ -149,12 +160,6 @@ def recursiveSearchParentTimeTrigger(task_name, trigger_list, parent_trigger_nam
 
 ######################################################################################################################
 
-
-def transformTime(time_string:str) -> str:
-    date_object = parser.parse(time_string)
-    formatted_date = date_object.strftime("%d/%m/%y-%H:%M:%S")
-    return formatted_date
-
 def getQualifyingTimeTrigger(trigger_name, count = 60):
     qualifying_time_list = []
     trigger_qulifying_time = trigger_qulifying_time_temp.copy()
@@ -172,11 +177,11 @@ def getQualifyingTimeTaskMonitor(task_monitor_list, trigger_list):
     for task_monitor in task_monitor_list:
         task_to_monitor = task_monitor['taskMonName']
         trigger_name_list = recursiveSearchParentTimeTrigger(task_to_monitor, trigger_list, [])
-        print(task_monitor['name'], trigger_name_list)
+        #print(task_monitor['name'], trigger_name_list)
         all_trigger_qualifying_time = []
         for trigger_name in trigger_name_list:
             trigger_qulifying_time = getQualifyingTimeTrigger(trigger_name)
-            print(trigger_name, len(trigger_qulifying_time))
+            #print(trigger_name, len(trigger_qulifying_time))
             for qualifying_time in trigger_qulifying_time:
                 if qualifying_time not in all_trigger_qualifying_time:
                     all_trigger_qualifying_time.append(qualifying_time)
@@ -184,15 +189,17 @@ def getQualifyingTimeTaskMonitor(task_monitor_list, trigger_list):
     return task_monitor_qualifying_time_dict
 
 def compareQualifyingTime(trigger_qualifying_time_list, task_qualifying_time_dict):
-    result_list = []
+    result_dict = {}
     for task_name, task_dict in task_qualifying_time_dict.items():
+        result_list = []
         for task_monitor, task_monitor_qualifying_time in task_dict.items():
-            print(task_monitor, len(task_monitor_qualifying_time), len(trigger_qualifying_time_list))
+            #print(task_monitor, len(task_monitor_qualifying_time), len(trigger_qualifying_time_list))
             if len(task_monitor_qualifying_time) == 0:
                 continue
             elif checkTimeDifference(task_monitor_qualifying_time, trigger_qualifying_time_list):
                 result_list.append(task_monitor)
-    return result_list
+        result_dict[task_name] = result_list
+    return result_dict
 
 ######################################################################################################################
 
@@ -219,8 +226,19 @@ def checkTimeTrigger(trigger_list, workflow_list = []):
 
 ######################################################################################################################
 
+def createJsonFile(outputfile, data):
+    with open(outputfile, 'w') as file:
+        json.dump(data, file, indent=4)
+
+
+######################################################################################################################
+
 def main():
-    domain = 'http://172.16.1.86:8080/uc/resources'
+    auth = loadJson('Auth.json')
+    userpass = auth['TTB']
+    updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
+    domain = "https://ttbdevstb.stonebranch.cloud/resources"
+    #domain = 'http://172.16.1.86:8080/uc/resources'
     updateURI(domain)
     response_trigger = getListTrigger()
     response_workflow = getListWorkflow()
@@ -228,9 +246,7 @@ def main():
     #print(json.dumps(response_trigger, indent=4))
     #print(json.dumps(workflow_name_list, indent=4))
     result = checkTimeTrigger(response_trigger, workflow_name_list)
-    print(json.dumps(result, indent=4))
-    
-    
+    createJsonFile('TTB_result.json', result)
     
 if __name__ == '__main__':
     main()
