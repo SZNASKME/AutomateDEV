@@ -45,11 +45,11 @@ def compareData(dfm, dfc, compare_column = None):
 
 
 def main():
-    dfm_sheet = getDataExcel()
-    dfc_sheet = getDataExcel()
+    dfnew_sheet = getDataExcel("Enter PATH of the newer file and sheetname [pathfile/sheetname]: ")
+    dfold_sheet = getDataExcel("Enter PATH of the older file and sheetname [pathfile/sheetname]: ")
     
     print("comparing data . . .")
-    diff_data = compareData(dfm_sheet, dfc_sheet, compare_column = COMPARE_COLUMN)
+    diff_data = compareData(dfnew_sheet, dfold_sheet, compare_column = COMPARE_COLUMN)
     
     new = (diff_data['main_new_from_compare'], 'New')
     delete = (diff_data['compare_delete_from_main'], 'Deleted')
