@@ -5,7 +5,8 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from utils.stbAPI import getListTaskAdvancedAPI
+from utils.stbAPI import getListTaskAdvancedAPI, updateURI, updateAuth
+from utils.loadFile import loadJson
 from utils.createExcel import createExcel
 
 OUTPUT_FILE = 'Excel_API.xlsx'
@@ -50,6 +51,12 @@ def createDataFrame(API_data):
         
         
 def main():
+    auth = loadJson('auth.json')
+    userpass = auth['ASKME_STB']
+    updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
+    domain = 'http://172.16.86:8080/uc/resources'
+    updateURI(domain)
+    
     APIdata = getData()
     df = createDataFrame(APIdata)
     df = df[new_order]

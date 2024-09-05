@@ -5,7 +5,8 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from utils.stbAPI import getListTaskAdvancedAPI, updateURI
+from utils.stbAPI import getListTaskAdvancedAPI, updateURI, updateAuth
+from utils.loadFile import loadJson
 
 task_adv_configs_temp = {
     'taskname': '*',
@@ -25,6 +26,9 @@ async def listTask():
 
 
 def main():
+    auth = loadJson('auth.json')
+    userpass = auth['ASKME_STB']
+    updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
     domain = 'http://172.16.1.86:8080/uc/resources'
     updateURI(domain)
     task_list = asyncio.run(listTask())

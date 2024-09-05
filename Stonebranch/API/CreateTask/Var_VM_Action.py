@@ -5,7 +5,8 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from utils.stbAPI import getListTaskAdvancedAPI, createVariableAPI, createTaskAPI, updateTaskAPI, updateURI
+from utils.stbAPI import getListTaskAdvancedAPI, createVariableAPI, createTaskAPI, updateTaskAPI, updateURI, updateAuth
+from utils.loadFile import loadJson
 
 TASK_MONITOR_SUBFIX = '-TM'
 VARIABLE_SUBFIX = '_ST_FLAG'
@@ -156,6 +157,9 @@ def addActionToTask(data):
 ################################################################
         
 def main():
+    auth = loadJson('auth.json')
+    userpass = auth['ASKME_STB']
+    updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
     domain = "http://172.16.1.161:8080/uc/resources"
     updateURI(domain)
     APIdata = getData()

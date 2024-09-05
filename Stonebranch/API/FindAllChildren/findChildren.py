@@ -1,12 +1,15 @@
 import requests
 import urllib.parse
 import json
-from requests.auth import HTTPBasicAuth
-import http
+import sys
+import os
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+from utils.stbAPI import updateAuth, updateURI, getTaskAPI
+from utils.loadFile import loadJson
+
 from collections import OrderedDict
-
-TASK_URI = "http://172.16.1.86:8080/uc/resources/task"
-
 
 TASK_NAME = "DWH_DAILY_B"
 CHILDREN_FIELD = "Children"
@@ -15,32 +18,9 @@ CHILD_LEVEL = "Child Level"
 NEXT_NODE = "Next Node"
 
 
-auth = HTTPBasicAuth('ops.admin','p@ssw0rd')
-
-
-
 task_configs_temp = {
     'taskname': None,
 }
-
-############################################################################################################
-
-def createURI(uri, configs):
-    uri += "?"
-    for key, value in configs.items():
-        uri += f"{key}={value}"
-        if key != list(configs.keys())[-1]:
-            uri += "&"
-    uri = urllib.parse.quote(uri, safe=':/&?=*')
-    return uri
-
-
-
-def getTaskAPI(task_configs):
-    uri = createURI(TASK_URI, task_configs)
-    response = requests.get(url = uri, auth = auth, headers={'Accept': 'application/json'})
-    return response
-
 
 #########################################     find children    ################################################
 
@@ -49,7 +29,6 @@ def findChildren(task_name, next_node = [], level = 0):
     task_configs = task_configs_temp.copy()
     task_configs['taskname'] = task_name
     response = getTaskAPI(task_configs)
-    status = http.HTTPStatus(response.status_code)
     if response.status_code == 200:
         task_data = json.loads(response.text)
         children[CHILD_TYPE] = task_data['type']
@@ -148,6 +127,12 @@ def visualizeWorkflow(workflow_dict):
 
 
 def main():
+    auth = loadJson('auth.json')
+    userpass = auth['ASKME_STB']
+    updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
+    domain = 'http://172.16.86:8080/uc/resources'
+    updateURI(domain)
+    
     print("Finding all children of a task in the workflow")
     children = findChildren(TASK_NAME)
     print("Showing the children of the task in a tree view")

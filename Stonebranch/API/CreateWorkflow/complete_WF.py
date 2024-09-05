@@ -7,7 +7,8 @@ import json
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.readExcel import getDataExcel
-from utils.stbAPI import createTaskAPI, updateTaskAPI, getTaskAPI, createDependencyInWorkflowAPI, getListTaskAPI, getListTaskAdvancedAPI
+from utils.stbAPI import createTaskAPI, updateTaskAPI, getTaskAPI, createDependencyInWorkflowAPI, getListTaskAPI, getListTaskAdvancedAPI, updateAuth, updateURI
+from utils.loadFile import loadJson
 from prefix import prefix_businessService
 from collections import OrderedDict
 
@@ -333,6 +334,11 @@ def updateFrequencyDict(existing_freq_dict, value, *dict_indices):
 
 ###############################           main       ########################################################
 def main():
+    auth = loadJson('auth.json')
+    userpass = auth['ASKME_STB']
+    updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
+    domain = 'http://172.16.86:8080/uc/resources'
+    updateURI(domain)
     prefix_list = getPrefix(BUSINESS_SERVICES)
     print(prefix_list)
     #taskname_list = getListTaskname(API_Data.json())

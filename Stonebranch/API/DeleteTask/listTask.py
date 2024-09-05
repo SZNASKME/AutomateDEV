@@ -8,7 +8,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.createExcel import createExcel
 from utils.readExcel import getDataExcel
-from utils.stbAPI import getListTaskAPI, getListTriggerAPI, getListTaskAdvancedAPI, getListTriggerAdvancedAPI
+from utils.stbAPI import getListTaskAPI, getListTriggerAPI, getListTaskAdvancedAPI, getListTriggerAdvancedAPI, updateAuth, updateURI
+from utils.loadFile import loadJson
 from delProcess import deleteProcess
 
 
@@ -278,6 +279,11 @@ def addDataToConfigs(data_list, configs, col_name = 'name'):
 
 ###########################################################################################
 def main():
+    auth = loadJson('auth.json')
+    userpass = auth['ASKME_STB']
+    updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
+    domain = 'http://172.16.86:8080/uc/resources'
+    updateURI(domain)
     #df = getDataExcel()
     
     #del_list_excel = getListExcel(df)

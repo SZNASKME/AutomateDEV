@@ -3,7 +3,8 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from utils.stbAPI import getListTriggerAPI, getListTriggerAdvancedAPI
+from utils.stbAPI import getListTriggerAPI, getListTriggerAdvancedAPI, updateURI, updateAuth
+from utils.loadFile import loadJson
 from utils.readExcel import getDataExcel
 import json
 
@@ -160,6 +161,12 @@ def countEachDictList(dict_list):
 ###########################################################################################
 
 def main():
+    auth = loadJson('auth.json')
+    userpass = auth['ASKME_STB']
+    updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
+    domain = 'http://172.16.86:8080/uc/resources'
+    updateURI(domain)
+    
     df = getDataExcel()
     print(df)
     

@@ -3,7 +3,7 @@ import requests
 import urllib.parse
 import http
 
-DOMAIN = "http://172.16.?.?:8080/uc/resources"
+DOMAIN = "http://?.?.?.?:8080/uc/resources"
 
 
 TASK_URI = f"{DOMAIN}/task"
@@ -25,7 +25,7 @@ VARIABLE_URI = f"{DOMAIN}/variable"
 
 LIST_PARENT_TASK_URI = f"{DOMAIN}/task/parent/list"
 
-auth = HTTPBasicAuth('ops.admin','p@ssw0rd')
+auth = HTTPBasicAuth('?','?')
 
 def createURI(uri, configs):
     uri += "?"

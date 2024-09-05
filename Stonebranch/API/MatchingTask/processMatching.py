@@ -120,6 +120,9 @@ def analysisCase(compared_dict):
 
 def main():
     try:
+        auth = loadJson('Auth.json')
+        userpass = auth['ASKME_STB']
+        updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
         origin_domain = 'http://172.16.1.86:8080/uc/resources'
         updateURI(origin_domain)
         #print(API.LIST_TASK_URI)
@@ -127,7 +130,7 @@ def main():
 
         destination_domain = 'https://ttbdevstb.stonebranch.cloud/resources'
         updateURI(destination_domain)
-        Auth = loadJson('../../../Auth.json')
+        Auth = loadJson('Auth.json')
         userpass = Auth['TTB']
         updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
         

@@ -8,8 +8,8 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.readExcel import getDataExcel, selectSheet
-from utils.stbAPI import deleteTaskAPI, deleteTriggerAPI, updateTaskAPI, getTaskAPI
-
+from utils.stbAPI import deleteTaskAPI, deleteTriggerAPI, updateTaskAPI, getTaskAPI, updateURI, updateAuth
+from utils.loadFile import loadJson
 task_configs_temp = {
    'taskid': None,
    #'taskname': None,
@@ -306,6 +306,13 @@ def deleteProcess(dftask_dict, dftrigger):
     viewResult(result)
     
 def main():
+    auth = loadJson('auth.json')
+    userpass = auth['ASKME_STB']
+    updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
+    domain = 'http://172.16.86:8080/uc/resources'
+    updateURI(domain)
+    
+    
     df = getDataExcel()
     dfworkflow = selectSheet(df, 'Workflow')
     dftimer = selectSheet(df, 'Timer')
