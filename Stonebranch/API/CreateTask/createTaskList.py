@@ -44,56 +44,46 @@ def createTaskConfigs(data, map_fields):
 
 def restructureTaskConfigs(task_configs):
     new_task_configs = {}
-    if task_configs["type"] == "BOX":
+    
+    fields_map = {
+        "largeTextField1": {"label" : "Command", "name": "command"},
+        "textField1": {"label" : "Profile File", "name": "profile_file"},
+        "textField2": {"label" : "STDOUT File", "name": "stdout_file"},
+        "textField3": {"label" : "STDERR File", "name": "stderr_file"},
+        "customField1": {"label" : "Application"}
+    }
+    for field, field_data in fields_map.items():
+        if field in task_configs:
+            new_task_configs[field] = field_data.copy()
+            new_task_configs[field]["value"] = task_configs[field]
+    
+    task_type = task_configs.get("type")
+    if task_type == "BOX":
         new_task_configs["type"] = "taskWorkflow"
-    if task_configs["type"] == "CMD":
+    elif task_type == "CMD":
         new_task_configs["type"] = "taskUniversal"
+        # Check for Linux or Windows based on fields
+        if "/" in task_configs.get("largeTextField1", ""):
+            new_task_configs["template"] = "Enhanced Linux"
+        elif "\\" in task_configs.get("largeTextField1", ""):
+            new_task_configs["template"] = "Enhanced Windows"
+    elif task_type == "FW":
+        new_task_configs["type"] = "taskFileMonitor"
     
-    if 'name' in task_configs:
-        new_task_configs["name"] = task_configs["name"]
-    if 'credentials' in task_configs:
-        if task_configs['type'] != 'BOX':
-            new_task_configs["credentials"] = task_configs["credentials"]
+    if task_type != "BOX" and "credentials" in task_configs:
+        new_task_configs["credentials"] = task_configs["credentials"]    
     
-    if "summary" in task_configs:
-        new_task_configs["summary"] = task_configs["summary"]
-    
-    if "largeTextField1" in task_configs:
-        new_task_configs["largeTextField1"] = {
-            "label": "Command",
-            "name": "command",
-            "value": task_configs["largeTextField1"]
-        }
-    if "textField1" in task_configs:
-        new_task_configs["textField1"] = {
-            "label": "Profile File",
-            "name": "profile_file",
-            "value": task_configs["textField1"]
-        }
-    if "textField2" in task_configs:
-        new_task_configs["textField2"] = {
-            "label": "STDOUT File",
-            "name": "stdout_file",
-            "value": task_configs["textField2"]
-        }
-    if "textField3" in task_configs:
-        new_task_configs["textField3"] = {
-            "label": "STDERR File",
-            "name": "stderr_file",
-            "value": task_configs["textField3"]
-        }
-
     if "retryMaximum" in task_configs:
         new_task_configs["retryMaximum"] = int(task_configs["retryMaximum"])
-    if "agentCluster" in task_configs:
-        new_task_configs["agentCluster"] = task_configs["agentCluster"]
     
-    if "customField1" in task_configs:
-        new_task_configs["customField1"] = {
-            "label": "Application",
-            "value": task_configs["customField1"]
-        }   
+
+    for key, value in task_configs.items():
+        if key not in new_task_configs and key not in fields_map and key != "type":
+            new_task_configs[key] = value
     
+    # Additional configurations
+    new_task_configs["exitCodes"] = "0"
+        
     return new_task_configs
 
 
@@ -105,12 +95,12 @@ def createTaskList(df, map_fields):
         print(json.dumps(task_configs, indent=4))
         task_configs = restructureTaskConfigs(task_configs)
         print(json.dumps(task_configs, indent=4))
-        #response = createTaskAPI(task_configs)
-        #if response.status_code == 200:
-        #    print(f"Task {task_configs["jobName"]} created")
-        #else:
-        #    print(f"Task {task_configs["jobName"]} failed to create")
-
+        response = createTaskAPI(task_configs)
+        if response.status_code == 200:
+            print(f"Task {task_configs["name"]} created")
+        else:
+            print(f"Task {task_configs["name"]} failed to create")
+            break
 
 
 
@@ -118,7 +108,7 @@ def main():
     auth = loadJson("auth.json")
     userpass = auth["ASKME_STB"]
     updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
-    domain = "http://172.16.1.86:8080/uc/resources"
+    domain = "http://172.16.1.161:8080/uc/resources"
     updateURI(domain)
     
     df = getDataExcel()
