@@ -102,7 +102,7 @@ def checkTimeDifference(task_qualifying_time, trigger_qualifying_time):
     
     task_qualifying_datetime = [datetime.strptime(date_str, DATETIME_FORMAT) for date_str in task_qualifying_time]
     trigger_qualifying_datetime = [datetime.strptime(date_str, DATETIME_FORMAT) for date_str in trigger_qualifying_time]
-    print("Time",len(task_qualifying_datetime), len(trigger_qualifying_datetime))
+    #print("Time",len(task_qualifying_datetime), len(trigger_qualifying_datetime))
     period = timedelta(days = DAY_PERIOD)
     task_index = 0
     trigger_index = 0
