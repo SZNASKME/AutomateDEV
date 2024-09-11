@@ -15,27 +15,33 @@ JSON_PATH = './Stonebranch/API/CheckTaskMonitor/TTB_result.json'
 def findAllTaskMonitorList(json_data):
     unique_task_monitor_list = []
     for trigger_name, trigger_data in json_data.items():
-        for task_name, task_monitor_list in trigger_data.items():
-            for task_monitor in task_monitor_list:
-                if task_monitor not in unique_task_monitor_list:
-                    unique_task_monitor_list.append(task_monitor)
+        for workflow_name, workflow_data in trigger_data.items():
+            for task_name, task_monitor_list in workflow_data.items():
+                for task_monitor in task_monitor_list:
+                    if task_monitor not in unique_task_monitor_list:
+                        unique_task_monitor_list.append(task_monitor)
     return unique_task_monitor_list
 
 def prepareTaskMonitorRowsSummary(json_data, unique_task_monitor_list):
     task_monitor_summary_rows = []
     for task_monitor in unique_task_monitor_list:
         task_list = []
+        workflow_list = []
         trigger_list = []
         for trigger_name, trigger_data in json_data.items():
-            for task_name, task_monitor_list in trigger_data.items():
-                if task_monitor in task_monitor_list:
-                    if task_name not in task_list:
-                        task_list.append(task_name)
-                    if trigger_name not in trigger_list:
-                        trigger_list.append(trigger_name)
+            for workflow_name, workflow_data in trigger_data.items():
+                for task_name, task_monitor_list in workflow_data.items():
+                    if task_monitor in task_monitor_list:
+                        if task_name not in task_list:
+                            task_list.append(task_name)
+                        if workflow_name not in workflow_list:
+                            workflow_list.append(workflow_name)
+                        if trigger_name not in trigger_list:
+                            trigger_list.append(trigger_name)
         task_monitor_summary_row = {
             'Task Monitor': task_monitor,
-            'Tasks': ', '.join(task_list),
+            'Main workflow': ', '.join(task_list),
+            'Sub workflow': ', '.join(workflow_list),
             'Triggers': ', '.join(trigger_list)
         }
         task_monitor_summary_rows.append(task_monitor_summary_row)
@@ -44,14 +50,16 @@ def prepareTaskMonitorRowsSummary(json_data, unique_task_monitor_list):
 def prepareTaskMonitorRowsExpand(json_data):
     task_monitor_rows = []
     for trigger_name, trigger_data in json_data.items():
-        for task_name, task_monitor_list in trigger_data.items():
-            for task_monitor in task_monitor_list:
-                task_monitor_row = {
-                    'Trigger Name': trigger_name,
-                    'Task Name': task_name,
-                    'Task Monitor': task_monitor
-                }
-                task_monitor_rows.append(task_monitor_row)
+        for workflow_name, workflow_data in trigger_data.items():
+            for task_name, task_monitor_list in workflow_data.items():
+                for task_monitor in task_monitor_list:
+                    task_monitor_row = {
+                        'Trigger Name': trigger_name,
+                        'Main workflow Name': task_name,
+                        'Sub workflow Name': workflow_name,
+                        'Task Monitor': task_monitor
+                    }
+                    task_monitor_rows.append(task_monitor_row)
     return task_monitor_rows
 
 

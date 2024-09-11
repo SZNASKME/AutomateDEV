@@ -10,6 +10,7 @@ from utils.loadFile import loadJson
 
 task_adv_configs_temp = {
     'taskname': '*',
+    'type': 1,
     'businessServices': 'A0076 - Data Warehouse ETL',
 }
     
@@ -22,6 +23,16 @@ async def listTask():
         return response.json()
     else:
         return None
+
+
+
+def prepareCollocateWorkflow(workflow_list):
+    workflow_data_dict = {}
+    for workflow_data in workflow_list:
+        if workflow_data['workflowVertices']:
+            vertex_list = []
+            for vertex in workflow_data['workflowVertices']:
+                vertex_list.append(vertex['vertexName'])
 
 
 
