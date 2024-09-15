@@ -47,11 +47,11 @@ SUFFIX = '-TM'
 DATETIME_FORMAT = '%d/%m/%y-%H:%M:%S'
 DAY_PERIOD = 7
 
-test_trigger_list = [
-    "DWH_HL_BUNDLE_CC_DAILY_B-TR001",
-    #"DWH_DAILY_B-TR001",
-    "DWH_CSM_BIC_DAILY_B-TR001",
-]
+#test_trigger_list = [
+#    "DWH_HL_BUNDLE_CC_DAILY_B-TR001",
+#    "DWH_DAILY_B-TR001",
+#    "DWH_CSM_BIC_DAILY_B-TR001",
+#]
 
 ######################################################################################################################
 
@@ -161,7 +161,7 @@ def recursiveSearchTaskMonitorInWorkflow(task_name:str, task_monitor_dict:dict, 
             task_monitor_dict[workflow_name].append(task_data)
     return task_monitor_dict
 
-def recursiveSearchParentTimeTrigger(task_name, trigger_list, parent_trigger_name_list, out_of_trigger_list):
+def recursiveSearchParentTimeTrigger(task_name, trigger_list, parent_trigger_name_list = [], out_of_trigger_list = False):
     parent_configs = parent_configs_temp.copy()
     parent_configs['taskname'] = task_name
     response = viewParentTaskAPI(parent_configs)
@@ -244,19 +244,19 @@ def checkTimeTrigger(trigger_list, workflow_list = []):
     for trigger in trigger_list:
         if trigger['type'] != 'triggerTime':
             continue
-        if trigger['name'] in test_trigger_list:
-            #trigger_qualifying_time_dict[trigger['name']] = getQualifyingTimeTrigger(trigger['name'])
-            trigger_qualifying_time_list = getQualifyingTimeTrigger(trigger['name'])
-            result_task_monitor_dict[trigger['name']] = {}
-            workflow_qualifying_time_dict = {}
-            workflow_out_of_trigger_dict = {}
-            task_list = trigger['tasks']
-            for task_name in task_list:
-                task_monitor_dict = recursiveSearchTaskMonitorInWorkflow(task_name, {}, '', workflow_list)
-                workflow_qualifying_time_dict[task_name], workflow_out_of_trigger_dict[task_name] = getQualifyingTimeTaskMonitor(task_monitor_dict, trigger_list)
+        #if trigger['name'] in test_trigger_list:
+        #trigger_qualifying_time_dict[trigger['name']] = getQualifyingTimeTrigger(trigger['name'])
+        trigger_qualifying_time_list = getQualifyingTimeTrigger(trigger['name'])
+        result_task_monitor_dict[trigger['name']] = {}
+        workflow_qualifying_time_dict = {}
+        workflow_out_of_trigger_dict = {}
+        task_list = trigger['tasks']
+        for task_name in task_list:
+            task_monitor_dict = recursiveSearchTaskMonitorInWorkflow(task_name, {}, '', workflow_list)
+            workflow_qualifying_time_dict[task_name], workflow_out_of_trigger_dict[task_name] = getQualifyingTimeTaskMonitor(task_monitor_dict, trigger_list)
 
-            result_task_monitor_dict[trigger['name']] = compareQualifyingTime(trigger_qualifying_time_list, workflow_qualifying_time_dict)
-            result_task_monitor_out_of_trigger_list_dict[trigger['name']] = workflow_out_of_trigger_dict
+        result_task_monitor_dict[trigger['name']] = compareQualifyingTime(trigger_qualifying_time_list, workflow_qualifying_time_dict)
+        result_task_monitor_out_of_trigger_list_dict[trigger['name']] = workflow_out_of_trigger_dict
     return result_task_monitor_dict, result_task_monitor_out_of_trigger_list_dict
 
 ######################################################################################################################
@@ -270,11 +270,11 @@ def createJsonFile(outputfile, data):
 
 def main():
     auth = loadJson('Auth.json')
-    #userpass = auth['TTB']
-    userpass = auth['ASKME_STB']
+    userpass = auth['TTB']
+    #userpass = auth['ASKME_STB']
     updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
-    #domain = "https://ttbdevstb.stonebranch.cloud/resources"
-    domain = 'http://172.16.1.86:8080/uc/resources'
+    domain = "https://ttbdevstb.stonebranch.cloud/resources"
+    #domain = 'http://172.16.1.86:8080/uc/resources'
     updateURI(domain)
     response_trigger = getListTrigger()
     response_workflow = getListWorkflow()
@@ -282,8 +282,8 @@ def main():
     #print(json.dumps(response_trigger, indent=4))
     #print(json.dumps(workflow_name_list, indent=4))
     result, result_out_of_trigger = checkTimeTrigger(response_trigger, workflow_name_list)
-    createJsonFile('Test_86_result_restructure.json', result)
-    createJsonFile('Test_86_result_out_of_trigger.json', result_out_of_trigger)
+    createJsonFile('TTB_result_restructure.json', result)
+    createJsonFile('TTB_result_out_of_trigger.json', result_out_of_trigger)
     
 if __name__ == '__main__':
     main()

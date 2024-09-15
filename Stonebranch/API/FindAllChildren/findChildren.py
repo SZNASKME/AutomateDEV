@@ -11,7 +11,7 @@ from utils.loadFile import loadJson
 
 from collections import OrderedDict
 
-TASK_NAME = "DWH_DAILY_B"
+TASK_NAME = "DWH_ONICE_ONHOLD_B"
 CHILDREN_FIELD = "Children"
 CHILD_TYPE = "Child Type"
 CHILD_LEVEL = "Child Level"
@@ -128,9 +128,11 @@ def visualizeWorkflow(workflow_dict):
 
 def main():
     auth = loadJson('auth.json')
-    userpass = auth['ASKME_STB']
+    #userpass = auth['ASKME_STB']
+    userpass = auth['TTB']
     updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
-    domain = 'http://172.16.1.86:8080/uc/resources'
+    domain = "https://ttbdevstb.stonebranch.cloud/resources"
+    #domain = 'http://172.16.1.86:8080/uc/resources'
     updateURI(domain)
     
     print("Finding all children of a task in the workflow")
