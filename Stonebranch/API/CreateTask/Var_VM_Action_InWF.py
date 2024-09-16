@@ -5,7 +5,7 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from utils.stbAPI import getListTaskAdvancedAPI, createVariableAPI, createTaskAPI, updateTaskAPI, updateURI, updateAuth
+from utils.stbAPI import updateURI, updateAuth, getListTaskAdvancedAPI, createVariableAPI, createTaskAPI, updateTaskAPI
 from utils.loadFile import loadJson
 
 TASK_MONITOR_SUBFIX = '-TM'
@@ -153,6 +153,12 @@ def addActionToTask(data):
     
     return None
 
+#def addTaskInWorkflow(data):
+#    
+#    for value in data:
+#        if value['name'].find(TASK_MONITOR_SUBFIX) != -1:
+            
+    
 
 ################################################################
         
@@ -162,8 +168,8 @@ def main():
     updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
     domain = "http://172.16.1.161:8080/uc/resources"
     updateURI(domain)
-    APIdata = getData()
-    print("Number of Response:",len(APIdata),"\n")
+    #APIdata = getData()
+    #print("Number of Response:",len(APIdata),"\n")
     print("create variable")
     #createVariable(APIdata)
     print("create variable monitor")
