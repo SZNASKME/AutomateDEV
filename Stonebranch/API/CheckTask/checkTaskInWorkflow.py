@@ -55,7 +55,10 @@ def findTaskRootVertex(parent_list, task_name):
         if response.status_code == 200:
             workflow = response.json()
             if checkTaskRootVertex(workflow, task_name):
-                root_vertex_list.append(workflow_name)
+                root_vertex_list.append({
+                    "jobName": task_name,
+                    "box_name": workflow_name
+                    })
     return root_vertex_list
         
 
@@ -75,7 +78,7 @@ def main():
     #print(root_vertex_list)
     print(len(root_vertex_list))
     createJson('rootVertex.json', root_vertex_list)
-    root_vertex_df = pd.DataFrame(root_vertex_list, columns=['jobName'])
+    root_vertex_df = pd.DataFrame(root_vertex_list)
     createExcel(f'rootVertex_{TASK_NAME}.xlsx', (root_vertex_df, 'Root Vertex'))
 
 if __name__ == '__main__':
