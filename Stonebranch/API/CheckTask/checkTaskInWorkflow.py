@@ -66,11 +66,11 @@ def findTaskRootVertex(parent_list, task_name):
 
 def main():
     auth = loadJson('Auth.json')
-    userpass = auth['TTB']
-    #userpass = auth['ASKME_STB']
+    #userpass = auth['TTB']
+    userpass = auth['ASKME_STB']
     updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
-    domain = "https://ttbdevstb.stonebranch.cloud/resources"
-    #domain = 'http://172.16.1.86:8080/uc/resources'
+    #domain = "https://ttbdevstb.stonebranch.cloud/resources"
+    domain = 'http://172.16.1.86:8080/uc/resources'
     updateURI(domain)
     parent_list = getParentList()
     print(len(parent_list))
@@ -79,7 +79,7 @@ def main():
     print(len(root_vertex_list))
     createJson('rootVertex.json', root_vertex_list)
     root_vertex_df = pd.DataFrame(root_vertex_list)
-    createExcel(f'rootVertex_{TASK_NAME}.xlsx', (root_vertex_df, 'Root Vertex'))
+    createExcel(f'86_rootVertex_{TASK_NAME}.xlsx', (root_vertex_df, 'Root Vertex'))
 
 if __name__ == '__main__':
     main()

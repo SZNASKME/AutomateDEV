@@ -12,6 +12,7 @@ from utils.loadFile import loadJson
 from collections import OrderedDict
 
 TASK_NAME = "DWH_ONICE_ONHOLD_B"
+
 CHILDREN_FIELD = "Children"
 CHILD_TYPE = "Child Type"
 CHILD_LEVEL = "Child Level"
@@ -145,7 +146,7 @@ def main():
     #createTreeView(children)
     save_choice = input("Do you want to save the children to a file? (y/n): ")
     if save_choice.lower() == "y":
-        with open(f"./WF/{TASK_NAME}_children.json", "w") as file:
+        with open(f"./DWF/{TASK_NAME}_children.json", "w") as file:
             json.dump(children, file, indent=4)
         print(f"Children saved to '{TASK_NAME}_children.json'")
 

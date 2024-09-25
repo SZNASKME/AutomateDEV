@@ -3,7 +3,7 @@ import requests
 import urllib.parse
 import http
 
-DOMAIN = "http://?.?.?.?:8080/uc/resources"
+DOMAIN = "http://?.?.?.?:?/uc/resources"
 
 
 TASK_URI = f"{DOMAIN}/task"
@@ -56,7 +56,7 @@ def updateAuth(username, password):
     global auth
     auth = HTTPBasicAuth(username, password)
 
-###########################################################################################
+###########################           Task           #####################################
 
 def getTaskAPI(task_configs, show_response = True):
     uri = createURI(TASK_URI, task_configs)
@@ -88,7 +88,7 @@ def deleteTaskAPI(task_configs, show_response = True):
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
-###########################################################################################
+###########################          List Task           #####################################
 
 def getListTaskAPI(task_configs, show_response = True):
     response = requests.post(url=LIST_TASK_URI, json = task_configs, auth=auth, headers={'Accept': 'application/json'})
@@ -105,7 +105,7 @@ def getListTaskAdvancedAPI(task_adv_configs, show_response = True):
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
-###########################################################################################
+#############################           Trigger           #######################################
 
 def getTriggerAPI(trigger_configs, show_response = True):
     response = requests.get(url = TRIGGER_URI, json = trigger_configs, auth = auth, headers = {'Accept': 'application/json'})
@@ -144,7 +144,7 @@ def getListQualifyingTriggerAPI(trigger_configs, show_response = True):
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
-###########################################################################################
+###########################           List Trigger           #####################################
 
 def getListTriggerAPI(trigger_configs, show_response = True):
     response = requests.post(url = LIST_TRIGGER_URI, json = trigger_configs, auth = auth, headers={'Accept': 'application/json'})
@@ -161,7 +161,7 @@ def getListTriggerAdvancedAPI(trigger_configs, show_response = True):
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
-###########################################################################################
+###########################           Bundle/Promote           #####################################
 
 
 def promoteBundleAPI(bundle_configs, show_response = True):
@@ -172,7 +172,7 @@ def promoteBundleAPI(bundle_configs, show_response = True):
     return response
 
 
-###########################################################################################
+###############################           Workflow           #########################################
 
 def createTaskInWorkflowAPI(task_configs, workflow_configs, show_response = True):
     uri = createURI(TASK_IN_WORKFLOW_URI, workflow_configs)
@@ -190,17 +190,25 @@ def updateTaskInWorkflowAPI(task_configs, workflow_configs, show_response = True
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
-###########################################################################################
+def deleteTaskInWorkflowAPI( workflow_configs, show_response = True):
+    uri = createURI(TASK_IN_WORKFLOW_URI, workflow_configs)
+    response = requests.delete(url = uri, auth = auth, headers = {'Content-Type': 'application/json'})
+    if show_response:
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
+    return response
 
-def viewParentTaskAPI(task_configs, show_response = True):
-    uri = createURI(LIST_PARENT_TASK_URI, task_configs)
+
+
+def ListWorkflowForecastAPI(workflow_configs, show_response = True):
+    uri = createURI(TASK_IN_WORKFLOW_URI, workflow_configs)
     response = requests.get(url = uri, auth = auth, headers = {'Accept': 'application/json'})
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
-###########################################################################################
+###############################           Dependency           #########################################
 
 def getListDependencyInWorkflowAPI(workflow_configs, show_response = True):
     uri = createURI(DEPEN_IN_WORKFLOW_URI, workflow_configs)
@@ -226,8 +234,17 @@ def updateDependencyInWorkflowAPI(dependency_configs, workflow_configs, show_res
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
+###############################           Parent           #########################################
 
-###########################################################################################
+def viewParentTaskAPI(task_configs, show_response = True):
+    uri = createURI(LIST_PARENT_TASK_URI, task_configs)
+    response = requests.get(url = uri, auth = auth, headers = {'Accept': 'application/json'})
+    if show_response:
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
+    return response
+
+###############################           Variable           #########################################
 
 def createVariableAPI(variable_configs, show_response = True):
     response = requests.post(url = VARIABLE_URI, json = variable_configs, auth = auth, headers = {'Content-Type': 'application/json'})

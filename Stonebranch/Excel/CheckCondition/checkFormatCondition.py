@@ -104,6 +104,7 @@ def compareCondition(df_jil, format_condition):
                         #rint(f"{first_operand} {second_operand} {operators[index]}\n")
                         found_format_condition.append({
                             'jobName': row['jobName'],
+                            'box_name': row['box_name'],
                             'condition': condition,
                             'firstSubOperand': first_operand,
                             'secondSubOperand': second_operand,
