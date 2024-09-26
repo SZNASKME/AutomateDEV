@@ -2,12 +2,16 @@ import os
 import json
 from pathlib import Path
 
-def loadJson(filename='config.json', parent_dir_level=3):
+def loadJson(filename='config.json', parent_dir_level=3, *dirs):
     # Determine the relative path to the repository root
     repo_root = Path(__file__).resolve()  # Adjust the number of '.parent' as needed to reach the repo root
     
     for _ in range(parent_dir_level):
         repo_root = repo_root.parent
+    # If additional directories are provided, append them to the path
+    if dirs:
+        for dir in dirs:
+            repo_root = repo_root.joinpath(dir)
     # Construct the full path to the JSON file
     json_path = repo_root / filename
     
