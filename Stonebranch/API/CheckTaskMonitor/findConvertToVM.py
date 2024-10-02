@@ -9,6 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from utils.stbAPI import getListTriggerAdvancedAPI, getTaskAPI, updateURI, updateAuth, getListQualifyingTriggerAPI, getListTaskAPI, viewParentTaskAPI
 from utils.readFile import loadJson
 from utils.createExcel import createExcel
+from utils.createFile import createJson
 from datetime import datetime, timedelta
 from dateutil import parser
 
@@ -116,13 +117,13 @@ def checkTimeDifference(task_qualifying_time, trigger_qualifying_time):
             trigger_datetime = trigger_qualifying_datetime[trigger_index]
         #print("Task",task_datetime, " Trigger",trigger_datetime, task_index, trigger_index)
         #print(abs(task_datetime - trigger_datetime))
-        if abs(task_datetime - trigger_datetime) > period:
-            previous_task_datetime = task_qualifying_datetime[task_index - 1]
-            previous_trigger_datetime = trigger_qualifying_datetime[trigger_index - 1]
+        if abs(task_datetime - trigger_datetime) > period and task_datetime < trigger_datetime:
+            #previous_task_datetime = task_qualifying_datetime[task_index - 1]
+            #previous_trigger_datetime = trigger_qualifying_datetime[trigger_index - 1]
             #print(f"{task_datetime} - {trigger_datetime}")
-            if abs(previous_trigger_datetime - trigger_datetime) < period:
+            #if abs(previous_trigger_datetime - trigger_datetime) < period:
                 #print(f">>>{task_datetime} - {trigger_datetime} | {previous_trigger_datetime - trigger_datetime}")
-                return True
+            return True
         
         # slide the window
         if task_datetime <= trigger_datetime:
@@ -261,13 +262,6 @@ def checkTimeTrigger(trigger_list, workflow_list = []):
 
 ######################################################################################################################
 
-def createJsonFile(outputfile, data):
-    with open(outputfile, 'w') as file:
-        json.dump(data, file, indent=4)
-
-
-######################################################################################################################
-
 def main():
     auth = loadJson('Auth.json')
     userpass = auth['TTB']
@@ -282,8 +276,8 @@ def main():
     #print(json.dumps(response_trigger, indent=4))
     #print(json.dumps(workflow_name_list, indent=4))
     result, result_out_of_trigger = checkTimeTrigger(response_trigger, workflow_name_list)
-    createJsonFile('TTB_result_restructure.json', result)
-    createJsonFile('TTB_result_out_of_trigger.json', result_out_of_trigger)
+    createJson('UAT_result_restructure.json', result)
+    createJson('UAT_result_out_of_trigger.json', result_out_of_trigger)
     
 if __name__ == '__main__':
     main()

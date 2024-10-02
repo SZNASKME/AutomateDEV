@@ -9,8 +9,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from utils.createExcel import createExcel
 from utils.readFile import loadJson
 
-JSON_PATH = './Stonebranch/API/CheckTaskMonitor/86_result_restructure.json'
-JSON_OUT_PATH = './Stonebranch/API/CheckTaskMonitor/86_result_out_of_trigger.json'
+JSON_PATH = './Stonebranch/API/CheckTaskMonitor/UAT_result.json'
+JSON_OUT_PATH = './Stonebranch/API/CheckTaskMonitor/UAT_result_out_of_trigger.json'
 
 def findAllTaskMonitorList(json_data):
     unique_task_monitor_list = []
