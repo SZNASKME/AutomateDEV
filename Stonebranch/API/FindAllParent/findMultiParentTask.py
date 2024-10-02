@@ -6,7 +6,7 @@ import json
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.createExcel import createExcel
-from utils.loadFile import loadJson
+from Stonebranch.utils.readFile import loadJson
 from utils.stbAPI import updateAuth, updateURI, getListTaskAdvancedAPI, viewParentTaskAPI
 
 TASK_TYPE_API = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,99]

@@ -7,7 +7,7 @@ import pandas as pd
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.createExcel import createExcel
-from utils.loadFile import loadJson
+from Stonebranch.utils.readFile import loadJson
 
 JSON_PATH = './Stonebranch/API/CheckTaskMonitor/86_result_restructure.json'
 JSON_OUT_PATH = './Stonebranch/API/CheckTaskMonitor/86_result_out_of_trigger.json'

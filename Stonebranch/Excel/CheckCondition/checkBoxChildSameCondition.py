@@ -6,7 +6,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.readExcel import getDataExcel
 from utils.createExcel import createExcel
-from utils.loadFile import loadJson
+from Stonebranch.utils.readFile import loadJson
 
 
 

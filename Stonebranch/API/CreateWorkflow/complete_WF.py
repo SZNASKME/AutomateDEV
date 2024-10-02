@@ -8,7 +8,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.readExcel import getDataExcel
 from utils.stbAPI import createTaskAPI, updateTaskAPI, getTaskAPI, createDependencyInWorkflowAPI, getListTaskAPI, getListTaskAdvancedAPI, updateAuth, updateURI
-from utils.loadFile import loadJson
+from Stonebranch.utils.readFile import loadJson
 from prefix import prefix_businessService
 from collections import OrderedDict
 

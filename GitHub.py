@@ -1,6 +1,6 @@
 from github import Github
 
-from Stonebranch.utils.loadFile import loadJson
+from Stonebranch.utils.readFile import loadJson
 
 # Replace with your GitHub token
 

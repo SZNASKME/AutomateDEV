@@ -9,7 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.readExcel import getDataExcel, selectSheet
 from utils.stbAPI import deleteTaskAPI, deleteTriggerAPI, updateTaskAPI, getTaskAPI, updateURI, updateAuth
-from utils.loadFile import loadJson
+from Stonebranch.utils.readFile import loadJson
 task_configs_temp = {
    'taskid': None,
    #'taskname': None,

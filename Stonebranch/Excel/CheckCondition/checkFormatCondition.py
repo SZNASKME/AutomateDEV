@@ -49,7 +49,8 @@ format_condition = [
 operand_pattern = r"[a-z]\([A-Za-z0-9_\.]+\)"  # Matches operands like s(...)
 operator_pattern = r"[&|()]+"              # Matches operators like &, |
 
-operator_format = ['|', '&']
+left_operator_format = ['(']
+right_operator_format = [')']
 
 pattern = r'([()&|])|(\w+\([^)]+\))'
 
@@ -59,7 +60,7 @@ def filteredOperators(operators):
     for operator in operators:
         for char in operator:
             filtered_operators.append(char)
-    print(filtered_operators)
+    #print(filtered_operators)
     for index in range(0, len(filtered_operators)):
         #print(filtered_operators[index])
         if (filtered_operators[index] == '(' and filtered_operators[index+1] == ')') or (filtered_operators[index] == ')' and filtered_operators[index-1] == '('):
@@ -68,38 +69,50 @@ def filteredOperators(operators):
     
     return separate_filtered_operators
 
-def separateCondition(condition_str):
-    operands = re.findall(operand_pattern, condition_str)
-    operators = re.findall(operator_pattern, condition_str)
-    print(condition_str)
-    #print(operands, operators)
-    filtered_opertors = filteredOperators(operators)
-    print(filtered_opertors)
-    return operands, filtered_opertors
-
-
-def complexConditionIndex(str, sub_str_list):
-    for index in range(0, len(sub_str_list)):
-        if sub_str_list[index] in str:
-            return index
-        
-
-def checkCondition(first_operand, second_operand, operator, format_condition):
-    for condition_data in format_condition:
-        first_operand_index = complexConditionIndex(first_operand, condition_data['subOperand'])
-        second_operand_index = complexConditionIndex(second_operand, condition_data['subOperand'])
-        if (first_operand_index != None and second_operand_index != None
-            and first_operand_index != second_operand_index
-            and condition_data['operator'] == operator):
-            return True
-    return False
-
 def checkFormatOperator(string, format_condition):
     for condition_data in format_condition:
         if string in condition_data['operator']:
             return True
     return False
 
+def findComplexConditionIndex(str, sub_str_list):
+    for index in range(0, len(sub_str_list)):
+        if sub_str_list[index] in str:
+            return index
+
+def checkFormatOperandCommon(first_operand, second_operand, format_condition):
+    for condition_data in format_condition:
+        first_operand_index = findComplexConditionIndex(first_operand, condition_data['subOperand'])
+        second_operand_index = findComplexConditionIndex(second_operand, condition_data['subOperand'])
+        if (first_operand_index != None and second_operand_index != None
+            and first_operand_index != second_operand_index):
+            return True
+    return False
+
+def findOperands(filtered_string, operator_index, direction = 'left'):
+    sub_string_list = []
+    if direction == 'left':
+        slice_index = operator_index - 1
+        while slice_index >= 0:
+            current_sub_string = filtered_string[slice_index]
+            if current_sub_string in left_operator_format:
+                break
+            if re.match(operand_pattern, current_sub_string):
+                sub_string_list.append(current_sub_string)
+            slice_index -= 1
+    
+    elif direction == 'right':
+        index = operator_index + 1
+        while index < len(filtered_string):
+            current_sub_string = filtered_string[index]
+            if current_sub_string in right_operator_format:
+                break
+            if re.match(operand_pattern, current_sub_string):
+                sub_string_list.append(current_sub_string)
+            index += 1
+            
+    return sub_string_list
+        
 
 def compareCondition(df_jil, format_condition, in_list_condition):
     found_format_condition = []
@@ -109,47 +122,61 @@ def compareCondition(df_jil, format_condition, in_list_condition):
         condition = row['condition']
         if not isinstance(condition,str) or (isinstance(condition,float) and math.isnan(condition)):
             continue
-        #operands, operators = separateCondition(condition)
-        # operator_index = 0
-        # for index in range(0, len(operators)):
-        #     if operators[index] in operator_format:
-        #         if ((index == 0) 
-        #             or (index >= 1 and operators[index-1] == '(' and operators[index-1] == ')')):
-        #             first_operand = operands[operator_index]
-        #             second_operand = operands[operator_index+1]
-        #             if checkCondition(first_operand, second_operand, operators[index], format_condition):
-        #                 #print(row['jobName'], ":", condition)
-        #                 #rint(f"{first_operand} {second_operand} {operators[index]}\n")
-        #                 found_format_condition.append({
-        #                     'jobName': row['jobName'],
-        #                     'box_name': row['box_name'],
-        #                     'condition': condition,
-        #                     'firstSubOperand': first_operand,
-        #                     'secondSubOperand': second_operand,
-        #                     'operator': operators[index]
-        #                 })
-        #         operator_index += 1
         separate_string = re.findall(pattern, condition)
         filtered_string = [item for sublist in separate_string for item in sublist if item]
-        #print(filtered_string)
+        
         for index in range(0, len(filtered_string)):
-            sub_string = filtered_string[index]
-            if checkFormatOperator(sub_string, format_condition):
-                left_sub_string = filtered_string[index - 1]
-                right_sub_string = filtered_string[index + 1]
-                #print(left_sub_string, sub_string, right_sub_string)
-                if checkCondition(left_sub_string, right_sub_string, sub_string, format_condition):
-                    found_format_condition.append({
-                        'jobName': row['jobName'],
-                        'box_name': row['box_name'],
-                        'condition': condition,
-                        'firstSubOperand': left_sub_string,
-                        'secondSubOperand': right_sub_string,
-                        'operator': sub_string
-                    })
+            operator_sub_string = filtered_string[index]
+            if checkFormatOperator(operator_sub_string, format_condition):
+                #print(filtered_string)
+                left_sub_string_list = findOperands(filtered_string, index, 'left')
+                right_sub_string_list = findOperands(filtered_string, index, 'right')
+                for left_sub_string in left_sub_string_list:
+                    for right_sub_string in right_sub_string_list:
+                        #print(left_sub_string, sub_string, right_sub_string)
+                        if checkFormatOperandCommon(left_sub_string, right_sub_string, format_condition):
+                            found_format_condition.append({
+                                'jobName': row['jobName'],
+                                'box_name': row['box_name'],
+                                'firstOperand': left_sub_string,
+                                'secondOperand': right_sub_string,
+                                'operator': operator_sub_string,
+                                'condition': condition,
+                            })
     #print(json.dumps(found_format_condition, indent=4))
     df_found_format_condition = pd.DataFrame(found_format_condition)
     return df_found_format_condition
+
+def checkSimilarOperand(first_operand, second_operand, format_condition):
+    for condition_data in format_condition:
+        sub_operand = condition_data['subOperand']
+        first_operand_index = findComplexConditionIndex(first_operand, sub_operand)
+        second_operand_index = findComplexConditionIndex(second_operand, sub_operand)
+        if first_operand_index != None and second_operand_index != None and first_operand_index != second_operand_index:
+            first_operand_sub_str = sub_operand[first_operand_index]
+            second_operand_sub_str = sub_operand[second_operand_index]
+            break
+    first_truncation_sub_str = first_operand.replace(first_operand_sub_str, '')
+    second_truncation_sub_str = second_operand.replace(second_operand_sub_str, '')
+    if first_truncation_sub_str == second_truncation_sub_str:
+        return True
+    return False
+
+############################################################################################################
+
+def compareSimilarOperands(df):
+    similar_condition = []
+    unsimilar_condition = []
+    for index, row in df.iterrows():
+        first_operand = row['firstOperand']
+        second_operand = row['secondOperand']
+        if checkSimilarOperand(first_operand, second_operand, format_condition):
+            similar_condition.append(row)
+        else:
+            unsimilar_condition.append(row)
+    df_similar_condition = pd.DataFrame(similar_condition)
+    df_unsimilar_condition = pd.DataFrame(unsimilar_condition)
+    return df_similar_condition, df_unsimilar_condition
 
 def getSpecificColumn(df, column_name):
     column_list = []
@@ -157,13 +184,22 @@ def getSpecificColumn(df, column_name):
         column_list.append(row[column_name])
     return column_list
 
+def getUniqueFormatCondition(df):
+    df['sortedOperands'] = df.apply(lambda row: tuple(sorted([row['firstOperand'], row['secondOperand']])), axis=1)
+    df_unique = df.drop_duplicates(subset=['jobName', 'sortedOperands'])
+    df_unique.drop(columns=['sortedOperands'])
+    
+    return df_unique
+    
 
 def main():
     df_jil = getDataExcel()
     df_in_list_condition = getDataExcel("Enter the path of the excel file with the conditions to be checked")
     in_list_condition = getSpecificColumn(df_in_list_condition, 'Taskname')
     df_format_condition = compareCondition(df_jil, format_condition, in_list_condition)
-    createExcel("DAILY_OR_MONTHLY_condition.xlsx", (df_format_condition, 'DAILY_OR_MONTHLY'))
+    df_unique_format_condition = getUniqueFormatCondition(df_format_condition)
+    df_similar_condition, df_unsimilar_condition = compareSimilarOperands(df_unique_format_condition)
+    createExcel("DAILY_OR_MONTHLY_condition.xlsx", (df_similar_condition, 'Similar Pair'), (df_unsimilar_condition, 'Unsimilar Pair'))
     
 if __name__ == '__main__':
     main()
