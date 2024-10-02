@@ -7,7 +7,7 @@ import pandas as pd
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.stbAPI import getListTriggerAdvancedAPI, getTaskAPI, updateURI, updateAuth, getListQualifyingTriggerAPI, getListTaskAPI, viewParentTaskAPI
-from Stonebranch.utils.readFile import loadJson
+from utils.readFile import loadJson
 from utils.createExcel import createExcel
 from datetime import datetime, timedelta
 from dateutil import parser

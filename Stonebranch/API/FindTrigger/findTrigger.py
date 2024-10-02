@@ -4,7 +4,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.stbAPI import getListTriggerAPI, getListTriggerAdvancedAPI, updateURI, updateAuth
-from Stonebranch.utils.readFile import loadJson
+from utils.readFile import loadJson
 from utils.readExcel import getDataExcel
 import json
 

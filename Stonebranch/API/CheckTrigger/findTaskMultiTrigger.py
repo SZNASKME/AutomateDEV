@@ -5,7 +5,7 @@ import json
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.stbAPI import updateAuth, updateURI, getListTriggerAdvancedAPI
-from Stonebranch.utils.readFile import loadJson
+from utils.readFile import loadJson
 
 API_TRIGGER_TYPE = [1,2,3,4,5,6,8,9,10,11,12]
 

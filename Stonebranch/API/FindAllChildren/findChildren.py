@@ -7,7 +7,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.stbAPI import updateAuth, updateURI, getTaskAPI
-from Stonebranch.utils.readFile import loadJson
+from utils.readFile import loadJson
 
 from collections import OrderedDict
 

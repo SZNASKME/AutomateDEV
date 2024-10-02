@@ -7,7 +7,7 @@ import pandas as pd
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.createExcel import createExcel
-from Stonebranch.utils.readFile import loadJson
+from utils.readFile import loadJson
 
 JSON_PATH = './Stonebranch/API/FindTaskMonitor/UAT_result_restructure.json'
 

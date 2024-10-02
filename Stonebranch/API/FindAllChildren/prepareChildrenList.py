@@ -5,7 +5,7 @@ import json
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from Stonebranch.utils.readFile import loadJson
+from utils.readFile import loadJson
 from utils.createExcel import createExcel
 
 JSON_FILE = "DWH_ONICE_ONHOLD_B_children.json"

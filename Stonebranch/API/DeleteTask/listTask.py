@@ -9,7 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from utils.createExcel import createExcel
 from utils.readExcel import getDataExcel
 from utils.stbAPI import getListTaskAPI, getListTriggerAPI, getListTaskAdvancedAPI, getListTriggerAdvancedAPI, updateAuth, updateURI
-from Stonebranch.utils.readFile import loadJson
+from utils.readFile import loadJson
 from delProcess import deleteProcess
 
 

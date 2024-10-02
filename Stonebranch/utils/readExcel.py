@@ -1,6 +1,6 @@
 import pandas as pd
 
-from Stonebranch.utils.readFile import loadJson
+from utils.readFile import loadJson
 from shareplum import Site
 from shareplum import Office365
 from io import BytesIO
