@@ -8,8 +8,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.stbAPI import getListTriggerAdvancedAPI, getTaskAPI, updateURI, updateAuth, getListQualifyingTriggerAPI, getListTaskAPI, viewParentTaskAPI
 from utils.readFile import loadJson
-from utils.createExcel import createExcel
 from utils.createFile import createJson
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from dateutil import parser
 
@@ -47,7 +47,7 @@ trigger_qulifying_time_temp = {
 SUFFIX = '-TM'
 DATETIME_FORMAT = '%d/%m/%y-%H:%M:%S'
 DAY_PERIOD = 7
-
+MAX_WORKERS = 8
 #test_trigger_list = [
 #    "DWH_HL_BUNDLE_CC_DAILY_B-TR001",
 #    "DWH_DAILY_B-TR001",
@@ -99,45 +99,30 @@ def transformTime(time_string:str) -> str:
 
 ######################################################################################################################
 
-def checkTimeDifference(task_qualifying_time, trigger_qualifying_time):
+def checkTimeDifferenceProblem(task_qualifying_time, trigger_qualifying_time, day_period = DAY_PERIOD):
     
     task_qualifying_datetime = [datetime.strptime(date_str, DATETIME_FORMAT) for date_str in task_qualifying_time]
     trigger_qualifying_datetime = [datetime.strptime(date_str, DATETIME_FORMAT) for date_str in trigger_qualifying_time]
-    #print("Time",len(task_qualifying_datetime), len(trigger_qualifying_datetime))
-    period = timedelta(days = DAY_PERIOD)
-    task_index = 0
-    trigger_index = 0
-    task_datetime = None
-    trigger_datetime = None
-    condition = True
-    while condition:
-        
-        if task_index == 0 and trigger_index == 0:
-            task_datetime = task_qualifying_datetime[task_index]
-            trigger_datetime = trigger_qualifying_datetime[trigger_index]
-        #print("Task",task_datetime, " Trigger",trigger_datetime, task_index, trigger_index)
-        #print(abs(task_datetime - trigger_datetime))
-        if abs(task_datetime - trigger_datetime) > period and task_datetime < trigger_datetime:
-            #previous_task_datetime = task_qualifying_datetime[task_index - 1]
-            #previous_trigger_datetime = trigger_qualifying_datetime[trigger_index - 1]
-            #print(f"{task_datetime} - {trigger_datetime}")
-            #if abs(previous_trigger_datetime - trigger_datetime) < period:
-                #print(f">>>{task_datetime} - {trigger_datetime} | {previous_trigger_datetime - trigger_datetime}")
-            return True
-        
-        # slide the window
-        if task_datetime <= trigger_datetime:
-            task_index += 1
-            if task_index < len(task_qualifying_datetime):
-                task_datetime = task_qualifying_datetime[task_index]
-            else:
-                condition = False
-        elif task_datetime > trigger_datetime:
-            trigger_index += 1
-            if trigger_index < len(trigger_qualifying_datetime):
-                trigger_datetime = trigger_qualifying_datetime[trigger_index]
-            else:
-                condition = False
+    exist_period = timedelta(days = day_period)
+    
+    if not task_qualifying_datetime or not trigger_qualifying_datetime:
+        return False
+    
+    last_task_time = max(task_qualifying_datetime)
+    for trigger_time in trigger_qualifying_datetime:
+        if trigger_time <= last_task_time:
+            exist_task_time = trigger_time - exist_period
+            exist_task_run = False
+            for task_time in task_qualifying_datetime:
+                if task_time >= exist_task_time and task_time <= trigger_time:
+                    exist_task_run = True
+                    break
+                if task_time > trigger_time:
+                    break
+            if not exist_task_run:
+                return True
+        else:
+            break
                 
     return False
     
@@ -230,7 +215,7 @@ def compareQualifyingTime(trigger_qualifying_time_list, task_qualifying_time_dic
             for task_monitor, task_qualifying_time in task_dict.items():
                 if len(task_qualifying_time) == 0:
                     continue
-                elif checkTimeDifference(task_qualifying_time, trigger_qualifying_time_list):
+                elif checkTimeDifferenceProblem(task_qualifying_time, trigger_qualifying_time_list, DAY_PERIOD):
                     result_list.append(task_monitor)
             if len(result_list) > 0:
                 result_workflow_dict[workflow_name] = result_list
@@ -242,22 +227,34 @@ def compareQualifyingTime(trigger_qualifying_time_list, task_qualifying_time_dic
 def checkTimeTrigger(trigger_list, workflow_list = []):
     result_task_monitor_dict = {}
     result_task_monitor_out_of_trigger_list_dict = {}
-    for trigger in trigger_list:
+    
+    def processMultiTrigger(trigger):
+        print(f"Processing trigger {trigger['name']} | type: {trigger['type']}")
         if trigger['type'] != 'triggerTime':
-            continue
-        #if trigger['name'] in test_trigger_list:
-        #trigger_qualifying_time_dict[trigger['name']] = getQualifyingTimeTrigger(trigger['name'])
+            return None, None
+
         trigger_qualifying_time_list = getQualifyingTimeTrigger(trigger['name'])
         result_task_monitor_dict[trigger['name']] = {}
         workflow_qualifying_time_dict = {}
         workflow_out_of_trigger_dict = {}
+        
         task_list = trigger['tasks']
         for task_name in task_list:
             task_monitor_dict = recursiveSearchTaskMonitorInWorkflow(task_name, {}, '', workflow_list)
             workflow_qualifying_time_dict[task_name], workflow_out_of_trigger_dict[task_name] = getQualifyingTimeTaskMonitor(task_monitor_dict, trigger_list)
 
-        result_task_monitor_dict[trigger['name']] = compareQualifyingTime(trigger_qualifying_time_list, workflow_qualifying_time_dict)
-        result_task_monitor_out_of_trigger_list_dict[trigger['name']] = workflow_out_of_trigger_dict
+        result = compareQualifyingTime(trigger_qualifying_time_list, workflow_qualifying_time_dict)
+        return result, workflow_out_of_trigger_dict
+        
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        results = list(executor.map(processMultiTrigger, trigger_list))
+        
+    for trigger, (result, workflow_out_of_trigger_dict) in zip(trigger_list, results):
+        if result:
+            result_task_monitor_dict[trigger['name']] = result
+        if workflow_out_of_trigger_dict:       
+            result_task_monitor_out_of_trigger_list_dict[trigger['name']] = workflow_out_of_trigger_dict
+
     return result_task_monitor_dict, result_task_monitor_out_of_trigger_list_dict
 
 ######################################################################################################################
@@ -276,7 +273,7 @@ def main():
     #print(json.dumps(response_trigger, indent=4))
     #print(json.dumps(workflow_name_list, indent=4))
     result, result_out_of_trigger = checkTimeTrigger(response_trigger, workflow_name_list)
-    createJson('UAT_result_restructure.json', result)
+    createJson('UAT_result.json', result)
     createJson('UAT_result_out_of_trigger.json', result_out_of_trigger)
     
 if __name__ == '__main__':
