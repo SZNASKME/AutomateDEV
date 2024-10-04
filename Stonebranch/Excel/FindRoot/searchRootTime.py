@@ -33,7 +33,7 @@ def recursiveSearchStartBox(df, task_name):
     else:
         return pd.DataFrame()
         
-def reverseSearchStart(df):
+def searchRootTime(df):
     job_insert_start_list = []
     number_of_rows = len(df)
     count = 0
@@ -43,7 +43,7 @@ def reverseSearchStart(df):
         if start_rows.empty:
             job_insert_start_list.append({
                 'jobName': row['jobName'],
-                'startBox': '',
+                'rootBox': '',
             })
         else:
             for index, start_row in start_rows.iterrows():
@@ -51,22 +51,22 @@ def reverseSearchStart(df):
                 if start_row['jobName'] == row['jobName']:
                     job_insert_start_list.append({
                         'jobName': row['jobName'],
-                        'startBox': 'Self Start',
-                        'startBoxType': replaceNan(row['jobType']),
-                        'startBoxStartTime': replaceNan(row['start_times']),
-                        'startBoxCondition': replaceNan(row['condition']),
-                        'startBoxRunCalender': replaceNan(row['run_calendar']),
-                        'startBoxExcludeCalender': replaceNan(row['exclude_calendar']),
+                        'rootBox': 'Self Start',
+                        'rootBoxType': replaceNan(row['jobType']),
+                        'rootBoxStartTime': replaceNan(row['start_times']),
+                        'rootBoxCondition': replaceNan(row['condition']),
+                        'rootBoxRunCalender': replaceNan(row['run_calendar']),
+                        'rootBoxExcludeCalender': replaceNan(row['exclude_calendar']),
                     })
                 else:
                     job_insert_start_list.append({
                         'jobName': row['jobName'],
-                        'startBox': start_row['jobName'],
-                        'startBoxType': replaceNan(start_row['jobType']),
-                        'startBoxStartTime': replaceNan(start_row['start_times']),
-                        'startBoxCondition': replaceNan(start_row['condition']),
-                        'startBoxRunCalender': replaceNan(start_row['run_calendar']),
-                        'startBoxExcludeCalender': replaceNan(start_row['exclude_calendar']),
+                        'rootBox': start_row['jobName'],
+                        'rootBoxType': replaceNan(start_row['jobType']),
+                        'rootBoxStartTime': replaceNan(start_row['start_times']),
+                        'rootBoxCondition': replaceNan(start_row['condition']),
+                        'rootBoxRunCalender': replaceNan(start_row['run_calendar']),
+                        'rootBoxExcludeCalender': replaceNan(start_row['exclude_calendar']),
                     })
         count += 1
         print(f'{count}/{number_of_rows} done | {row["jobName"]}')
@@ -126,7 +126,7 @@ def main():
     
     df_selected = getDataExcel()
     
-    insert_start_list = reverseSearchStart(df_selected)
+    insert_start_list = searchRootTime(df_selected)
     createJson('job_insert_start.json', insert_start_list)
     df_insert_start = pd.DataFrame(insert_start_list)
     createExcel('job_insert_start.xlsx', (df_insert_start, 'job Insert Start'))

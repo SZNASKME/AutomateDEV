@@ -9,20 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from utils.readExcel import getDataExcel
 from utils.createExcel import createExcel
 
-def getInnermostSubstring(string, start_char, end_char):
-    # Create a regex pattern that finds the innermost substring within nested parentheses
-    # The pattern looks for the deepest nested parenthesis first
-    pattern = re.escape(start_char) + r'([^' + re.escape(start_char) + re.escape(end_char) + r']*)' + re.escape(end_char)
-    
-    while True:
-        # Check if there is a match
-        match = re.search(pattern, string)
-        if not match:
-            break
-        # Replace the innermost match with a placeholder or remove it from string
-        string = match.group(1)
-    
-    return string
+# Check condition job that Depen ONICE ONHOLD
 
 def getAllInnermostSubstrings(string, start_char, end_char):
     pattern = re.escape(start_char) + r'([^' + re.escape(start_char) + re.escape(end_char) + r']+)' + re.escape(end_char)

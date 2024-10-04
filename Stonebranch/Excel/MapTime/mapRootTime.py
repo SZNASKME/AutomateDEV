@@ -19,7 +19,7 @@ def findSpecificRowSpecificColumn(df_time, column_name, row_value , column_name_
         return None
     return row_data[column_name_get_value].values[0]
 
-def mapStartTime(df, df_time):
+def mapRootTime(df, df_time):
     dfc = df.copy()
     for index, row in dfc.iterrows():
         task_name = row['Task Monitor']
@@ -52,9 +52,9 @@ def main():
     df = getDataExcel("Enter PATH of the Task Monitor file and sheetname [pathfile/sheetname]: ")
     df_time = getDataExcel("Enter PATH of the Time file and sheetname [pathfile/sheetname]: ")
 
-    df_mapped = mapStartTime(df, df_time)
+    df_mapped = mapRootTime(df, df_time)
     
-    createExcel("MappedStartTime.xlsx", (df_mapped, 'MappedStartTime'))
+    createExcel("MappedRootTime.xlsx", (df_mapped, 'MappedRootTime'))
     
     
 if __name__ == "__main__":

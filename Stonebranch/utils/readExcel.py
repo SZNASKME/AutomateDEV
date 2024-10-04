@@ -56,6 +56,36 @@ def selectSheet(dfs, sheetname):
     else:
         return dfs[sheetname]
 
+def getExcelProcess(pathfile, sheetname=None):
+    print('Reading excel file...')
+    excel_file = pd.ExcelFile(pathfile)
+    if excel_file is None:
+        print('Error reading excel file')
+        return None
+    sheet_names = excel_file.sheet_names
+    if len(sheet_names) == 1:
+        dfs_sheet = pd.read_excel(pathfile, sheet_name=sheet_names[0], engine='openpyxl')
+    else:
+        dfs = readExcelMultipleSheet(pathfile, sheetname)
+        if dfs is None:
+            print('Error reading excel file')
+            return None
+        
+        if isinstance(dfs, dict) and sheetname is not None:
+            print('selecting sheet . . .')
+            dfs_sheet = selectSheet(dfs, sheetname)
+        elif isinstance(dfs, dict) and sheetname is None:
+            print('Multiple sheets found in the excel file')
+            for i, sheet_name in enumerate(sheet_names):
+                print(f"{i+1}. {sheet_name}")
+            sheet_name = inputSheetName()
+            dfs_sheet = selectSheet(dfs, sheet_name)
+        else:
+            dfs_sheet = dfs
+    
+    print('Excel data read successfully')
+    return dfs_sheet
+
 
 def getDataExcel(prompt="Enter PATH of the file and sheetname [pathfile/sheetname]: "):
     excel_configs = inputMethod(prompt)
@@ -63,28 +93,8 @@ def getDataExcel(prompt="Enter PATH of the file and sheetname [pathfile/sheetnam
         print('Error getting excel configs')
         return None
     
-    print('Reading excel file...')
-    excel_file = pd.ExcelFile(excel_configs['path'])
-    if excel_file is None:
-        print('Error reading excel file')
-        return None
-    sheet_names = excel_file.sheet_names
-    if len(sheet_names) == 1:
-        dfs_sheet = pd.read_excel(excel_configs['path'], sheet_name=sheet_names[0], engine='openpyxl')
-    else:
-        dfs = readExcelMultipleSheet(excel_configs['path'], excel_configs['sheetname'])
-        if dfs is None:
-            print('Error reading excel file')
-            return None
-        
-        if isinstance(dfs, dict) and excel_configs['sheetname'] is not None:
-            print('selecting sheet . . .')
-            dfs_sheet = selectSheet(dfs, excel_configs['sheetname'])
-        else:
-            sheet_name = inputSheetName()
-            dfs_sheet = selectSheet(dfs, sheet_name)
+    dfs_sheet = getExcelProcess(excel_configs['path'], excel_configs['sheetname'])
     
-    print('Excel data read successfully')
     return dfs_sheet
 
 

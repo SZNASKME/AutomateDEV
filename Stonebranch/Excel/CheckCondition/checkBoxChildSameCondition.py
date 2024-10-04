@@ -10,7 +10,7 @@ from utils.readFile import loadJson
 
 
 
-
+# Check if the box job has the same condition as the child job
 
 def compareCondition(df_jil):
     error_list = []

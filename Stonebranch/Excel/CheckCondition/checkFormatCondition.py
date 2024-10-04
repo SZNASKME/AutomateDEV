@@ -10,7 +10,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from utils.readExcel import getDataExcel
 from utils.createExcel import createExcel
 
-
+# Daily and Monthly format condition
 format_condition = [
     {
         "operator": "|",
@@ -47,7 +47,6 @@ format_condition = [
 ]
 
 operand_pattern = r"[a-z]\([A-Za-z0-9_\.]+\)"  # Matches operands like s(...)
-operator_pattern = r"[&|()]+"              # Matches operators like &, |
 
 left_operator_format = ['(']
 right_operator_format = [')']
