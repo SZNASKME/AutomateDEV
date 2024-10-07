@@ -7,11 +7,9 @@ import json
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from utils.readExcel import getDataExcel, getExcelProcess
+from utils.readExcel import getDataExcel
 from utils.createExcel import createExcel
-
-
-DAY_PERIOD = 7
+from utils.createFile import createJson
 
 
 def getAllInnermostSubstrings(string, start_char, end_char):
@@ -98,9 +96,9 @@ def searchRootTimeBreakThrought(df, df_time):
     for index, row in df.iterrows():
         job_root_time_list = breakThroughtRootTimeProcess(row, df_time)
         job_root_time_breakthorught_list.extend(job_root_time_list)
-        print(len(job_root_time_list), len(job_root_time_breakthorught_list))
+        #print(len(job_root_time_list), len(job_root_time_breakthorught_list))
         count += 1
-        print(f'{count}/{number_of_rows} done | {row["jobName"]}')
+        print(f'{count}/{number_of_rows} done | {row["jobName"]} {len(job_root_time_list)}')
     
     return job_root_time_breakthorught_list
 
@@ -113,7 +111,8 @@ def main():
     result_list = searchRootTimeBreakThrought(df_selected, df_time)
     df_result = pd.DataFrame(result_list)
     df_result = df_result.drop_duplicates()
-    createExcel("RootTimeBreakThrought.xlsx", (df_result, 'RootTimeBreakThrought'))
+    createJson("RootTimeBT.json", result_list)
+    createExcel("RootTimeBreakThrought.xlsx", (df_result, 'RootTime'))
     
     
     
