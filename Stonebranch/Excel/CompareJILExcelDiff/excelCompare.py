@@ -18,18 +18,18 @@ def compareData(dfm, dfc, compare_column = None):
     new = dfm[~dfm[compare_column].isin(dfc[compare_column])]
     delete = dfc[~dfc[compare_column].isin(dfm[compare_column])]
     
-    merge_data = pd.merge(dfm, dfc, on=compare_column, suffixes=('_main', '_compare'))
+    merge_data = pd.merge(dfm, dfc, on=compare_column, suffixes=('_new', '_old'))
     merge_data = merge_data.fillna('')
     update_list = []
         
     for _, row in merge_data.iterrows():
         for col in main_columns_compare:
-            if row[col+'_main'] != row[col+'_compare']:
+            if row[col+'_new'] != row[col+'_old']:
                 update_list.append(pd.DataFrame({
                     'jobName': [row[compare_column]],
                     'fieldname': [col],
-                    'old_value': [row[col+'_compare']],
-                    'new_value': [row[col+'_main']]
+                    'old_value': [row[col+'_old']],
+                    'new_value': [row[col+'_new']]
                 }))
     if update_list:
         update = pd.concat(update_list, ignore_index=True)
@@ -37,9 +37,9 @@ def compareData(dfm, dfc, compare_column = None):
         update = pd.DataFrame(columns=['jobName', 'fieldname', 'old_value', 'new_value'])
         
     difference_data = {
-        'main_new_from_compare': new,
-        'compare_delete_from_main': delete,
-        'main_update_from_compare': update
+        'new': new,
+        'delete': delete,
+        'update': update
     }
     return difference_data
 
@@ -51,9 +51,9 @@ def main():
     print("comparing data . . .")
     diff_data = compareData(dfnew_sheet, dfold_sheet, compare_column = COMPARE_COLUMN)
     
-    new = (diff_data['main_new_from_compare'], 'New')
-    delete = (diff_data['compare_delete_from_main'], 'Deleted')
-    update = (diff_data['main_update_from_compare'], 'Updated')
+    new = (diff_data['new'], 'New')
+    delete = (diff_data['delete'], 'Deleted')
+    update = (diff_data['update'], 'Updated')
     
     createExcel(OUTPUT_FILE, new, delete, update)
     

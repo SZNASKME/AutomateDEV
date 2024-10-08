@@ -64,15 +64,15 @@ def breakThroughtRootTimeProcess(row, df_dict, df_time_dict):
     break_throught_job_root_time_list = []
     cache = []
     break_throught_job_name_list = recursiveSearchRootTimeName(df_time_dict, df_dict, job_name, cache)
-    #print(break_throught_job_name_dict)
     if break_throught_job_name_list:
         for value in break_throught_job_name_list:
             break_throught_job_root_time = mapRootTime(df_time_dict, value)
+            break_throught_job_root_time['jobName'] = job_name
             if break_throught_job_root_time not in break_throught_job_root_time_list:
                 break_throught_job_root_time_list.append(break_throught_job_root_time)
     else:
         break_throught_job_root_time_list.append(job_root_time)
-    
+        
     return break_throught_job_root_time_list
 
 
@@ -85,8 +85,6 @@ def searchRootTimeBreakThrought(df, df_time):
     
     for row in df.itertuples(index=False):
         job_root_time_list = breakThroughtRootTimeProcess(row, df_dict, df_time_dict)
-        if len(job_root_time_list) > 1:
-            print(job_root_time_list)
         job_root_time_breakthorught_list.extend(job_root_time_list)
         
         count += 1
