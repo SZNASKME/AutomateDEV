@@ -15,6 +15,9 @@ def compareData(dfm, dfc, compare_column = None):
     main_columns = dfm.columns.tolist()
     main_columns_compare = [col for col in main_columns if col not in compare_column]
     
+    dfm = dfm.map(lambda x: x.strip() if isinstance(x, str) else x)
+    dfc = dfc.map(lambda x: x.strip() if isinstance(x, str) else x)
+    
     new = dfm[~dfm[compare_column].isin(dfc[compare_column])]
     delete = dfc[~dfc[compare_column].isin(dfm[compare_column])]
     

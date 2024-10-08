@@ -78,9 +78,9 @@ def main():
     df_selected = getDataExcel()
     
     insert_start_list = searchRootTime(df_selected)
-    createJson('job_start_root_time.json', insert_start_list)
+    createJson('RootTime.json', insert_start_list)
     df_insert_start = pd.DataFrame(insert_start_list)
-    createExcel('job_start_root_time.xlsx', (df_insert_start, 'Start Root Time'))
+    createExcel('RootTime.xlsx', (df_insert_start, 'Start Root Time'))
     
     
 if __name__ == "__main__":
