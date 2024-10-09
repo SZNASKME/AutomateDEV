@@ -12,8 +12,18 @@ from utils.stbAPI import updateAuth, updateURI
 
 
 def choiceTemplate():
-    print("1. Check Parent")
+    choice_message = [
+        "Check Parent",
+        "Check Children All Level",
+        "Check Children One Level"
+    ]
     
+    for index, message in enumerate(choice_message):
+        print(f"{index+1}. {message}")
+    
+    
+    choice = input("Enter your choice: ")
+    return choice
 
 
 
@@ -26,12 +36,7 @@ def main():
     domain = "https://ttbdevstb.stonebranch.cloud/resources"
     #domain = 'http://172.16.1.86:8080/uc/resources'
     updateURI(domain)
-    
-    df = getDataExcel()
-    
-    
-    
-    
+    choice = choiceTemplate()
     
 if __name__ == '__main__':
     main()
