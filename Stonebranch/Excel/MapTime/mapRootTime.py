@@ -45,8 +45,6 @@ def mapRootTime(df, df_time):
     return dfc
 
 
-
-
 def main():
         
     df = getDataExcel("Enter PATH of the Task Monitor file and sheetname [pathfile/sheetname]: ")
