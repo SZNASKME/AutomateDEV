@@ -7,7 +7,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.stbAPI import getListTaskAdvancedAPI, updateURI, updateAuth
 from utils.readFile import loadJson
-from utils.createExcel import createExcel
+from utils.createFile import createExcel
 
 OUTPUT_FILE = 'Excel_API.xlsx'
 

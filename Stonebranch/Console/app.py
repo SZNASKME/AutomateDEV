@@ -4,8 +4,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.readExcel import getDataExcel
-from utils.createExcel import createExcel
-from utils.createFile import createJson
+from utils.createFile import createJson, createExcel
 from utils.readFile import loadJson
 from utils.stbAPI import updateAuth, updateURI
 

@@ -8,8 +8,7 @@ import json
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.readExcel import getDataExcel
-from utils.createExcel import createExcel
-from utils.createFile import createJson
+from utils.createFile import createJson, createExcel
 
 
 def getAllInnermostSubstrings(string, start_char, end_char):

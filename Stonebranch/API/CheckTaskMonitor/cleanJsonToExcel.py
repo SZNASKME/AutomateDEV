@@ -6,7 +6,7 @@ import pandas as pd
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from utils.createExcel import createExcel
+from utils.createFile import createExcel
 from utils.readFile import loadJson
 
 JSON_PATH = './Stonebranch/API/CheckTaskMonitor/UAT_result.json'

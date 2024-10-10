@@ -10,7 +10,7 @@ from utils.stbAPI import updateURI, updateAuth, updateTaskAPI, getTaskAPI
 from utils.readFile import loadJson
 from utils.createFile import createJson
 from utils.readExcel import getDataExcel
-from utils.createExcel import createExcel
+from utils.createFile import createExcel
 
 
 ENABLE_UPDATE = False

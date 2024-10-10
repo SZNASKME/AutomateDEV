@@ -6,8 +6,7 @@ import pandas as pd
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.readFile import loadJson
-from utils.createExcel import createExcel
-from utils.createFile import createJson
+from utils.createFile import createJson, createExcel
 from utils.stbAPI import updateURI, updateAuth, getTaskAPI, viewParentTaskAPI
 
 TASK_NAME = "startDummy"

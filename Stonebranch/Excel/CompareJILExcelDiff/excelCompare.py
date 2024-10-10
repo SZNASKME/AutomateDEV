@@ -5,7 +5,7 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.readExcel import getDataExcel
-from utils.createExcel import createExcel
+from utils.createFile import createExcel
 
 OUTPUT_FILE = 'Difference.xlsx'
 COMPARE_COLUMN = 'jobName'

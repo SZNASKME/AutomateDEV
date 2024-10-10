@@ -1,11 +1,5 @@
 import pandas as pd
 
-from utils.readFile import loadJson
-from shareplum import Site
-from shareplum import Office365
-from io import BytesIO
-
-
 SHEET_NAME = "Sheet"
 
 def inputMethod(prompt, method='excel'):

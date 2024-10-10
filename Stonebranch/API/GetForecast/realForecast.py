@@ -9,9 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.stbAPI import updateURI, updateAuth, runReportAPI
 from utils.readFile import loadJson
-from utils.createFile import createJson, createXml
-from utils.createExcel import createExcel
-from io import StringIO
+from utils.createFile import prepareOutputFile
 
 
 
@@ -56,19 +54,7 @@ def getChoice(input_choice):
         return None
 
 
-def prepareOutputFile(data_response, filename, format_str):
-    if format_str == "csv":
-        data = pd.read_csv(StringIO(data_response.text))
-        createExcel(f"{filename}.xlsx", (data, "Forecast Report"))
-    elif format_str == "json":
-        data = data_response.json()
-        createJson(f"{filename}.json", data)
-    elif format_str == "xml":
-        data = data_response.text
-        createXml(f"{filename}.xml", data)
-            
-            
-            
+
             
 def main():
     auth = loadJson('auth.json')

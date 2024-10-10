@@ -8,9 +8,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.stbAPI import getListTriggerAdvancedAPI, getTaskAPI, updateURI, updateAuth, getListQualifyingTriggerAPI, getListTaskAPI, viewParentTaskAPI
 from utils.readFile import loadJson
-from utils.createExcel import createExcel
-from datetime import datetime, timedelta
-from dateutil import parser
+from utils.createFile import createJson
 
 API_TRIGGER_TYPE = [1,2,3,4,5,6,8,9,10,11,12]
 
@@ -123,10 +121,6 @@ def findTaskMonitors(trigger_list, workflow_list = []):
 
 ######################################################################################################################
 
-def createJsonFile(outputfile, data):
-    with open(outputfile, 'w') as file:
-        json.dump(data, file, indent=4)
-
 
 ######################################################################################################################
 
@@ -142,7 +136,7 @@ def main():
     response_workflow = getListWorkflow()
     workflow_name_list = getListSpecificField(response_workflow,'name')
     result = findTaskMonitors(response_trigger, workflow_name_list)
-    createJsonFile('UAT_result_restructure.json', result)
+    createJson('UAT_result_restructure.json', result)
     
 if __name__ == '__main__':
     main()
