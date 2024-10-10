@@ -5,7 +5,8 @@
 *.xlsb
 *.txt
 *.json
-
+*.xml
+*.csv
 
 /.pytest_cache
 /.pytest_cache/

@@ -25,6 +25,8 @@ VARIABLE_URI = f"{DOMAIN}/variable"
 
 LIST_PARENT_TASK_URI = f"{DOMAIN}/task/parent/list"
 
+RUN_REPORT_URI = f"{DOMAIN}/report/run"
+
 auth = HTTPBasicAuth('?','?')
 
 def createURI(uri, configs):
@@ -37,7 +39,9 @@ def createURI(uri, configs):
     return uri
 
 def updateURI(changed_domain):
-    global TASK_URI, LIST_TASK_URI, LIST_TASK_ADV_URI, TRIGGER_URI, LIST_TRIGGER_URI, LIST_TRIGGER_ADV_URI, LIST_QUALIFYING_TRIGGER_URI, PROMOTE_BUNDLE_URI, TASK_IN_WORKFLOW_URI, DEPEN_IN_WORKFLOW_URI, VARIABLE_URI, LIST_PARENT_TASK_URI
+    global TASK_URI, LIST_TASK_URI, LIST_TASK_ADV_URI, TRIGGER_URI, LIST_TRIGGER_URI
+    global LIST_TRIGGER_ADV_URI, LIST_QUALIFYING_TRIGGER_URI, PROMOTE_BUNDLE_URI, TASK_IN_WORKFLOW_URI
+    global DEPEN_IN_WORKFLOW_URI, VARIABLE_URI, LIST_PARENT_TASK_URI, RUN_REPORT_URI
     TASK_URI = f"{changed_domain}/task"
     LIST_TASK_URI = f"{changed_domain}/task/list"
     LIST_TASK_ADV_URI = f"{changed_domain}/task/listadv"
@@ -50,31 +54,45 @@ def updateURI(changed_domain):
     DEPEN_IN_WORKFLOW_URI = f"{changed_domain}/workflow/edges"
     VARIABLE_URI = f"{changed_domain}/variable"
     LIST_PARENT_TASK_URI = f"{changed_domain}/task/parent/list"
-    
+    RUN_REPORT_URI = f"{changed_domain}/report/run"
 
 def updateAuth(username, password):
     global auth
     auth = HTTPBasicAuth(username, password)
 
+def formatHeader(key, format_str):
+    if format_str == "json":
+        return {key: 'application/json'}
+    elif format_str == "xml":
+        return {key: 'application/xml'}
+    elif format_str == "text":
+        return {key: 'text/plain'}
+    elif format_str == "csv":
+        return {key: 'text/csv'}
+
+
 ###########################           Task           #####################################
 
-def getTaskAPI(task_configs, show_response = True):
+def getTaskAPI(task_configs, show_response = True, format_str ='json'):
     uri = createURI(TASK_URI, task_configs)
-    response = requests.get(url = uri, auth = auth, headers = {'Accept': 'application/json'})
+    header = formatHeader('Accept', format_str)
+    response = requests.get(url = uri, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
-def createTaskAPI(task_configs, show_response = True):
-    response = requests.post(url = TASK_URI, json = task_configs, auth = auth, headers = {'Content-Type': 'application/json'})
+def createTaskAPI(task_configs, show_response = True, format_str ='json'):
+    header = formatHeader('Content-Type', format_str)
+    response = requests.post(url = TASK_URI, json = task_configs, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
-def updateTaskAPI(task_configs, show_response = True):
-    response = requests.put(url = TASK_URI, json = task_configs, auth = auth, headers = {'Content-Type': 'application/json'})
+def updateTaskAPI(task_configs, show_response = True, format_str ='json'):
+    header = formatHeader('Content-Type', format_str)
+    response = requests.put(url = TASK_URI, json = task_configs, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
@@ -90,16 +108,18 @@ def deleteTaskAPI(task_configs, show_response = True):
 
 ###########################          List Task           #####################################
 
-def getListTaskAPI(task_configs, show_response = True):
-    response = requests.post(url=LIST_TASK_URI, json = task_configs, auth=auth, headers={'Accept': 'application/json'})
+def getListTaskAPI(task_configs, show_response = True, format_str ='json'):
+    header = formatHeader('Accept', format_str)
+    response = requests.post(url=LIST_TASK_URI, json = task_configs, auth=auth, headers=header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
-def getListTaskAdvancedAPI(task_adv_configs, show_response = True):
+def getListTaskAdvancedAPI(task_adv_configs, show_response = True, format_str ='json'):
     uri = createURI(LIST_TASK_ADV_URI, task_adv_configs)
-    response = requests.get(url = uri, auth = auth, headers={'Accept': 'application/json'})
+    header = formatHeader('Accept', format_str)
+    response = requests.get(url = uri, auth = auth, headers=header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
@@ -107,22 +127,25 @@ def getListTaskAdvancedAPI(task_adv_configs, show_response = True):
 
 #############################           Trigger           #######################################
 
-def getTriggerAPI(trigger_configs, show_response = True):
-    response = requests.get(url = TRIGGER_URI, json = trigger_configs, auth = auth, headers = {'Accept': 'application/json'})
+def getTriggerAPI(trigger_configs, show_response = True, format_str ='json'):
+    header = formatHeader('Accept', format_str)
+    response = requests.get(url = TRIGGER_URI, json = trigger_configs, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
-def createTriggerAPI(trigger_configs, show_response = True):
-    response = requests.post(url = TRIGGER_URI, json = trigger_configs, auth = auth, headers = {'Content-Type': 'application/json'})
+def createTriggerAPI(trigger_configs, show_response = True, format_str ='json'):
+    header = formatHeader('Content-Type', format_str)
+    response = requests.post(url = TRIGGER_URI, json = trigger_configs, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
     
-def updateTriggerAPI(trigger_configs, show_response = True):
-    response = requests.put(url = TRIGGER_URI, json = trigger_configs, auth = auth, headers = {'Content-Type': 'application/json'})
+def updateTriggerAPI(trigger_configs, show_response = True, format_str ='json'):
+    header = formatHeader('Content-Type', format_str)
+    response = requests.put(url = TRIGGER_URI, json = trigger_configs, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
@@ -136,9 +159,10 @@ def deleteTriggerAPI(trigger_configs, show_response = True):
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
-def getListQualifyingTriggerAPI(trigger_configs, show_response = True):
+def getListQualifyingTriggerAPI(trigger_configs, show_response = True, format_str ='json'):
     uri = createURI(LIST_QUALIFYING_TRIGGER_URI, trigger_configs)
-    response = requests.get(url = uri, auth = auth, headers = {'Accept': 'application/json'})
+    header = formatHeader('Accept', format_str)
+    response = requests.get(url = uri, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
@@ -146,16 +170,18 @@ def getListQualifyingTriggerAPI(trigger_configs, show_response = True):
 
 ###########################           List Trigger           #####################################
 
-def getListTriggerAPI(trigger_configs, show_response = True):
-    response = requests.post(url = LIST_TRIGGER_URI, json = trigger_configs, auth = auth, headers={'Accept': 'application/json'})
+def getListTriggerAPI(trigger_configs, show_response = True, format_str ='json'):
+    header = formatHeader('Content-Type', format_str)
+    response = requests.post(url = LIST_TRIGGER_URI, json = trigger_configs, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
-def getListTriggerAdvancedAPI(trigger_configs, show_response = True):
+def getListTriggerAdvancedAPI(trigger_configs, show_response = True, format_str ='json'):
     uri = createURI(LIST_TRIGGER_ADV_URI, trigger_configs)
-    response = requests.get(url = uri, auth = auth, headers={'Accept': 'application/json'})
+    header = formatHeader('Accept', format_str)
+    response = requests.get(url = uri, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
@@ -164,8 +190,9 @@ def getListTriggerAdvancedAPI(trigger_configs, show_response = True):
 ###########################           Bundle/Promote           #####################################
 
 
-def promoteBundleAPI(bundle_configs, show_response = True):
-    response = requests.post(url = PROMOTE_BUNDLE_URI, json = bundle_configs, auth = auth, headers = {'Content-Type': 'application/json'})
+def promoteBundleAPI(bundle_configs, show_response = True, format_str ='json'):
+    header = formatHeader('Content-Type', format_str)
+    response = requests.post(url = PROMOTE_BUNDLE_URI, json = bundle_configs, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
@@ -174,25 +201,28 @@ def promoteBundleAPI(bundle_configs, show_response = True):
 
 ###############################           Workflow           #########################################
 
-def createTaskInWorkflowAPI(task_configs, workflow_configs, show_response = True):
+def createTaskInWorkflowAPI(task_configs, workflow_configs, show_response = True, format_str ='json'):
     uri = createURI(TASK_IN_WORKFLOW_URI, workflow_configs)
-    response = requests.post(url = uri, json = task_configs, auth = auth, headers = {'Content-Type': 'application/json'})
+    header = formatHeader('Content-Type', format_str)
+    response = requests.post(url = uri, json = task_configs, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
-def updateTaskInWorkflowAPI(task_configs, workflow_configs, show_response = True):
+def updateTaskInWorkflowAPI(task_configs, workflow_configs, show_response = True, format_str ='json'):
     uri = createURI(TASK_IN_WORKFLOW_URI, workflow_configs)
-    response = requests.put(url = uri, json = task_configs, auth = auth, headers = {'Content-Type': 'application/json'})
+    header = formatHeader('Content-Type', format_str)
+    response = requests.put(url = uri, json = task_configs, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
-def deleteTaskInWorkflowAPI( workflow_configs, show_response = True):
+def deleteTaskInWorkflowAPI( workflow_configs, show_response = True, format_str ='json'):
     uri = createURI(TASK_IN_WORKFLOW_URI, workflow_configs)
-    response = requests.delete(url = uri, auth = auth, headers = {'Content-Type': 'application/json'})
+    header = formatHeader('Content-Type', format_str)
+    response = requests.delete(url = uri, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
@@ -200,9 +230,10 @@ def deleteTaskInWorkflowAPI( workflow_configs, show_response = True):
 
 
 
-def ListWorkflowForecastAPI(workflow_configs, show_response = True):
+def ListWorkflowForecastAPI(workflow_configs, show_response = True, format_str ='json'):
     uri = createURI(TASK_IN_WORKFLOW_URI, workflow_configs)
-    response = requests.get(url = uri, auth = auth, headers = {'Accept': 'application/json'})
+    header = formatHeader('Accept', format_str)
+    response = requests.get(url = uri, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
@@ -210,25 +241,28 @@ def ListWorkflowForecastAPI(workflow_configs, show_response = True):
 
 ###############################           Dependency           #########################################
 
-def getListDependencyInWorkflowAPI(workflow_configs, show_response = True):
+def getListDependencyInWorkflowAPI(workflow_configs, show_response = True, format_str ='json'):
     uri = createURI(DEPEN_IN_WORKFLOW_URI, workflow_configs)
-    response = requests.get(url = uri, auth = auth, headers = {'Accept': 'application/json'})
+    header = formatHeader('Accept', format_str)
+    response = requests.get(url = uri, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
-def createDependencyInWorkflowAPI(dependency_configs, workflow_configs, show_response = True):
+def createDependencyInWorkflowAPI(dependency_configs, workflow_configs, show_response = True, format_str ='json'):
     uri = createURI(DEPEN_IN_WORKFLOW_URI, workflow_configs)
-    response = requests.post(url = uri, json = dependency_configs, auth = auth, headers = {'Content-Type': 'application/json'})
+    header = formatHeader('Content-Type', format_str)
+    response = requests.post(url = uri, json = dependency_configs, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
     return response
 
-def updateDependencyInWorkflowAPI(dependency_configs, workflow_configs, show_response = True):
+def updateDependencyInWorkflowAPI(dependency_configs, workflow_configs, show_response = True, format_str ='json'):
     uri = createURI(DEPEN_IN_WORKFLOW_URI, workflow_configs)
-    response = requests.put(url = uri, json = dependency_configs, auth = auth, headers = {'Content-Type': 'application/json'})
+    header = formatHeader('Content-Type', format_str)
+    response = requests.put(url = uri, json = dependency_configs, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
@@ -236,9 +270,10 @@ def updateDependencyInWorkflowAPI(dependency_configs, workflow_configs, show_res
 
 ###############################           Parent           #########################################
 
-def viewParentTaskAPI(task_configs, show_response = True):
+def viewParentTaskAPI(task_configs, show_response = True, format_str ='json'):
     uri = createURI(LIST_PARENT_TASK_URI, task_configs)
-    response = requests.get(url = uri, auth = auth, headers = {'Accept': 'application/json'})
+    header = formatHeader('Accept', format_str)
+    response = requests.get(url = uri, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
@@ -246,8 +281,20 @@ def viewParentTaskAPI(task_configs, show_response = True):
 
 ###############################           Variable           #########################################
 
-def createVariableAPI(variable_configs, show_response = True):
-    response = requests.post(url = VARIABLE_URI, json = variable_configs, auth = auth, headers = {'Content-Type': 'application/json'})
+def createVariableAPI(variable_configs, show_response = True, format_str ='json'):
+    header = formatHeader('Content-Type', 'application/json')
+    response = requests.post(url = VARIABLE_URI, json = variable_configs, auth = auth, headers = header)
+    if show_response:
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
+    return response
+
+##############################             Report              ##########################################
+
+def runReportAPI(report_configs, show_response = True, format_str ='json'):
+    uri = createURI(RUN_REPORT_URI, report_configs)
+    header = formatHeader('Accept', format_str)
+    response = requests.get(url = uri, json = report_configs, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
