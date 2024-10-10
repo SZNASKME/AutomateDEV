@@ -123,13 +123,15 @@ def main():
         auth = loadJson('Auth.json')
         userpass = auth['ASKME_STB']
         updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
-        origin_domain = 'http://172.16.1.86:8080/uc/resources'
-        updateURI(origin_domain)
+        domain_url = loadJson('Domain.json')
+
+        domain = domain_url['1.86']
+        updateURI(domain)
         #print(API.LIST_TASK_URI)
         ori_task_type_dict = getTaskListByType(API_TASK_TYPE, ORIGINAL_BUSSINESS_SERVICES)
 
-        destination_domain = 'https://ttbdevstb.stonebranch.cloud/resources'
-        updateURI(destination_domain)
+        domain = domain_url['TTB_UAT']
+        updateURI(domain)
         Auth = loadJson('Auth.json')
         userpass = Auth['TTB']
         updateAuth(userpass['USERNAME'], userpass['PASSWORD'])

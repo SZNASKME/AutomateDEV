@@ -40,7 +40,9 @@ def main():
     auth = loadJson('auth.json')
     userpass = auth['ASKME_STB']
     updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
-    domain = 'http://172.16.1.86:8080/uc/resources'
+    domain_url = loadJson('Domain.json')
+    #domain = domain_url['TTB_UAT']
+    domain = domain_url['1.86']
     updateURI(domain)
     task_list = asyncio.run(listTask())
     print(json.dumps(task_list, indent=4))

@@ -132,8 +132,9 @@ def main():
     #userpass = auth['ASKME_STB']
     userpass = auth['TTB']
     updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
-    domain = "https://ttbdevstb.stonebranch.cloud/resources"
-    #domain = 'http://172.16.1.86:8080/uc/resources'
+    domain_url = loadJson('Domain.json')
+    domain = domain_url['TTB_UAT']
+    #domain = domain_url['1.86']
     updateURI(domain)
     
     print("Finding all children of a task in the workflow")

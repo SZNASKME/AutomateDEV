@@ -49,7 +49,9 @@ def main():
     auth = loadJson('auth.json')
     userpass = auth['ASKME_STB']
     updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
-    domain = 'http://172.16.2.144:8080/uc/resources'
+    domain_url = loadJson('Domain.json')
+    #domain = domain_url['TTB_UAT']
+    domain = domain_url['1.144']
     updateURI(domain)
     
     response_task_list = getListTask()

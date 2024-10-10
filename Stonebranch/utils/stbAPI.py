@@ -282,7 +282,7 @@ def viewParentTaskAPI(task_configs, show_response = True, format_str ='json'):
 ###############################           Variable           #########################################
 
 def createVariableAPI(variable_configs, show_response = True, format_str ='json'):
-    header = formatHeader('Content-Type', 'application/json')
+    header = formatHeader('Content-Type', format_str)
     response = requests.post(url = VARIABLE_URI, json = variable_configs, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)

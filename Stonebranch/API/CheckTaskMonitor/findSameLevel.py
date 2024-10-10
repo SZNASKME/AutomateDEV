@@ -93,7 +93,8 @@ def main():
     auth = loadJson('Auth.json')
     userpass = auth['TTB']
     updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
-    domain = "https://ttbdevstb.stonebranch.cloud/resources"
+    domain_url = loadJson('Domain.json')
+    domain = domain_url['TTB_UAT']
     updateURI(domain)
     reponse_workflow = getWorkflow()
     print(len(reponse_workflow))
