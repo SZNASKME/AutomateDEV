@@ -117,7 +117,7 @@ def main():
     exist_task_list = ListTask()
     
     new_task_df = prepareCreatingTaskList(df, exist_task_list)
-    map_fields = loadJson("STB_Excel.json")
+    map_fields = loadJson("STB_Map_Excel.json")
     createTaskList(new_task_df, map_fields)
     print(f"Total Task to create: {len(new_task_df)}")
     print(new_task_df)
