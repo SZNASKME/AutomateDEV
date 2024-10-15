@@ -30,13 +30,15 @@ def checkJobConditionInList(df_jil, in_list_condition):
             continue
         condition = row['condition']
         
-        if not isinstance(condition,str) or (isinstance(condition,float) and math.isnan(condition)):
+        if pd.isna(condition):
             continue
         condition_list = getNamefromCondition(condition)
+        #print(condition)
+        #print(condition_list)
         found_condition_list = []
-        for in_list in in_list_condition:
-            if in_list in condition_list:
-                found_condition_list.append(in_list)
+        for sub_condition in condition_list:
+            if sub_condition in in_list_condition:
+                found_condition_list.append(sub_condition)
         
         if len(found_condition_list) == 0:
             continue
@@ -44,14 +46,18 @@ def checkJobConditionInList(df_jil, in_list_condition):
         found_list.append({
             'jobName': row['jobName'],
             'box_name': row['box_name'],
+            'From Survey': row['From Survey'],
             'Condition': condition,
             'Found_Condition': ", ".join(found_condition_list)
         })
     df_condition_matched = pd.DataFrame(found_list)
     return df_condition_matched
     
-def getSpecificColumn(df, column_name):
+def getSpecificColumn(df, column_name, filter_column_name = None, *filter_value):
     column_list = []
+    if filter_column_name is not None:
+        df = df[df[filter_column_name].isin(filter_value)]
+        
     for index, row in df.iterrows():
         column_list.append(row[column_name])
     return column_list
@@ -61,7 +67,8 @@ def main():
     
     df_jil = getDataExcel("Enter the path of the main excel file")
     df_in_list_condition = getDataExcel("Enter the path of the excel file with the conditions to be checked")
-    in_list_condition = getSpecificColumn(df_in_list_condition, 'Taskname')
+    in_list_condition = getSpecificColumn(df_in_list_condition, 'jobName', 'From Survey', 'ACTIVE - ON_REQ')
+    print(len(in_list_condition))
     df_condition_matched = checkJobConditionInList(df_jil, in_list_condition)
     
     createExcel('job_condition_matched.xlsx', (df_condition_matched, 'job Condition Matched'))
