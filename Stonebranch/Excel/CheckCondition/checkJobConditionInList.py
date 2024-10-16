@@ -67,11 +67,11 @@ def main():
     
     df_jil = getDataExcel("Enter the path of the main excel file")
     df_in_list_condition = getDataExcel("Enter the path of the excel file with the conditions to be checked")
-    in_list_condition = getSpecificColumn(df_in_list_condition, 'jobName', 'From Survey', 'ACTIVE - ON_REQ')
+    in_list_condition = getSpecificColumn(df_in_list_condition, 'jobName', 'rootBox', 'DWH_ONICE_ONHOLD_B')
     print(len(in_list_condition))
     df_condition_matched = checkJobConditionInList(df_jil, in_list_condition)
     
-    createExcel('job_condition_matched.xlsx', (df_condition_matched, 'job Condition Matched'))
+    createExcel('job_condition_matched_r.xlsx', (df_condition_matched, 'job Condition Matched'))
     
 if __name__ == '__main__':
     main()
