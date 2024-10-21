@@ -15,6 +15,8 @@ XML_PATH = './Stonebranch/Excel_BMC/XmlConvert/Open-CTE1-20092024.xml'
 
 ROOT_KEY = 'DEFTABLE'
 JSON_COLUMN_CHAR = '@'
+JOBNAME_COLUMN = ["@JOBNAME"]
+
 SHEETNAME_LIST = ["SMART_FOLDER","FOLDER","JOB","VARIABLE"]
 
 
@@ -27,29 +29,31 @@ def prepareXJson(json_dict):
     return xjson_dict
 
 
-def recursiveFlattenSheetDict(xjson, sheet_dict = {}, key_column = None, parent_key = None):
+def recursiveFlattenSheetDict(xjson_value, sheet_dict = {}, key_column = None, parent_key = None, parent_name = None):
     #print(len(xjson), type(xjson))
-    if isinstance(xjson, dict):
+    if isinstance(xjson_value, dict):
         #print(xjson.keys())
         row_data = {}
-        for key, value in xjson.items():
-            
+        for key, value in xjson_value.items():
+            if key in JOBNAME_COLUMN:
+                parent_key = key
+                parent_name = value
             if not key.startswith(JSON_COLUMN_CHAR):
                 if key not in sheet_dict:
                     sheet_dict[key] = []
-                sheet_dict = recursiveFlattenSheetDict(value, sheet_dict, key)
+                sheet_dict = recursiveFlattenSheetDict(value, sheet_dict, key, parent_key, parent_name)
             else:
                 row_data[key] = value
         if key_column is not None:
-            print("D")
+            if parent_key not in row_data and parent_key is not None:
+                row_data[parent_key] = parent_name
             sheet_dict[key_column].append(row_data)
-    elif isinstance(xjson, list):
-        print("L")
-        for value in xjson:
-            sheet_dict = recursiveFlattenSheetDict(value, sheet_dict, key_column)
-    elif isinstance(xjson, str):
-        print("S")
-        sheet_dict[key_column].append(xjson)
+    elif isinstance(xjson_value, list):
+        for value in xjson_value:
+            sheet_dict = recursiveFlattenSheetDict(value, sheet_dict, key_column, parent_key, parent_name)
+    #elif isinstance(xjson, str):
+    #    print("S")
+    #    sheet_dict[key_column].append(xjson)
     
     return sheet_dict
 
@@ -61,7 +65,10 @@ def XJsonToDataFrame(xjson_dict):
     df_list = []
     for key, value in sheet_dict.items():
         df = pd.DataFrame(value)
+        df.columns = df.columns.str.replace('@', '', regex=False)
         df_list.append((df, key))
+        
+    
     return df_list
 
 
