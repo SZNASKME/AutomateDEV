@@ -229,8 +229,18 @@ def deleteTaskInWorkflowAPI( workflow_configs, show_response = True, format_str 
     return response
 
 
-
 def ListWorkflowForecastAPI(workflow_configs, show_response = True, format_str ='json'):
+    uri = createURI(TASK_IN_WORKFLOW_URI, workflow_configs)
+    header = formatHeader('Accept', format_str)
+    response = requests.get(url = uri, auth = auth, headers = header)
+    if show_response:
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
+    return response
+
+###############################           Vertices           #########################################
+
+def getListTaskInWorkflowAPI(workflow_configs, show_response = True, format_str ='json'):
     uri = createURI(TASK_IN_WORKFLOW_URI, workflow_configs)
     header = formatHeader('Accept', format_str)
     response = requests.get(url = uri, auth = auth, headers = header)
