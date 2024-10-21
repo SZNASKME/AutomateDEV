@@ -15,7 +15,7 @@ XML_PATH = './Stonebranch/Excel_BMC/XmlConvert/Open-CTE1-20092024.xml'
 
 ROOT_KEY = 'DEFTABLE'
 JSON_COLUMN_CHAR = '@'
-JOBNAME_COLUMN = ["@JOBNAME"]
+EXPAND_COLUMN = ["@JOBNAME", "@FOLDER_NAME"]
 
 SHEETNAME_LIST = ["SMART_FOLDER","FOLDER","JOB","VARIABLE"]
 
@@ -29,46 +29,60 @@ def prepareXJson(json_dict):
     return xjson_dict
 
 
-def recursiveFlattenSheetDict(xjson_value, sheet_dict = {}, key_column = None, parent_key = None, parent_name = None):
+def recursiveFlattenSheetDict(xjson_value, sheet_dict = {}, key_column = None, deep_parent = {}):
     #print(len(xjson), type(xjson))
     if isinstance(xjson_value, dict):
         #print(xjson.keys())
         row_data = {}
         for key, value in xjson_value.items():
-            if key in JOBNAME_COLUMN:
-                parent_key = key
-                parent_name = value
+            if key in EXPAND_COLUMN:
+                deep_parent[key] = value
+                
+        for key, value in xjson_value.items():
             if not key.startswith(JSON_COLUMN_CHAR):
                 if key not in sheet_dict:
                     sheet_dict[key] = []
-                sheet_dict = recursiveFlattenSheetDict(value, sheet_dict, key, parent_key, parent_name)
+
+                sheet_dict = recursiveFlattenSheetDict(value, sheet_dict, key, deep_parent)
             else:
                 row_data[key] = value
+        
         if key_column is not None:
-            if parent_key not in row_data and parent_key is not None:
-                row_data[parent_key] = parent_name
+            if any(key in xjson_value for key in EXPAND_COLUMN) and not all(key in xjson_value for key in EXPAND_COLUMN):
+                deep_parent = {}
+            for key, value in deep_parent.items():
+                if key not in row_data:
+                    row_data[key] = value
             sheet_dict[key_column].append(row_data)
     elif isinstance(xjson_value, list):
         for value in xjson_value:
-            sheet_dict = recursiveFlattenSheetDict(value, sheet_dict, key_column, parent_key, parent_name)
-    #elif isinstance(xjson, str):
-    #    print("S")
-    #    sheet_dict[key_column].append(xjson)
-    
+            sheet_dict = recursiveFlattenSheetDict(value, sheet_dict, key_column, deep_parent)
+    # elif isinstance(xjson_value, str):
+    #     print("S")
+    #     sheet_dict[key_column].append(xjson_value)
     return sheet_dict
 
-def XJsonToDataFrame(xjson_dict):
+
+def insertList(list, index, value):
+    if index < len(list):
+        list.insert(index, value)
+    else:
+        list.append(value)
+    return list
+
+
+def XJsonToDataFrame(xjson_dict, reorder = True):
     
-    sheet_dict = recursiveFlattenSheetDict(xjson_dict, {})
-    
-    #print(json.dumps(sheet_dict, indent=4))
+    sheet_dict = recursiveFlattenSheetDict(xjson_dict, {}, None, {})
+    if reorder:
+        ordered_keys = ['SMART_FOLDER', 'FOLDER'] + [key for key in sheet_dict if key not in ['SMART_FOLDER', 'FOLDER']]
+        reordered_dict = {key: sheet_dict[key] for key in ordered_keys}
+        sheet_dict = reordered_dict.copy()
     df_list = []
     for key, value in sheet_dict.items():
         df = pd.DataFrame(value)
         df.columns = df.columns.str.replace('@', '', regex=False)
         df_list.append((df, key))
-        
-    
     return df_list
 
 
@@ -77,13 +91,12 @@ def XJsonToDataFrame(xjson_dict):
 def main():
     XML_text = loadText(XML_PATH)
     json_data = xmltodict.parse(XML_text)
-    xjson_dict = prepareXJson(json_data)
     
-    createJson('XmlCT.json', xjson_dict)
-    #print(json.dumps(xjson_dict, indent=4))
+    xjson_dict = prepareXJson(json_data)
+    createJson('XmlConvert.json', xjson_dict)
     
     df_list = XJsonToDataFrame(xjson_dict)
-    createExcel('XmlCT.xlsx', *df_list)
+    createExcel('XmlConvert.xlsx', *df_list)
 
 if __name__ == '__main__':
     main()
