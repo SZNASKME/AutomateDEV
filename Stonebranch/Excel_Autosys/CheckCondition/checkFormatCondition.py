@@ -10,8 +10,21 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from utils.readExcel import getDataExcel
 from utils.createFile import createExcel
 
+JOBNAME_COLUMN = 'jobName'
+BOXNAME_COLUMN = 'box_name'
+CONDITION_COLUMN = 'condition'
+
+JOB_COLUMN_OUTPUT = 'jobName'
+BOX_COLUMN_OUTPUT = 'box_name'
+FIRST_OPERAND_COLUMN_OUTPUT = 'firstOperand'
+SECOND_OPERAND_COLUMN_OUTPUT = 'secondOperand'
+OPERATOR_COLUMN_OUTPUT = 'operator'
+CONDITION_COLUMN_OUTPUT = 'condition'
+
+
+
 # Daily and Monthly format condition
-format_condition = [
+FORMAT_CONDITION = [
     {
         "operator": "|",
         "subOperand": ["_M_", "_D_"],
@@ -116,9 +129,9 @@ def findOperands(filtered_string, operator_index, direction = 'left'):
 def compareCondition(df_jil, format_condition, in_list_condition):
     found_format_condition = []
     for index, row in df_jil.iterrows():
-        if row['jobName'] in in_list_condition:
+        if row[JOBNAME_COLUMN] in in_list_condition:
             continue
-        condition = row['condition']
+        condition = row[CONDITION_COLUMN]
         if not isinstance(condition,str) or (isinstance(condition,float) and math.isnan(condition)):
             continue
         separate_string = re.findall(pattern, condition)
@@ -135,12 +148,12 @@ def compareCondition(df_jil, format_condition, in_list_condition):
                         #print(left_sub_string, sub_string, right_sub_string)
                         if checkFormatOperandCommon(left_sub_string, right_sub_string, format_condition):
                             found_format_condition.append({
-                                'jobName': row['jobName'],
-                                'box_name': row['box_name'],
-                                'firstOperand': left_sub_string,
-                                'secondOperand': right_sub_string,
-                                'operator': operator_sub_string,
-                                'condition': condition,
+                                JOB_COLUMN_OUTPUT: row[JOBNAME_COLUMN],
+                                BOX_COLUMN_OUTPUT: row[BOXNAME_COLUMN],
+                                FIRST_OPERAND_COLUMN_OUTPUT: left_sub_string,
+                                SECOND_OPERAND_COLUMN_OUTPUT: right_sub_string,
+                                OPERATOR_COLUMN_OUTPUT: operator_sub_string,
+                                CONDITION_COLUMN_OUTPUT: condition,
                             })
     #print(json.dumps(found_format_condition, indent=4))
     df_found_format_condition = pd.DataFrame(found_format_condition)
@@ -163,7 +176,7 @@ def checkSimilarOperand(first_operand, second_operand, format_condition):
 
 ############################################################################################################
 
-def compareSimilarOperands(df):
+def compareSimilarOperands(df, format_condition):
     similar_condition = []
     unsimilar_condition = []
     for index, row in df.iterrows():
@@ -195,9 +208,9 @@ def main():
     df_jil = getDataExcel()
     df_in_list_condition = getDataExcel("Enter the path of the excel file with the conditions to be checked")
     in_list_condition = getSpecificColumn(df_in_list_condition, 'Taskname')
-    df_format_condition = compareCondition(df_jil, format_condition, in_list_condition)
+    df_format_condition = compareCondition(df_jil, FORMAT_CONDITION, in_list_condition)
     df_unique_format_condition = getUniqueFormatCondition(df_format_condition)
-    df_similar_condition, df_unsimilar_condition = compareSimilarOperands(df_unique_format_condition)
+    df_similar_condition, df_unsimilar_condition = compareSimilarOperands(df_unique_format_condition, FORMAT_CONDITION)
     createExcel("DAILY_OR_MONTHLY_condition.xlsx", (df_similar_condition, 'Similar Pair'), (df_unsimilar_condition, 'Unsimilar Pair'))
     
 if __name__ == '__main__':
