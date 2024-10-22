@@ -7,6 +7,12 @@ from utils.readFile import loadJson
 from utils.readExcel import getDataExcel
 from utils.stbAPI import updateURI, updateAuth, deleteTaskInWorkflowAPI
 
+
+JOBNAME_COLUMN = 'jobName'
+BOXNAME_COLUMN = 'box_name'
+
+
+
 delete_task_configs_temp = {
     'taskname': '',
     'workflowname': '',
@@ -29,8 +35,8 @@ def deleteTaskInWorkflow(task_name, workflow_name):
 def deleteTaskInWorkflowProcess(df_delete):
     del_count = 0
     for index, row in df_delete.iterrows():
-        task_name = row['jobName']
-        workflow_name = row['box_name']
+        task_name = row[JOBNAME_COLUMN]
+        workflow_name = row[BOXNAME_COLUMN]
         status = deleteTaskInWorkflow(task_name, workflow_name)
         if status:
             del_count += 1

@@ -14,8 +14,10 @@ task_configs_temp = {
     "businessServices": "A0076 - Data Warehouse ETL",
 }
 
-
-
+JOB_COLUMN = "jobName"
+WORKFLOW_CATEGORY = "BOX"
+UNIVERSAL_CATEGORY = "CMD"
+FILE_MONITOR_CATEGORY = "FW"
 
 def ListTask():
     task_configs = task_configs_temp.copy()
@@ -26,7 +28,7 @@ def ListTask():
         return None
 
 def prepareCreatingTaskList(df, exist_task_list):
-    dfnew = df[~df["jobName"].isin(exist_task_list)]
+    dfnew = df[~df[JOB_COLUMN].isin(exist_task_list)]
     
     return dfnew
 
@@ -58,19 +60,19 @@ def restructureTaskConfigs(task_configs):
             new_task_configs[field]["value"] = task_configs[field]
     
     task_type = task_configs.get("type")
-    if task_type == "BOX":
+    if task_type == WORKFLOW_CATEGORY:
         new_task_configs["type"] = "taskWorkflow"
-    elif task_type == "CMD":
+    elif task_type == UNIVERSAL_CATEGORY:
         new_task_configs["type"] = "taskUniversal"
         # Check for Linux or Windows based on fields
         if "/" in task_configs.get("largeTextField1", ""):
             new_task_configs["template"] = "Enhanced Linux"
         elif "\\" in task_configs.get("largeTextField1", ""):
             new_task_configs["template"] = "Enhanced Windows"
-    elif task_type == "FW":
+    elif task_type == FILE_MONITOR_CATEGORY:
         new_task_configs["type"] = "taskFileMonitor"
     
-    if task_type != "BOX" and "credentials" in task_configs:
+    if task_type != WORKFLOW_CATEGORY and "credentials" in task_configs:
         new_task_configs["credentials"] = task_configs["credentials"]    
     
     if "retryMaximum" in task_configs:

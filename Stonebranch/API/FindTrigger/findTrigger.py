@@ -20,8 +20,9 @@ TRIIGER_TYPE = ['Cron','Time','Agent File Monitor','Temporary','Task Monitor','M
 
 API_TRIGGER_TYPE = [1,2,3,4,5,6,8,9,10,11,12]
 
-
 BUSSINESS_SERVICES = ['A0329 - Data Warehouse ETL (ODS)']
+
+JOBNAME_COLUMN = 'JobName'
 
 def getTriggerListByBussinessServices(api_trigger_type, bussiness_service_list):
     trigger_list_type_dict = { type: [] for type in api_trigger_type}
@@ -174,7 +175,7 @@ def main():
     
     trigger_list_api = getTriggerListByType(API_TRIGGER_TYPE, BUSSINESS_SERVICES)
     trigger_business_service_list_api = getTriggerListByBussinessServices(API_TRIGGER_TYPE, BUSSINESS_SERVICES)
-    trigger_type_list = filterDictListNameByDataFrame(trigger_list_api, df, 'jobName')
+    trigger_type_list = filterDictListNameByDataFrame(trigger_list_api, df, JOBNAME_COLUMN)
     other_type_list = filterNonIntersectionDictListName(trigger_type_list, trigger_business_service_list_api)
     trigger_type_list_name = changeTriggerTypeKey(trigger_type_list, TRIIGER_TYPE)
     other_type_list_name = changeTriggerTypeKey(other_type_list, TRIIGER_TYPE)

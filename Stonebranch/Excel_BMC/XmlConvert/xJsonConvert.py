@@ -76,7 +76,7 @@ def insertList(list, index, value):
 
 def XJsonToDataFrame(xjson_dict, reorder = True):
     
-    sheet_dict = recursiveFlattenSheetDict(xjson_dict, {}, None, {})
+    sheet_dict = recursiveFlattenSheetDict(xjson_dict)
     if reorder:
         ordered_keys = ['SMART_FOLDER', 'FOLDER'] + [key for key in sheet_dict if key not in ['SMART_FOLDER', 'FOLDER']]
         reordered_dict = {key: sheet_dict[key] for key in ordered_keys}

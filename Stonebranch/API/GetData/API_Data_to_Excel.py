@@ -22,9 +22,7 @@ task_adv_configs = {
     'updatedTime': '-10d',
 }
 
-auth = ('ops.admin','p@ssw0rd')
-
-new_order = ['name', 'type', 'description','sysId','version']
+NEW_ORDER = ['name', 'type', 'description','sysId','version']
 
 
 def getData():
@@ -61,7 +59,7 @@ def main():
     
     APIdata = getData()
     df = createDataFrame(APIdata)
-    df = df[new_order]
+    df = df[NEW_ORDER]
     #createExcel(OUTPUT_FILE,(df, 'Sheet'))
     print(df)
     

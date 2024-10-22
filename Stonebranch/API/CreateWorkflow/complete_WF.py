@@ -14,6 +14,15 @@ from collections import OrderedDict
 
 BUSINESS_SERVICES = "A0417 - AML Management System"
 
+JOBNAME_COLUMN = "jobName"
+BOXNAME_COLUMN = "box_name"
+CONDITION_COLUMN = "condition"
+
+
+JOBTYPE_COLUMN = "jobType"
+WORKFLOW_CATEGORY = "BOX"
+
+
 task_adv_configs_temp = {
     'taskname': '*',
     'type': None,
@@ -54,7 +63,7 @@ vertex_configs_temp = {
 def processingWorkflow(df, wfn, businessService = None):
     print("creating workflow...")
     createWorkflow(wfn, businessService)
-    df_selected = df[df['box_name'].isin(wfn)]
+    df_selected = df[df[BOXNAME_COLUMN].isin(wfn)]
     #print(df_selected)
     task_adv_configs = task_adv_configs_temp.copy()
     task_adv_configs['type'] = 1
@@ -147,27 +156,27 @@ def addVertex(excel_data, api_data):
     print(json.dumps(freq_vertex_dict_api, indent=4))
     
     for index, row in excel_data.iterrows():
-        freq_vertex_dict_excel = updateFrequencyDict(freq_vertex_dict_excel, row['jobName'], row['box_name'])
-        if freq_vertex_dict_excel[row['box_name']].get(row['jobName']) <= freq_vertex_dict_api[row['box_name']].get(row['jobName'], 0):
+        freq_vertex_dict_excel = updateFrequencyDict(freq_vertex_dict_excel, row[JOBNAME_COLUMN], row[BOXNAME_COLUMN])
+        if freq_vertex_dict_excel[row[BOXNAME_COLUMN]].get(row[JOBNAME_COLUMN]) <= freq_vertex_dict_api[row[BOXNAME_COLUMN]].get(row[JOBNAME_COLUMN], 0):
             continue
-        if previous_wfn != row['box_name']:
+        if previous_wfn != row[BOXNAME_COLUMN]:
             Xpos = 0
             Ypos = 0
         vertex_configs = {
             "alias": None,
             "task":{
-                "value": row['jobName']
+                "value": row[JOBNAME_COLUMN]
             },
-            "vertexId": findAvailableVertexId(api_data, vertex_dict, row['box_name']),
+            "vertexId": findAvailableVertexId(api_data, vertex_dict, row[BOXNAME_COLUMN]),
             "vertexX": Xpos,
             "vertexY": Ypos,
         }
         Xpos += 50
         Ypos += 150
-        previous_wfn = row['box_name']
-        if row['box_name'] not in vertex_dict:
-            vertex_dict[row['box_name']] = []
-        vertex_dict[row['box_name']].append(vertex_configs)
+        previous_wfn = row[BOXNAME_COLUMN]
+        if row[BOXNAME_COLUMN] not in vertex_dict:
+            vertex_dict[row[BOXNAME_COLUMN]] = []
+        vertex_dict[row[BOXNAME_COLUMN]].append(vertex_configs)
         max_vertex += 1
         
     #print(json.dumps(vertex_dict, indent=4))
@@ -224,12 +233,11 @@ def addDependency(df, workflow_name):
         workflow_vertex = response_workflow.json().get('workflowVertices')
         #print(workflow_vertex)
         vertex_name = getVertex(workflow_vertex)
-        dfv = df[df["jobName"].isin(vertex_name)]
-        
+        dfv = df[df[JOBNAME_COLUMN].isin(vertex_name)]
         
         for index, row in dfv.iterrows():
-            if isinstance(row['condition'], str):
-                condition_list = row['condition'].split('&')
+            if isinstance(row[CONDITION_COLUMN], str):
+                condition_list = row[CONDITION_COLUMN].split('&')
                 condition_list = [x.strip() for x in condition_list]
                 for condition in condition_list:
                     depen_configs = depen_configs_temp.copy()
@@ -239,7 +247,7 @@ def addDependency(df, workflow_name):
                     depen_configs['sourceId']['value'] = getSourceTargetId(getSubstringBetween(condition, '(', ')'), workflow_vertex)
                     if depen_configs['sourceId']['value'] is None:
                         continue
-                    depen_configs['targetId']['value'] = getSourceTargetId(row['jobName'], workflow_vertex)
+                    depen_configs['targetId']['value'] = getSourceTargetId(row[JOBNAME_COLUMN], workflow_vertex)
                     if depen_configs['targetId']['value'] is None:
                         continue
                     depen_configs['condition']['value'] = getConditionStatus(condition)
@@ -270,12 +278,12 @@ def startWithAny(prefix_list, string):
 def getWorkflowExcel(df, taskname_list = None, prefix_list = None):
     workflow = []
     for index, row in df.iterrows():
-        if taskname_list is not None and row['jobName'] not in taskname_list and row['jobType'] == 'BOX':
-            if prefix_list is not None and startWithAny(prefix_list, row['jobName']):
-                    workflow.append(row['jobName'])
-        elif taskname_list is None and row['jobType'] == 'BOX':
-            if prefix_list is not None and startWithAny(prefix_list, row['jobName']):
-                    workflow.append(row['jobName'])
+        if taskname_list is not None and row[JOBNAME_COLUMN] not in taskname_list and row[JOBTYPE_COLUMN] == WORKFLOW_CATEGORY:
+            if prefix_list is not None and startWithAny(prefix_list, row[JOBNAME_COLUMN]):
+                    workflow.append(row[JOBNAME_COLUMN])
+        elif taskname_list is None and row[JOBTYPE_COLUMN] == WORKFLOW_CATEGORY:
+            if prefix_list is not None and startWithAny(prefix_list, row[JOBNAME_COLUMN]):
+                    workflow.append(row[JOBNAME_COLUMN])
     return workflow
 
 def getPrefix(businessService:str):

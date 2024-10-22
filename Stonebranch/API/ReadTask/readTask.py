@@ -1,5 +1,6 @@
 import sys
 import os
+import multiprocessing
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
@@ -9,7 +10,9 @@ from utils.readExcel import getDataExcel
 
 
 
-import multiprocessing
+
+JOBNAME_COLUMN = 'JobName'
+
 
 task_adv_configs_temp = {
     'taskname': None,
@@ -38,7 +41,7 @@ def readingAllTask(df, num_process = 4):
 
 ###########################################################################################
 
-def getListExcel(df, col_name = 'jobName'):
+def getListExcel(df, col_name = JOBNAME_COLUMN):
     del_list = []
     for index, row in df.iterrows():
         del_list.append(row[col_name])
