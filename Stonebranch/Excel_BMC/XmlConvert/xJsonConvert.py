@@ -29,10 +29,14 @@ def prepareXJson(json_dict):
     return xjson_dict
 
 
-def recursiveFlattenSheetDict(xjson_value, sheet_dict = {}, key_column = None, deep_parent = {}):
-    #print(len(xjson), type(xjson))
+def recursiveFlattenSheetDict(xjson_value, sheet_dict = None, key_column = None, deep_parent = None):
+    
+    if sheet_dict is None:
+        sheet_dict = {}
+    if deep_parent is None:
+        deep_parent = {}
+    
     if isinstance(xjson_value, dict):
-        #print(xjson.keys())
         row_data = {}
         for key, value in xjson_value.items():
             if key in EXPAND_COLUMN:
@@ -54,12 +58,11 @@ def recursiveFlattenSheetDict(xjson_value, sheet_dict = {}, key_column = None, d
                 if key not in row_data:
                     row_data[key] = value
             sheet_dict[key_column].append(row_data)
+            
     elif isinstance(xjson_value, list):
         for value in xjson_value:
             sheet_dict = recursiveFlattenSheetDict(value, sheet_dict, key_column, deep_parent)
-    # elif isinstance(xjson_value, str):
-    #     print("S")
-    #     sheet_dict[key_column].append(xjson_value)
+            
     return sheet_dict
 
 
