@@ -21,12 +21,17 @@ TASK_TYPE = ['Workflow','Timer','Windows','Linux/Unix','z/OS','Agent File Monito
 API_TASK_TYPE = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,99]
 
 BUSSINESS_SERVICE_LIST = [
-    "A0127 - Market and Liquidity Risk Management  -  Ambit Focus",
-    "A0341 - Core GL System",
-    "A0357 - IFRS9 system",
-    "A0357-1 - IFRS9 (HP) system",
-    "A0455 - Core Hire Purchase",
-    "A0417 - AML Management System"
+    "A00000 - AskMe - Delete Tasks",
+    "A0031 - Data Mart",
+    "A0033 - BOT DMS (Data Management System)",
+    "A0076 - Data Warehouse ETL",
+    "A0128 - Marketing Data Mart",
+    "A0140 - NCB Data Submission",
+    "A0329 - ODS",
+    "A0356 - Big Data Foundation Platform",
+    "A0360 - Oracle Financial Services Analytical App",
+    "Phase 4",
+    "SEP04_2024"
 ]
 
 task_adv_configs_temp = {
@@ -284,7 +289,7 @@ def main():
     updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
     domain_url = loadJson('Domain.json')
     #domain = domain_url['TTB_UAT']
-    domain = domain_url['1.86']
+    domain = domain_url['1.226']
     updateURI(domain)
     #df = getDataExcel()
     
@@ -328,7 +333,7 @@ def main():
     dfuniversal = pd.DataFrame(del_task_type_dict['Universal'])
     dftrigger = pd.DataFrame(del_trigger_list_api)
     
-    createExcel('delete_task_trigger.xlsx', (dfworkflow, 'Workflow'), (dftimer, 'Timer'), 
+    createExcel('delete_task_trigger_226.xlsx', (dfworkflow, 'Workflow'), (dftimer, 'Timer'), 
                 (dfwindow, 'Windows'), (dflinux, 'Linux Unix'), (dfzos, 'zOS'), (dffilemonitor, 'Agent File Monitor'), 
                 (dfmanual, 'Manual'), (dfemail, 'Email'), (dffiletransfer, 'File Transfer'), (dfsql, 'SQL'), 
                 (dfremote, 'Remote File Monitor'), (dfmonitor, 'Task Monitor'), (dfstored, 'Stored Procedure'), 
@@ -369,7 +374,7 @@ def main():
     if choice == 'y':
         confirm = input("confirm to continue delete? (confirm/...)").lower()
         if confirm == 'confirm':
-            deleteProcess(dftask_dict, dftrigger)
+            deleteProcess(dftask_dict, dftrigger, userpass, domain)
     
 if __name__ == "__main__":
     main()

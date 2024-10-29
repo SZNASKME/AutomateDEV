@@ -7,9 +7,11 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from utils.readExcel import getDataExcel, selectSheet
+from utils.readExcel import getDataExcelAllSheet, selectSheet
 from utils.stbAPI import deleteTaskAPI, deleteTriggerAPI, updateTaskAPI, getTaskAPI, updateURI, updateAuth
 from utils.readFile import loadJson
+from utils.createFile import createJson
+
 task_configs_temp = {
    'taskid': None,
    #'taskname': None,
@@ -23,7 +25,7 @@ trigger_configs_temp = {
 
 ##########################################################################################
 
-def delTask(df, num_process = 4):
+def delTask(df,userpass, domain, num_process = 4):
     if df.empty:
         return {
             "200": 0,
@@ -35,7 +37,7 @@ def delTask(df, num_process = 4):
     cannot_delete = []
     not_found = []
     task_configs_list = addDataToConfigs(df, task_configs_temp, col_name = 'taskid', df_col_name = 'sysId')
-    with multiprocessing.Pool(num_process, initializer, (count,)) as pool_task:
+    with multiprocessing.Pool(num_process, initializer=initializer, initargs=(userpass, domain,)) as pool_task:
         result_task = pool_task.map(deleteTaskAPI, task_configs_list)
     
     pool_task.close()
@@ -56,19 +58,18 @@ def delTask(df, num_process = 4):
     }
         
 
-def delTrigger(df, num_process = 4):
+def delTrigger(df, userpass, domain, num_process = 4):
     if df.empty:
         return {
             "200": 0,
             "403": [],
             "404": []
         }
-    count = multiprocessing.Value('i', 0)
     success = 0
     cannot_delete = []
     not_found = []
     trigger_configs_list = addDataToConfigs(df, trigger_configs_temp, col_name = 'triggerid', df_col_name = 'sysId')
-    with multiprocessing.Pool(num_process, initializer, (count,)) as pool_trigger:
+    with multiprocessing.Pool(num_process, initializer=initializer, initargs=(userpass, domain,)) as pool_trigger:
         result_trigger = pool_trigger.map(deleteTriggerAPI, trigger_configs_list)
     
     pool_trigger.close()
@@ -89,7 +90,7 @@ def delTrigger(df, num_process = 4):
     }
 
 
-def updateEmptyWorkflow(df, num_process = 4):
+def updateEmptyWorkflow(df, userpass, domain, num_process = 4, ):
     if df.empty:
         return {
             "200": 0,
@@ -113,7 +114,7 @@ def updateEmptyWorkflow(df, num_process = 4):
             task_configs['workflowVertices'] = []
             workflow_configs_list.append(task_configs)
         
-    with multiprocessing.Pool(num_process, initializer, (count,)) as pool_workflow:
+    with multiprocessing.Pool(num_process, initializer=initializer, initargs=(userpass, domain,)) as pool_workflow:
         result_workflow = pool_workflow.map(updateTaskAPI, workflow_configs_list)
         
     pool_workflow.close()
@@ -135,9 +136,10 @@ def updateEmptyWorkflow(df, num_process = 4):
 
 ##########################################################################################
 
-def initializer(cnt):
-    global count
-    count = cnt
+def initializer(userpass, domain):
+    updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
+    updateURI(domain)
+    
 
 def getListExcel(df, col_name = 'jobName'):
     del_list = []
@@ -217,62 +219,62 @@ def countResult(result_dict):
     print(f"404: {_404}")
 
 
-def deleteProcess(dftask_dict, dftrigger):
+def deleteProcess(dftask_dict, dftrigger, userpass, domain):
     print("Delete Process ...")
     
     print("Delete Trigger ...")
-    result_trigger = delTrigger(dftrigger)
+    result_trigger = delTrigger(dftrigger, userpass, domain)
     print("Empty Workflow ...")
-    result_empty_workflow = updateEmptyWorkflow(dftask_dict['Workflow'])
+    result_empty_workflow = updateEmptyWorkflow(dftask_dict['Workflow'], userpass, domain)
 
     print("Delete File Monitor ...")
-    result_file_monitor = delTask(dftask_dict['Agent File Monitor'])
+    result_file_monitor = delTask(dftask_dict['Agent File Monitor'], userpass, domain)
     print("Delete Remote Monitor ...")
-    result_remote_monitor = delTask(dftask_dict['Remote File Monitor'])
+    result_remote_monitor = delTask(dftask_dict['Remote File Monitor'], userpass, domain)
     print("Delete Task Monitor ...")
-    result_task_monitor = delTask(dftask_dict['Task Monitor'])
+    result_task_monitor = delTask(dftask_dict['Task Monitor'], userpass, domain)
     print("Delete System Monitor ...")
-    result_system_monitor = delTask(dftask_dict['System Monitor'])
+    result_system_monitor = delTask(dftask_dict['System Monitor'], userpass, domain)
     print("Delete Variable Monitor ...")
-    result_variable_monitor = delTask(dftask_dict['Variable Monitor'])
+    result_variable_monitor = delTask(dftask_dict['Variable Monitor'], userpass, domain)
     print("Delete Email Monitor ...")
-    result_email_monitor = delTask(dftask_dict['Email Monitor'])
+    result_email_monitor = delTask(dftask_dict['Email Monitor'], userpass, domain)
     print("Delete Universal Monitor ...")
-    result_universal_monitor = delTask(dftask_dict['Universal Monitor'])
+    result_universal_monitor = delTask(dftask_dict['Universal Monitor'], userpass, domain)
     
     print("Delete Timer Task ...")
-    result_timer_task = delTask(dftask_dict['Timer'])
+    result_timer_task = delTask(dftask_dict['Timer'], userpass, domain)
     print("Delete Windows Task ...")
-    result_window = delTask(dftask_dict['Windows'])
+    result_window = delTask(dftask_dict['Windows'], userpass, domain)
     print("Delete Linux Unix Task ...")
-    result_linux = delTask(dftask_dict['Linux Unix'])
+    result_linux = delTask(dftask_dict['Linux Unix'], userpass, domain)
     print("Delete zOS Task ...")
-    result_zos = delTask(dftask_dict['zOS'])
+    result_zos = delTask(dftask_dict['zOS'], userpass, domain)
     print("Delete Manual Task ...")
-    result_manual = delTask(dftask_dict['Manual'])
+    result_manual = delTask(dftask_dict['Manual'], userpass, domain)
     print("Delete Email Task ...")
-    result_email = delTask(dftask_dict['Email'])
+    result_email = delTask(dftask_dict['Email'], userpass, domain)
     print("Delete File Transfer Task ...")
-    result_file_transfer = delTask(dftask_dict['File Transfer'])
+    result_file_transfer = delTask(dftask_dict['File Transfer'], userpass, domain)
     print("Delete SQL Task ...")
-    result_sql = delTask(dftask_dict['SQL'])
+    result_sql = delTask(dftask_dict['SQL'], userpass, domain)
     print("Delete Stored Procedure Task ...")
-    result_stored = delTask(dftask_dict['Stored Procedure'])
+    result_stored = delTask(dftask_dict['Stored Procedure'], userpass, domain)
     print("Delete Application Control Task ...")
-    result_appcontrol = delTask(dftask_dict['Application Control'])
+    result_appcontrol = delTask(dftask_dict['Application Control'], userpass, domain)
     print("Delete SAP Task ...")
-    result_sap = delTask(dftask_dict['SAP'])
+    result_sap = delTask(dftask_dict['SAP'], userpass, domain)
     print("Delete Web Service Task ...")
-    result_webservice = delTask(dftask_dict['Web Service'])
+    result_webservice = delTask(dftask_dict['Web Service'], userpass, domain)
     print("Delete PeopleSoft Task ...")
-    result_peoplesoft = delTask(dftask_dict['PeopleSoft'])
+    result_peoplesoft = delTask(dftask_dict['PeopleSoft'], userpass, domain)
     print("Delete Recurring Task ...")
-    result_recurring = delTask(dftask_dict['Recurring'])
+    result_recurring = delTask(dftask_dict['Recurring'], userpass, domain)
     print("Delete Universal Task ...")
-    result_universal_task = delTask(dftask_dict['Universal'])
+    result_universal_task = delTask(dftask_dict['Universal'], userpass, domain)
 
     print("Delete Workflow Task ...")
-    result_workflow = delTask(dftask_dict['Workflow'])
+    result_workflow = delTask(dftask_dict['Workflow'], userpass, domain)
 
     print("Complete Process ...")
     result = {
@@ -302,6 +304,7 @@ def deleteProcess(dftask_dict, dftrigger):
         'Universal': result_universal_task,
         'Workflow': result_workflow,
     }
+    createJson('delete_result.json', result)
     countResult(result)
     viewResult(result)
     
@@ -311,11 +314,15 @@ def main():
     updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
     domain_url = loadJson('Domain.json')
     #domain = domain_url['TTB_UAT']
-    domain = domain_url['1.86']
+    domain_manual = input("Enter domain: ")
+    if domain_manual not in domain_url.keys():
+        print("Domain not found")
+        return None
+    domain = domain_url[domain_manual]
     updateURI(domain)
     
     
-    df = getDataExcel()
+    df = getDataExcelAllSheet()
     dfworkflow = selectSheet(df, 'Workflow')
     dftimer = selectSheet(df, 'Timer')
     dfwindow = selectSheet(df, 'Windows')
@@ -368,7 +375,7 @@ def main():
         'Universal': dfuniversal,
     }
     dftrigger = selectSheet(df, 'Trigger')
-    deleteProcess(dftask_dict, dftrigger)
+    deleteProcess(dftask_dict, dftrigger, userpass, domain)
     
     
 if __name__ == '__main__':

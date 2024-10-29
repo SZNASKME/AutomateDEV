@@ -92,6 +92,22 @@ def getDataExcel(prompt="Enter PATH of the file and sheetname [pathfile/sheetnam
     return dfs_sheet
 
 
+def getDataExcelAllSheet(prompt="Enter PATH of the file and sheetname [pathfile/sheetname]: "):
+    print('Reading excel file...')
+    excel_configs = inputMethod(prompt)
+    pathfile = excel_configs['path']
+    excel_file = pd.ExcelFile(pathfile)
+    if excel_file is None:
+        print('Error reading excel file')
+        return None
+    sheet_names = excel_file.sheet_names
+    dfs = {}
+    for sheet_name in sheet_names:
+        dfs[sheet_name] = pd.read_excel(pathfile, sheet_name=sheet_name, engine='openpyxl')
+    
+    print('Excel data read successfully')
+    return dfs
+
 # def getDataExcelOnline(prompt="Enter Sharepoint Folder PATH of the file, and sheetname [folderpath|filename|sheetname]: "):
 #     excel_configs = inputMethod(prompt, 'sharepoint')
 #     print('Loading Sharepoint credentials...')

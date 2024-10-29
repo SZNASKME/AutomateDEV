@@ -51,8 +51,8 @@ def main():
     userpass = auth['ASKME_STB']
     updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
     domain_url = loadJson('Domain.json')
-    domain = domain_url['TTB_UAT']
-    #domain = domain_url['1.86']
+    #domain = domain_url['TTB_UAT']
+    domain = domain_url['1.226']
     updateURI(domain)
     df_delete = getDataExcel()
     deleteTaskInWorkflowProcess(df_delete)
