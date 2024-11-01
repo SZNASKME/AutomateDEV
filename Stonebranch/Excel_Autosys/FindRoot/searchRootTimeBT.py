@@ -38,8 +38,8 @@ def mapRootTime(df_time, job_name):
     job_box_type = findSpecificRowSpecificColumn(df_time, 'jobName', job_name, 'rootBoxType')
     job_start_time = findSpecificRowSpecificColumn(df_time, 'jobName', job_name, 'rootBoxStartTime')
     job_condition = findSpecificRowSpecificColumn(df_time, 'jobName', job_name, 'rootBoxCondition')
-    job_run_calender = findSpecificRowSpecificColumn(df_time, 'jobName', job_name, 'rootBoxRunCalender')
-    job_exclude_calender = findSpecificRowSpecificColumn(df_time, 'jobName', job_name, 'rootBoxExcludeCalender')
+    job_run_calender = findSpecificRowSpecificColumn(df_time, 'jobName', job_name, 'rootBoxRunCalendar')
+    job_exclude_calender = findSpecificRowSpecificColumn(df_time, 'jobName', job_name, 'rootBoxExcludeCalendar')
     
     return {
         'jobName': job_name,
@@ -47,8 +47,8 @@ def mapRootTime(df_time, job_name):
         'rootBoxType': replaceNan(job_box_type),
         'rootBoxStartTime': replaceNan(job_start_time),
         'rootBoxCondition': replaceNan(job_condition),
-        'rootBoxRunCalender': replaceNan(job_run_calender),
-        'rootBoxExcludeCalender': replaceNan(job_exclude_calender),
+        'rootBoxRunCalendar': replaceNan(job_run_calender),
+        'rootBoxExcludeCalendar': replaceNan(job_exclude_calender),
     }
     
     
@@ -59,8 +59,8 @@ def recursiveSearchRootTimeName(df_time, job_name, root_time_name_list = []):
         
         root_start_time = row_data['rootBoxStartTime'].values[0]
         root_box_condition = row_data['rootBoxCondition'].values[0]
-        root_run_calender = row_data['rootBoxRunCalender'].values[0]
-        root_exclude_calender = row_data['rootBoxExcludeCalender'].values[0]
+        root_run_calender = row_data['rootBoxRunCalendar'].values[0]
+        root_exclude_calender = row_data['rootBoxExcludeCalendar'].values[0]
         #print(f"{row_data['jobName'].values[0]} - {root_start_time} - {root_box_condition} -")
         if pd.notna(root_start_time):
             root_time_name_list.append(row_data['jobName'].values[0])

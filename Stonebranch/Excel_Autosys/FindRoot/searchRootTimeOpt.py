@@ -55,24 +55,24 @@ def searchRootTime(df):
                     'rootBox': 'Self Start',
                     'rootBoxStartTime': replaceNan(row.start_times),
                     'rootBoxCondition': replaceNan(row.condition),
-                    'rootBoxRunCalender': replaceNan(row.run_calendar),
-                    'rootBoxExcludeCalender': replaceNan(row.exclude_calendar),
+                    'rootBoxRunCalendar': replaceNan(row.run_calendar),
+                    'rootBoxExcludeCalendar': replaceNan(row.exclude_calendar),
                 })
             else:
                 job_start_root_time.append({
                     'jobName': row.jobName,
-                    'jobBox': row.box_name,
                     'jobType': replaceNan(row.jobType),
-                    'jobStartTime': replaceNan(row.start_times),
-                    'jobCondition': replaceNan(row.condition),
-                    'jobRunCalender': replaceNan(row.run_calendar),
-                    'jobExcludeCalender': replaceNan(row.exclude_calendar),
+                    'jobBox': row.box_name,
                     'rootBox': start_row_job_name,
                     'rootBoxType': replaceNan(start_row['jobType']),
                     'rootBoxStartTime': replaceNan(start_row['start_times']),
                     'rootBoxCondition': replaceNan(start_row['condition']),
-                    'rootBoxRunCalender': replaceNan(start_row['run_calendar']),
-                    'rootBoxExcludeCalender': replaceNan(start_row['exclude_calendar']),
+                    'rootBoxRunCalendar': replaceNan(start_row['run_calendar']),
+                    'rootBoxExcludeCalendar': replaceNan(start_row['exclude_calendar']),
+                    'jobStartTime': replaceNan(row.start_times),
+                    'jobCondition': replaceNan(row.condition),
+                    'jobRunCalendar': replaceNan(row.run_calendar),
+                    'jobExcludeCalendar': replaceNan(row.exclude_calendar),
                 })
         count += 1
         print(f'{count}/{number_of_rows} done | {row.jobName}')
@@ -86,8 +86,8 @@ def main():
     createJson('RootTime.json', insert_start_list)
     df_insert_start = pd.DataFrame(insert_start_list, 
                                    columns=['jobName', 'jobType', 'jobBox', 'rootBox', 'rootBoxType', 'rootBoxStartTime', 
-                                            'rootBoxCondition','rootBoxRunCalender', 'rootBoxExcludeCalender', 
-                                            'jobStartTime', 'jobCondition', 'jobRunCalender', 'jobExcludeCalender'])
+                                            'rootBoxCondition','rootBoxRunCalendar', 'rootBoxExcludeCalendar', 
+                                            'jobStartTime', 'jobCondition', 'jobRunCalendar', 'jobExcludeCalendar'])
     createExcel('RootTime.xlsx', (df_insert_start, 'Start Root Time'))
     
     

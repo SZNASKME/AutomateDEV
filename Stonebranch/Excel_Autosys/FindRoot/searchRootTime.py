@@ -46,8 +46,8 @@ def searchRootTime(df):
                         'rootBoxType': replaceNan(row['jobType']),
                         'rootBoxStartTime': replaceNan(row['start_times']),
                         'rootBoxCondition': replaceNan(row['condition']),
-                        'rootBoxRunCalender': replaceNan(row['run_calendar']),
-                        'rootBoxExcludeCalender': replaceNan(row['exclude_calendar']),
+                        'rootBoxRunCalendar': replaceNan(row['run_calendar']),
+                        'rootBoxExcludeCalendar': replaceNan(row['exclude_calendar']),
                     })
                 else:
                     job_insert_start_list.append({
@@ -56,8 +56,8 @@ def searchRootTime(df):
                         'rootBoxType': replaceNan(start_row['jobType']),
                         'rootBoxStartTime': replaceNan(start_row['start_times']),
                         'rootBoxCondition': replaceNan(start_row['condition']),
-                        'rootBoxRunCalender': replaceNan(start_row['run_calendar']),
-                        'rootBoxExcludeCalender': replaceNan(start_row['exclude_calendar']),
+                        'rootBoxRunCalendar': replaceNan(start_row['run_calendar']),
+                        'rootBoxExcludeCalendar': replaceNan(start_row['exclude_calendar']),
                     })
         count += 1
         print(f'{count}/{number_of_rows} done | {row["jobName"]}')

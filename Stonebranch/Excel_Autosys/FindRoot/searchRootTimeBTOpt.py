@@ -32,8 +32,8 @@ def mapRootTime(df_time_dict, job_name):
         'rootBoxType': replaceNan(root_data['rootBoxType']),
         'rootBoxStartTime': replaceNan(root_data['rootBoxStartTime']),
         'rootBoxCondition': replaceNan(root_data['rootBoxCondition']),
-        'rootBoxRunCalender': replaceNan(root_data['rootBoxRunCalender']),
-        'rootBoxExcludeCalender': replaceNan(root_data['rootBoxExcludeCalender']),
+        'rootBoxRunCalendar': replaceNan(root_data['rootBoxRunCalendar']),
+        'rootBoxExcludeCalendar': replaceNan(root_data['rootBoxExcludeCalendar']),
     }
     
     
@@ -43,8 +43,8 @@ def recursiveSearchRootTimeName(df_time_dict, df_dict, job_name, chache):
     if row_data:
         root_start_time = row_data['rootBoxStartTime']
         root_box_condition = row_data['rootBoxCondition']
-        root_run_calender = row_data['rootBoxRunCalender']
-        root_exclude_calender = row_data['rootBoxExcludeCalender']
+        root_run_calender = row_data['rootBoxRunCalendar']
+        root_exclude_calender = row_data['rootBoxExcludeCalendar']
         #print(f"{row_data['jobName'].values[0]} - {root_start_time} - {root_box_condition} -")
         if pd.notna(root_start_time):
             job_name = next((key for key, value in df_time_dict.items() if value == row_data), None)
@@ -57,7 +57,7 @@ def recursiveSearchRootTimeName(df_time_dict, df_dict, job_name, chache):
     return chache
 
 def breakThroughtRootTimeProcess(row, df_dict, df_time_dict):
-    job_name = row.jobName
+    job_name = getattr(row, 'jobName')
     job_root_time = mapRootTime(df_time_dict, job_name)
     
     break_throught_job_root_time_list = []
@@ -76,7 +76,7 @@ def breakThroughtRootTimeProcess(row, df_dict, df_time_dict):
 
 
 def searchRootTimeBreakThrought(df, df_time):
-    job_root_time_breakthorught_list = []
+    job_root_time_breakthorught_dict = {}
     count = 0
     number_of_rows = len(df)
     df_dict = df.set_index('jobName').to_dict(orient='index')
@@ -84,12 +84,14 @@ def searchRootTimeBreakThrought(df, df_time):
     
     for row in df.itertuples(index=False):
         job_root_time_list = breakThroughtRootTimeProcess(row, df_dict, df_time_dict)
-        job_root_time_breakthorught_list.extend(job_root_time_list)
+        if f"{len(job_root_time_list)} RootTime" not in job_root_time_breakthorught_dict:
+            job_root_time_breakthorught_dict[f"{len(job_root_time_list)} RootTime"] = []
+        job_root_time_breakthorught_dict[f"{len(job_root_time_list)} RootTime"].extend(job_root_time_list)
         
         count += 1
-        print(f'{count}/{number_of_rows} done | {row.jobName} {len(job_root_time_list)}/{len(job_root_time_breakthorught_list)}')
+        print(f'{count}/{number_of_rows} done | {row.jobName} {len(job_root_time_list)}')
     
-    return job_root_time_breakthorught_list
+    return job_root_time_breakthorught_dict
 
 
 def main():
@@ -97,11 +99,15 @@ def main():
     df_selected = getDataExcel("Enter the path of the JobMaster excel file")
     df_time = getDataExcel("Enter the path of the Start time excel file")
     
-    result_list = searchRootTimeBreakThrought(df_selected, df_time)
-    df_result = pd.DataFrame(result_list)
-    df_result = df_result.drop_duplicates(keep='first' ,subset = ['jobName', 'rootBox', 'rootBoxType', 'rootBoxStartTime', 'rootBoxCondition', 'rootBoxRunCalender', 'rootBoxExcludeCalender'])
-    createJson("RootTimeBT.json", result_list)
-    createExcel("RootTimeBreakThroughtOpt.xlsx", (df_result, 'RootTime'))
+    result_dict = searchRootTimeBreakThrought(df_selected, df_time)
+    df_result_list = []
+    for key, value in result_dict.items():
+        df_result = pd.DataFrame(value)
+        df_result = df_result.drop_duplicates(keep='first' ,subset = ['jobName', 'rootBox', 'rootBoxType', 'rootBoxStartTime', 'rootBoxCondition', 'rootBoxRunCalendar', 'rootBoxExcludeCalendar'])
+        df_result_list.append((df_result, key))
+    
+    createJson("RootTimeBT.json", result_dict)
+    createExcel("RootTimeBreakThroughtOpt.xlsx", *df_result_list)
     
     
     
