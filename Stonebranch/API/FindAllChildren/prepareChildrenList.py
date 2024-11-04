@@ -41,7 +41,7 @@ def main():
     children_json = loadJson(JSON_FILE,2,"API\\FindAllChildren\\DWF")
     children_list = prepareChildrenListAllLevel(children_json, TASK_NAME)
     df_children = pd.DataFrame(children_list)
-    createExcel("ChildrenExcel\\{0}.xlsx".format(JSON_FILE.split('.')[0]), (df_children,"Children List"))
+    createExcel("ChildrenExcel\\{0}.xlsx".format(JSON_FILE.split('.')[0]), ("Children List", df_children))
     
     
 if __name__ == "__main__":

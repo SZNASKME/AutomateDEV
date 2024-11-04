@@ -105,7 +105,7 @@ def main():
     df_err_Depen = pd.DataFrame(err_Depen_list)
     df_err_NonDepen = pd.DataFrame(err_NonDepen_list)
     
-    createExcel('depend_in_list.xlsx', (df_err_Depen, 'Have Depen'), (df_err_NonDepen, 'Non Depen'))
+    createExcel('depend_in_list.xlsx', ('Have Depen', df_err_Depen), ('Non Depen', df_err_NonDepen))
 
 if __name__ == '__main__':
     main()

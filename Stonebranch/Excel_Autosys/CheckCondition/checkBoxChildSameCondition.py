@@ -55,7 +55,7 @@ def main():
     df_jil = getDataExcel()
     print(df_jil)
     df_same_condition = compareCondition(df_jil)
-    createExcel('box_job_same_condition.xlsx', (df_same_condition, 'box_job_same_condition'))
+    createExcel('box_job_same_condition.xlsx', ('box_job_same_condition', df_same_condition))
 
 
 

@@ -111,7 +111,7 @@ def main():
     df_result = pd.DataFrame(result_list)
     df_result = df_result.drop_duplicates()
     createJson("RootTimeBT.json", result_list)
-    createExcel("RootTimeBreakThrought.xlsx", (df_result, 'RootTime'))
+    createExcel("RootTimeBreakThrought.xlsx", ('RootTime', df_result))
     
     
     

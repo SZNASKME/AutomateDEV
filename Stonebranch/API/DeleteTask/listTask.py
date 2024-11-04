@@ -307,66 +307,16 @@ def main():
     #del_task_type_dict = separateTaskType(del_task_list_api, TASK_TYPE)
     del_task_type_dict = prepareTaskType(del_task_list_api_type_dict)
     #print(json.dumps(compared_del_task_list, indent=4))
-    dfworkflow = pd.DataFrame(del_task_type_dict['Workflow'])
-    dftimer = pd.DataFrame(del_task_type_dict['Timer'])
-    dfwindow = pd.DataFrame(del_task_type_dict['Windows'])
-    dflinux = pd.DataFrame(del_task_type_dict['Linux/Unix'])
-    dfzos = pd.DataFrame(del_task_type_dict['z/OS'])
-    dffilemonitor = pd.DataFrame(del_task_type_dict['Agent File Monitor'])
-    dfmanual = pd.DataFrame(del_task_type_dict['Manual'])
-    dfemail = pd.DataFrame(del_task_type_dict['Email'])
-    dffiletransfer = pd.DataFrame(del_task_type_dict['File Transfer'])
-    dfsql = pd.DataFrame(del_task_type_dict['SQL'])
-    dfremote = pd.DataFrame(del_task_type_dict['Remote File Monitor'])
-    dfmonitor = pd.DataFrame(del_task_type_dict['Task Monitor'])
-    dfstored = pd.DataFrame(del_task_type_dict['Stored Procedure'])
-    dfuniversal = pd.DataFrame(del_task_type_dict['Universal Command'])
-    dfsystem = pd.DataFrame(del_task_type_dict['System Monitor'])
-    dfappcontrol = pd.DataFrame(del_task_type_dict['Application Control'])
-    dfsap = pd.DataFrame(del_task_type_dict['SAP'])
-    dfvariable = pd.DataFrame(del_task_type_dict['Variable Monitor'])
-    dfwebservice = pd.DataFrame(del_task_type_dict['Web Service'])
-    dfemailmonitor = pd.DataFrame(del_task_type_dict['Email Monitor'])
-    dfpeople = pd.DataFrame(del_task_type_dict['PeopleSoft'])
-    dfrecurring = pd.DataFrame(del_task_type_dict['Recurring'])
-    dfuniversalmonitor = pd.DataFrame(del_task_type_dict['Universal Monitor'])  
-    dfuniversal = pd.DataFrame(del_task_type_dict['Universal'])
+    df_list = []
+    dftask_dict = {}
+    for key, value in del_task_type_dict.items():
+        df = pd.DataFrame(value)
+        df_list.append((key, df))
+        dftask_dict[key] = df
     dftrigger = pd.DataFrame(del_trigger_list_api)
     
-    createExcel('delete_task_trigger_226.xlsx', (dfworkflow, 'Workflow'), (dftimer, 'Timer'), 
-                (dfwindow, 'Windows'), (dflinux, 'Linux Unix'), (dfzos, 'zOS'), (dffilemonitor, 'Agent File Monitor'), 
-                (dfmanual, 'Manual'), (dfemail, 'Email'), (dffiletransfer, 'File Transfer'), (dfsql, 'SQL'), 
-                (dfremote, 'Remote File Monitor'), (dfmonitor, 'Task Monitor'), (dfstored, 'Stored Procedure'), 
-                (dfuniversal, 'Universal Command'), (dfsystem, 'System Monitor'), (dfappcontrol, 'Application Control'), 
-                (dfsap, 'SAP'), (dfvariable, 'Variable Monitor'), (dfwebservice, 'Web Service'), (dfemailmonitor, 'Email Monitor'), 
-                (dfpeople, 'PeopleSoft'), (dfrecurring, 'Recurring'), (dfuniversalmonitor, 'Universal Monitor'), (dfuniversal, 'Universal'), 
-                (dftrigger, 'Trigger'))
-    dftask_dict = {
-        'Workflow': dfworkflow,
-        'Timer': dftimer,
-        'Windows': dfwindow,
-        'Linux Unix': dflinux,
-        'zOS': dfzos,
-        'Agent File Monitor': dffilemonitor,
-        'Manual': dfmanual,
-        'Email': dfemail,
-        'File Transfer': dffiletransfer,
-        'SQL': dfsql,
-        'Remote File Monitor': dfremote,
-        'Task Monitor': dfmonitor,
-        'Stored Procedure': dfstored,
-        'Universal Command': dfuniversal,
-        'System Monitor': dfsystem,
-        'Application Control': dfappcontrol,
-        'SAP': dfsap,
-        'Variable Monitor': dfvariable,
-        'Web Service': dfwebservice,
-        'Email Monitor': dfemailmonitor,
-        'PeopleSoft': dfpeople,
-        'Recurring': dfrecurring,
-        'Universal Monitor': dfuniversalmonitor,
-        'Universal': dfuniversal,
-    }
+    createExcel('delete_task_trigger_226.xlsx', *df_list, ('Trigger', dftrigger))
+    
     for key, value in dftask_dict.items():
         print(key, len(value))
     print("Do you want to delete these tasks and triggers? (y/n)")

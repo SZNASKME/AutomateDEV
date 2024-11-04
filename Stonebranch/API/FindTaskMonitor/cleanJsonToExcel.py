@@ -89,7 +89,7 @@ def createDataFrameFromJson(json_data):
 def main():
     json_data = loadJson(JSON_PATH)
     sum_df,expand_df = createDataFrameFromJson(json_data)
-    createExcel('UAT_TaskMonitor_List.xlsx', (sum_df, 'Summary'), (expand_df, 'Expand'))
+    createExcel('UAT_TaskMonitor_List.xlsx', ('Summary', sum_df), ('Expand', expand_df))
     
     
 if __name__ == '__main__':

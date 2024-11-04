@@ -59,7 +59,7 @@ def main():
     #print(json.dumps(multi_parent_dict, indent=4))
     df_multi_parent = pd.DataFrame(multi_parent_list)
     df_multi_parent = df_multi_parent.astype({'Task': str, 'Parent': str})
-    createExcel("MultiParentTask.xlsx", (df_multi_parent,"MultiParentTask"))
+    createExcel("MultiParentTask.xlsx", ("MultiParentTask", df_multi_parent))
     
     
 if __name__ == '__main__':

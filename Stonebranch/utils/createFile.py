@@ -33,7 +33,7 @@ def createText(filename, data):
 def createExcel(outputfile, *data):
     try:
         with pd.ExcelWriter(outputfile) as writer:
-            for df, sheetname in data:
+            for sheetname, df in data:
                 df.to_excel(writer, sheet_name=sheetname, index=False)
         print("File created successfully")
     except Exception as e:
@@ -43,7 +43,7 @@ def createExcel(outputfile, *data):
 def prepareOutputFile(data_response, filename, format_str):
     if format_str == "csv":
         data = pd.read_csv(StringIO(data_response.text))
-        createExcel(f"{filename}.xlsx", (data, "Forecast Report"))
+        createExcel(f"{filename}.xlsx", ("Forecast Report", data))
     elif format_str == "json":
         data = data_response.json()
         createJson(f"{filename}.json", data)

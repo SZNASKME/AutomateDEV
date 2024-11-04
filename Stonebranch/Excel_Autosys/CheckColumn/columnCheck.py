@@ -23,7 +23,7 @@ def main():
     df = getDataExcel()
     job_not_exist = checkComponentColumn(df)
     df_not_exist = pd.DataFrame(job_not_exist, columns=['box_name'])
-    createExcel('job_not_exist.xlsx', (df_not_exist, 'job_not_exist'))
+    createExcel('job_not_exist.xlsx', ('job_not_exist', df_not_exist))
     
 if __name__ == "__main__":
     main()

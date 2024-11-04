@@ -54,9 +54,9 @@ def main():
     print("comparing data . . .")
     diff_data = compareData(dfnew_sheet, dfold_sheet, compare_column = COMPARE_COLUMN)
     
-    new = (diff_data['new'], 'New')
-    delete = (diff_data['delete'], 'Deleted')
-    update = (diff_data['update'], 'Updated')
+    new = ('New', diff_data['new'])
+    delete = ('Deleted', diff_data['delete'])
+    update = ('Updated', diff_data['update'])
     
     createExcel(OUTPUT_FILE, new, delete, update)
     

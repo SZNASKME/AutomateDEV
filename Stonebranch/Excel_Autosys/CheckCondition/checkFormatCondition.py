@@ -211,7 +211,7 @@ def main():
     df_format_condition = compareCondition(df_jil, FORMAT_CONDITION, in_list_condition)
     df_unique_format_condition = getUniqueFormatCondition(df_format_condition)
     df_similar_condition, df_unsimilar_condition = compareSimilarOperands(df_unique_format_condition, FORMAT_CONDITION)
-    createExcel("DAILY_OR_MONTHLY_condition.xlsx", (df_similar_condition, 'Similar Pair'), (df_unsimilar_condition, 'Unsimilar Pair'))
+    createExcel("DAILY_OR_MONTHLY_condition.xlsx", ('Similar Pair', df_similar_condition), ('Unsimilar Pair', df_unsimilar_condition))
     
 if __name__ == '__main__':
     main()

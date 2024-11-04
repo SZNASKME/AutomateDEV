@@ -24,7 +24,7 @@ def main():
     #print("Duplicated values in column A:", duplicated_values_A.tolist())
     print("Non-unique values in column with counts:\n", df_non_unique)
     
-    createExcel("NonUniqueJob.xlsx", (df_non_unique, 'NonUniqueJob'))
+    createExcel("NonUniqueJob.xlsx", ('NonUniqueJob', df_non_unique))
     
     
 if __name__ == '__main__':

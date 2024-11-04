@@ -79,7 +79,7 @@ def main():
     print(len(root_vertex_list))
     createJson('rootVertex.json', root_vertex_list)
     root_vertex_df = pd.DataFrame(root_vertex_list)
-    createExcel(f'86_rootVertex_{TASK_NAME}.xlsx', (root_vertex_df, 'Root Vertex'))
+    createExcel(f'86_rootVertex_{TASK_NAME}.xlsx', ('Root Vertex', root_vertex_df))
 
 if __name__ == '__main__':
     main()

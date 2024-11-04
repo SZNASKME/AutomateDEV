@@ -96,7 +96,7 @@ def main():
     df_jil = getDataExcel('Enter the path of the JIL file')
     df_time = getDataExcel('Enter the path of the Time file')
     df_job_root_time = compareStartRun(df_jil, df_time)
-    createExcel('job_root_time_compare.xlsx', (df_job_root_time, 'job_root_time_compare'))
+    createExcel('job_root_time_compare.xlsx', ('job_root_time_compare', df_job_root_time))
 
 if __name__ == '__main__':
     main()

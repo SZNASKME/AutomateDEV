@@ -70,7 +70,7 @@ def main():
     insert_start_list = searchRootTime(df_selected)
     createJson('job_insert_start.json', insert_start_list)
     df_insert_start = pd.DataFrame(insert_start_list)
-    createExcel('job_insert_start.xlsx', (df_insert_start, 'job Insert Start'))
+    createExcel('job_insert_start.xlsx', ('job Insert Start', df_insert_start))
     
     
 if __name__ == "__main__":

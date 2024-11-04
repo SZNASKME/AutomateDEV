@@ -87,7 +87,7 @@ def main():
     df_parent = pd.DataFrame(parent_list)
     df_non_parent = pd.DataFrame(non_parent_list)
     
-    createExcel('ParentTaskMonitor.xlsx', (df_parent, 'Parent Task Monitor'), (df_non_parent, 'Non Parent Task Monitor'))
+    createExcel('ParentTaskMonitor.xlsx', ('Parent Task Monitor', df_parent), ('Non Parent Task Monitor',df_non_parent))
     
     
 if __name__ == '__main__':

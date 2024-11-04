@@ -85,7 +85,7 @@ def XJsonToDataFrame(xjson_dict, reorder = True):
     for key, value in sheet_dict.items():
         df = pd.DataFrame(value)
         df.columns = df.columns.str.replace('@', '', regex=False)
-        df_list.append((df, key))
+        df_list.append((key, df))
     return df_list
 
 

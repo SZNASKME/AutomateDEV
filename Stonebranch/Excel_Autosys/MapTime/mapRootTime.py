@@ -52,7 +52,7 @@ def main():
 
     df_mapped = mapRootTime(df, df_time)
     
-    createExcel("MappedRootTime.xlsx", (df_mapped, 'MappedRootTime'))
+    createExcel("MappedRootTime.xlsx", ('MappedRootTime', df_mapped))
     
     
 if __name__ == "__main__":

@@ -13,7 +13,7 @@ def main():
     df_all = getDataExcel()
     df_sep = getDataExcel()
     df_status = compareDataStatus(df_all, df_sep)
-    createExcel('output.xlsx'(df_status['main'], 'main'), (df_status['compare'], 'compare'))
+    createExcel('output.xlsx', ('main', df_status['main']), ('compare', df_status['compare']))
     
     
 if __name__ == '__main__':

@@ -104,7 +104,7 @@ def main():
     for key, value in result_dict.items():
         df_result = pd.DataFrame(value)
         df_result = df_result.drop_duplicates(keep='first' ,subset = ['jobName', 'rootBox', 'rootBoxType', 'rootBoxStartTime', 'rootBoxCondition', 'rootBoxRunCalendar', 'rootBoxExcludeCalendar'])
-        df_result_list.append((df_result, key))
+        df_result_list.append((key, df_result))
     
     createJson("RootTimeBT.json", result_dict)
     createExcel("RootTimeBreakThroughtOpt.xlsx", *df_result_list)
