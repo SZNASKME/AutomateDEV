@@ -2,6 +2,7 @@ import sys
 import os
 import re
 import pandas as pd
+import json
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
@@ -46,34 +47,58 @@ def getListDatabyColumnValue(df, column, value):
     list_value = df_filtered_value[JOBNAME_COLUMN].unique().tolist()
     return list_value
 
+def iterativeSearchDepenCondition(df_dict, task_name, cache):
+    stack = [task_name]  # Initialize stack with the root task
+    result = set()  # Track unique conditions
+    
+    while stack:
+        current_task = stack.pop()
+        if current_task in cache:
+            result.update(cache[current_task])
+            continue
+        row_data = df_dict.get(current_task)
+        if row_data and CONDITION_COLUMN in row_data:
+            condition = row_data[CONDITION_COLUMN]
+            if pd.notna(condition):
+                condition_list = getNamefromCondition(condition)
+                for condition in condition_list:
+                    if condition not in result:
+                        stack.append(condition)
+                result.update(condition_list)
+            else:
+                box_name = row_data.get(BOXNAME_COLUMN)
+                if pd.notna(box_name) and box_name not in result:
+                    stack.append(box_name)
+        cache[current_task] = list(result)
+    
+    return list(result)
 
 def checkJobConditionNoneList(df_jil, list_condition):
     found_list = []
+    df_dict = df_jil.set_index(JOBNAME_COLUMN).to_dict(orient='index')
+    cache = {}
+    
     for row in df_jil.itertuples(index=False):
-        if getattr(row, JOBNAME_COLUMN) in list_condition:
+        job_name = getattr(row, JOBNAME_COLUMN)
+        if job_name in list_condition:
             continue
-        condition = getattr(row, CONDITION_COLUMN)
         
-        if pd.isna(condition):
-            continue
-        condition_list = getNamefromCondition(condition)
-        #print(condition)
-        #print(condition_list)
-        found_condition_list = []
-        for sub_condition in condition_list:
-            if sub_condition in list_condition:
-                found_condition_list.append(sub_condition)
+        breakthrough_condition_list = iterativeSearchDepenCondition(df_dict, job_name, cache)
+        
+        found_condition_list = [condition for condition in breakthrough_condition_list if condition in list_condition]
+        #print(len(breakthrough_condition_list), len(found_condition_list))
         if found_condition_list:
             found_list.append({
                 APPNAME_COLUMN: getattr(row, APPNAME_COLUMN),
-                JOBNAME_COLUMN: getattr(row, JOBNAME_COLUMN),
+                JOBNAME_COLUMN: job_name,
                 JOBTYPE_COLUMN: getattr(row, JOBTYPE_COLUMN),
                 BOXNAME_COLUMN: getattr(row, BOXNAME_COLUMN),
-                CONDITION_COLUMN: condition,
-                'Found_Condition': ", ".join(found_condition_list)
+                'NumberOfAllCondition': len(breakthrough_condition_list),
+                'NumberOfFoundCondition': len(found_condition_list),
+                'FoundCondition': ", ".join(found_condition_list)
             })
+    
     return found_list
-
 
 def checkJobOtherDepenJob(df_jil):
     found_list_by_value = []
@@ -84,6 +109,9 @@ def checkJobOtherDepenJob(df_jil):
         df_condition_matched = pd.DataFrame(found_list)
         found_list_by_value.append((value[:31], df_condition_matched))
     return found_list_by_value
+
+
+
 
 def main():
     df_jil = getDataExcel()
