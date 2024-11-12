@@ -16,7 +16,7 @@ def loadJson(filename='config.json', parent_dir_level=3, *dirs):
     try:
         with open(json_path, 'r') as file:
             config_data = json.load(file)
-        print(f"{json_path} loaded successfully")
+        print(f"{filename} loaded successfully")
         return config_data
     except Exception as e:
         print(f"Error loading {json_path}: {e}")
