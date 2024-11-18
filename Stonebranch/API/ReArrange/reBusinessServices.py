@@ -119,7 +119,7 @@ def main():
     df_jobname, task_log, new_df_jil = compareBusinessServices(df_jil, list_task_by_BU)
     df_task_log = pd.DataFrame(task_log)
     #createJson('not_found_in UAC.json',jobname_list)
-    createExcel('Rearrange Business Services.xlsx',('REARRANGE_BU_JIL', new_df_jil), ('log', df_task_log), ('not_found_in_excel', df_jobname))
+    createExcel('RearrangeBusinessServices_20241114.xlsx',('REARRANGE_JIL', new_df_jil), ('log', df_task_log), ('not_found_in_excel', df_jobname))
     #print("Task log created successfully")
     
     
