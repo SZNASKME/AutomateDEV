@@ -22,8 +22,8 @@ FOUND_CONDITION_COLUMN_OUTPUT = 'Found_Condition'
 
 SELECTED_COLUMN = 'jobName'
 FILTER_COLUMN = 'rootBox'
-FILTER_VALUE_LIST = ['DWH_MTHLY_B']
-#FILTER_VALUE_LIST = ['DWH_ONICE_ONHOLD_B']
+#FILTER_VALUE_LIST = ['DWH_MTHLY_B']
+FILTER_VALUE_LIST = ['DWH_ONICE_ONHOLD_B']
 
 # Check condition job that Depen ONICE ONHOLD
 
@@ -101,7 +101,7 @@ def main():
     for name, df in found_condition_matched_dict.items():
         df_found_condition_matched_list.append((name, df))
     
-    createExcel('job_condition_matched_DWH_MTHLY_B.xlsx', *df_found_condition_matched_list)
+    createExcel('job_condition_depend_DWH_ONICE_ONHOLD_20241114.xlsx', *df_found_condition_matched_list)
     
 if __name__ == '__main__':
     main()

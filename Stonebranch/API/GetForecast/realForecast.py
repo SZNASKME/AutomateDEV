@@ -67,7 +67,7 @@ def main():
     input_choice = choiceTemplate()
     format_str = getChoice(input_choice)
     forecast_report = getForecastReport(format_str)
-    prepareOutputFile(forecast_report,"forecast_report", format_str)
+    prepareOutputFile(forecast_report,"forecast_report", format_str, "Forecast Report")
     
     
 if __name__ == '__main__':

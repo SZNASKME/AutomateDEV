@@ -11,9 +11,9 @@ from utils.createFile import createExcel
 JSON_FILE = "DWH_ONICE_ONHOLD_B_children.json"
 TASK_NAME = "DWH_ONICE_ONHOLD_B"
 
-def prepareChildrenList(children_json, parent_name, children_list):
-    if children_json["Children"]:
-        for childname, child_data in children_json["Children"].items():
+def prepareChildrenList(children_dict, parent_name, children_list):
+    if children_dict["Children"]:
+        for childname, child_data in children_dict["Children"].items():
             child_level = child_data["Child Level"]
             child_type = child_data["Child Type"]
             next_node = child_data["Next Node"]

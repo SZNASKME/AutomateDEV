@@ -1,22 +1,31 @@
-import requests
-import urllib.parse
-import json
 import sys
 import os
+import pandas as pd
+import json
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.stbAPI import updateAuth, updateURI, getTaskAPI
 from utils.readFile import loadJson
+from utils.createFile import createExcel, createJson
 
 from collections import OrderedDict
 
-TASK_NAME = "DWH_ONICE_ONHOLD_B"
+workflow_list = [
+    'MDM_PROCESS_DAILY_B',
+    'MDM_PROCESS_POST_DAILY_B',
+    'MDM_PROCESS_MTHLY_B',
+    'MDM_PROCESS_POST_MTHLY_B',
+    'NCBDS_MTH_B',
+    'NCBDS_MTH_5Y_B'
+    #'DWH_DAILY_B',
+]
 
 CHILDREN_FIELD = "Children"
-CHILD_TYPE = "Child Type"
-CHILD_LEVEL = "Child Level"
+CHILD_TYPE = "Task Type"
+CHILD_LEVEL = "Task Level"
 NEXT_NODE = "Next Node"
+PREVIOUS_NODE = "Previous Node"
 
 
 task_configs_temp = {
@@ -25,34 +34,46 @@ task_configs_temp = {
 
 #########################################     find children    ################################################
 
-def findChildren(task_name, next_node = [], level = 0):
-    children = {CHILD_TYPE: None, CHILD_LEVEL: level, CHILDREN_FIELD: OrderedDict(), NEXT_NODE: None}
+def findChildren(task_name, next_node = [], previous_node = [], level = 0):
+    children = {CHILD_TYPE: None, CHILD_LEVEL: level, CHILDREN_FIELD: OrderedDict(), NEXT_NODE: None, PREVIOUS_NODE: None}
     task_configs = task_configs_temp.copy()
     task_configs['taskname'] = task_name
     response = getTaskAPI(task_configs)
     if response.status_code == 200:
-        task_data = json.loads(response.text)
+        task_data = response.json()
         children[CHILD_TYPE] = task_data['type']
         if task_data['type'] == "taskWorkflow":
             for child in task_data['workflowVertices']:
                 child_name = child['task']['value']
                 child_next_node = findNextNode(child_name, task_data['workflowEdges'])
-                children["Children"][child_name] = findChildren(child_name, child_next_node, level + 1)
+                child_previous_node = findPreviousNode(child_name, task_data['workflowEdges'])
+                children["Children"][child_name] = findChildren(child_name, child_next_node, child_previous_node, level + 1)
+                
         if len(next_node) > 0:
             children[NEXT_NODE] = next_node
         else:
             children[NEXT_NODE] = []
-        
-    #print(f"{response.status_code} - {status.phrase}: {status.description}")
-
+            
+        if len(previous_node) > 0:
+            children[PREVIOUS_NODE] = previous_node
+        else:
+            children[PREVIOUS_NODE] = []
+    
     return children
 
 def findNextNode(task_name, workflowEdges):
     next_node = []
     for edge in workflowEdges:
         if edge['sourceId']['taskName'] == task_name:
-            next_node.append(f"{edge['targetId']['taskName']} | {edge['condition']['value']}")
+            next_node.append(f"{edge['targetId']['taskName']} ({edge['condition']['value']})")
     return next_node
+
+def findPreviousNode(task_name, workflowEdges):
+    previous_node = []
+    for edge in workflowEdges:
+        if edge['targetId']['taskName'] == task_name:
+            previous_node.append(f"{edge['sourceId']['taskName']} ({edge['condition']['value']})")
+    return previous_node
 
 def countChildren(children_dict):
     count = 0
@@ -61,68 +82,88 @@ def countChildren(children_dict):
         count += countChildren(child_data)  # Recursively count the child's children
     return count
 
-############################################       tree         ############################################
+############################################################################################################
 
-import tkinter as tk
-from tkinter import ttk
-
-def insert_items(parent, children, tree):
-    for key, value in children.items():
-        item_id = tree.insert(parent, 'end', text=key)
-        insert_items(item_id, value[CHILDREN_FIELD], tree)
-        for next_node in value.get(NEXT_NODE, []):
-            tree.insert(item_id, 'end', text=next_node)
-
-def createTreeView(data):
-    root = tk.Tk()
-    root.title("GUI Tree Workflow")
-
-    # Create the Treeview widget
-    tree = ttk.Treeview(root)
-    tree.heading("#0", text="Workflow", anchor='w')
-
-    # Insert the root item
-    root_item = tree.insert('', 'end', text='ROOT')
-    insert_items(root_item, data[CHILDREN_FIELD], tree)
-
-    # Pack the Treeview widget
-    tree.pack(fill='both', expand=True)
-
-    # Run the application
-    root.mainloop()
-
-############################################      graph         ############################################
+def searchAllChildrenInWorkflow(workflow_list):
+    all_children_dict = {}
+    for workflow_name in workflow_list:
+        print(f"Searching children of {workflow_name}")
+        all_children_dict[workflow_name] = findChildren(workflow_name)
+        total_children = countChildren(all_children_dict[workflow_name])
+        print(f"Total children: {total_children}")
+    return all_children_dict
 
 
-import networkx as nx
-import matplotlib.pyplot as plt
+############################################################################################################
+
+# def prepareChildrenList(children_json, parent_name, children_list):
+#     if children_json["Children"]:
+#         for childname, child_data in children_json["Children"].items():
+#             child_level = child_data["Child Level"]
+#             child_type = child_data["Child Type"]
+#             next_node = child_data["Next Node"]
+#             if next_node == []:
+#                 next_node = None
+#             children_list.append({
+#                 'Taskname': childname,
+#                 'workflow': parent_name,
+#                 'Child Level': child_level,
+#                 'Child Type': child_type,
+#                 'Next Node': next_node
+#             })
+#             if child_data["Children"]:
+#                 children_list = prepareChildrenList(child_data, childname, children_list)
+#     return children_list
 
 
-def add_nodes_and_edges(graph, parent, data):
-    for node, info in data[CHILDREN_FIELD].items():
-        graph.add_node(node)
-        graph.add_edge(parent, node)
-        add_nodes_and_edges(graph, node, info)
-        for next_node in info.get(NEXT_NODE, []):
-            graph.add_node(next_node)
-            graph.add_edge(node, next_node)
+# def prepareChildrenListAllLevel(children_dict):
+#     df_all_children_list = {}
+#     for workflow_name, children_dict in children_dict.items():
+#         children_list = prepareChildrenList(children_dict, workflow_name, children_list)
+        
+#         df_children_list = pd.DataFrame(children_list)
+#         df_all_children_list[workflow_name] = df_children_list
+#     return children_list
 
-# Function to create and visualize the workflow graph
-def visualizeWorkflow(workflow_dict):
-    G = nx.DiGraph()
-    root = "ROOT"
-    G.add_node(root)
+def flattenChildrenHierarchy(children_json, parent_path=None):
+    if parent_path is None:
+        parent_path = []
 
-    # Build the graph
-    add_nodes_and_edges(G, root, workflow_dict)
+    rows = []
+    for child_name, child_data in children_json["Children"].items():
+        current_path = parent_path + [child_name]
+        child_level = child_data["Task Level"]
+        child_type = child_data["Task Type"]
+        next_node = ", ".join(child_data["Next Node"]) if child_data["Next Node"] else None
+        previous_node = ", ".join(child_data["Previous Node"]) if child_data["Previous Node"] else None
+        rows.append({
+            "Path": current_path,
+            "Taskname": child_name,
+            #"Parent": parent_path[-1] if parent_path else None,
+            "Task Level": child_level,
+            "Task Type": child_type,
+            "Previous Node": previous_node,
+            "Next Node": next_node
+        })
+        if child_data["Children"]:
+            rows.extend(flattenChildrenHierarchy(child_data, current_path))
+    return rows
 
-    # Draw the graph
-    plt.figure(figsize=(20, 15))
-    pos = nx.spring_layout(G, k=0.5, iterations=50)
-    nx.draw(G, pos, with_labels=True, node_size=3000, node_color="skyblue", font_size=10, font_weight="bold", arrows=True)
-    plt.title("Visual Graph GUI Workflow")
-    plt.show()
+def listChildrenHierarchyToDataFrame(children_dict):
+    df_all_children_dict = {}
 
+    for workflow_name, workflow_children in children_dict.items():
+        flattened_rows = flattenChildrenHierarchy(workflow_children)
+        max_depth = max(len(row["Path"]) for row in flattened_rows)
+        columns = ["Taskname", "Task Type", "Task Level"] + [f"Level {i+1}" for i in range(max_depth)] + ["Previous Task", "Next Task"]
+        data = []
+        for row in flattened_rows:
+            padded_path = row["Path"] + [""] * (max_depth - len(row["Path"]))
+            data.append([row["Taskname"], row["Task Type"], row["Task Level"]] + padded_path + [row["Previous Node"], row["Next Node"]])
+        #print(json.dumps(data, indent=10))
+        df_all_children_dict[workflow_name] = pd.DataFrame(data, columns=columns)
+
+    return df_all_children_dict
 
 ############################################################################################################
 
@@ -137,19 +178,16 @@ def main():
     #domain = domain_url['1.86']
     updateURI(domain)
     
-    print("Finding all children of a task in the workflow")
-    children = findChildren(TASK_NAME)
-    print("Showing the children of the task in a tree view")
-    print(json.dumps(children, indent=10))
-    total_children = countChildren(children)
-    print(f"Total children: {total_children}")
-    #visualizeWorkflow(children)
-    #createTreeView(children)
-    save_choice = input("Do you want to save the children to a file? (y/n): ")
-    if save_choice.lower() == "y":
-        with open(f"./DWF/{TASK_NAME}_children.json", "w") as file:
-            json.dump(children, file, indent=4)
-        print(f"Children saved to '{TASK_NAME}_children.json'")
+    print("Finding all children of the workflow")
+    all_children_dict = searchAllChildrenInWorkflow(workflow_list)
+    #print(json.dumps(all_children_dict, indent=10))
+    createJson("DeepWF\\All Children.json", all_children_dict, False)
+    print("Preparing the children list")
+    df_workflow_children_list = listChildrenHierarchyToDataFrame(all_children_dict)
+    #print(df_workflow_children_list)
+    list_df_workflow_children_list = [(workflow_name, df_children_list) for workflow_name, df_children_list in df_workflow_children_list.items()]
+    createExcel("ChildrenExcel\\All Children In Workflow.xlsx", *list_df_workflow_children_list)
+    
 
 if __name__ == "__main__":
     main()
