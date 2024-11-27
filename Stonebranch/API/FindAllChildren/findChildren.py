@@ -150,20 +150,24 @@ def flattenChildrenHierarchy(children_json, parent_path=None):
     return rows
 
 def listChildrenHierarchyToDataFrame(children_dict):
-    df_all_children_dict = {}
-
+    workflow_children_dict = {}
+    df_children_list = []
+    max_depth = 0
     for workflow_name, workflow_children in children_dict.items():
         flattened_rows = flattenChildrenHierarchy(workflow_children)
-        max_depth = max(len(row["Path"]) for row in flattened_rows)
-        columns = ["Taskname", "Task Type", "Task Level"] + [f"Level {i+1}" for i in range(max_depth)] + ["Previous Task", "Next Task"]
-        data = []
-        for row in flattened_rows:
+        workflow_children_dict[workflow_name] = flattened_rows
+        max_depth = max(max_depth, max(len(row["Path"]) for row in flattened_rows))
+        
+    columns = ["Taskname", "Task Type", "Task Level", "Main Workflow"] + [f"Sub Level {i+1}" for i in range(max_depth)] + ["Previous Task", "Next Task"]
+    
+    for workflow_name, workflow_rows in workflow_children_dict.items():
+        for row in workflow_rows:
             padded_path = row["Path"] + [""] * (max_depth - len(row["Path"]))
-            data.append([row["Taskname"], row["Task Type"], row["Task Level"]] + padded_path + [row["Previous Node"], row["Next Node"]])
-        #print(json.dumps(data, indent=10))
-        df_all_children_dict[workflow_name] = pd.DataFrame(data, columns=columns)
+            df_children_list.append([row["Taskname"], row["Task Type"], row["Task Level"], workflow_name] + padded_path + [row["Previous Node"], row["Next Node"]])
+            #print(json.dumps(data, indent=10))
+    df_children_list = pd.DataFrame(df_children_list, columns=columns)
 
-    return df_all_children_dict
+    return df_children_list
 
 ############################################################################################################
 
@@ -185,8 +189,7 @@ def main():
     print("Preparing the children list")
     df_workflow_children_list = listChildrenHierarchyToDataFrame(all_children_dict)
     #print(df_workflow_children_list)
-    list_df_workflow_children_list = [(workflow_name, df_children_list) for workflow_name, df_children_list in df_workflow_children_list.items()]
-    createExcel("ChildrenExcel\\All Children In Workflow.xlsx", *list_df_workflow_children_list)
+    createExcel("ChildrenExcel\\All Children In Workflow.xlsx", ("All Children",df_workflow_children_list))
     
 
 if __name__ == "__main__":
