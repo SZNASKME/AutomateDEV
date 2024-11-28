@@ -2,7 +2,7 @@ import google.generativeai as genai
 import asyncio
 
 INPUT_TEXT = "What is SLA?"
-API_KEY = "AIzaSyC-bDt5TonYSmKzKfxdGPnLn7pmdVGdxq4"
+API_KEY = ""
 PROJECT_NAME = "275082005270"
 MODEL = "gemini-1.5-flash"
 
