@@ -12,13 +12,7 @@ from utils.createFile import createExcel, createJson
 from collections import OrderedDict
 
 workflow_list = [
-    'MDM_PROCESS_DAILY_B',
-    'MDM_PROCESS_POST_DAILY_B',
-    'MDM_PROCESS_MTHLY_B',
-    'MDM_PROCESS_POST_MTHLY_B',
-    'NCBDS_MTH_B',
-    'NCBDS_MTH_5Y_B'
-    #'DWH_DAILY_B',
+    'DI_DWH_LCS_S.MN_B'
 ]
 
 CHILDREN_FIELD = "Children"
@@ -175,11 +169,11 @@ def listChildrenHierarchyToDataFrame(children_dict):
 def main():
     auth = loadJson('auth.json')
     #userpass = auth['ASKME_STB']
-    userpass = auth['TTB']
+    userpass = auth['ASKME_STB']
     updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
     domain_url = loadJson('Domain.json')
-    domain = domain_url['TTB_UAT']
-    #domain = domain_url['1.86']
+    #domain = domain_url['TTB_UAT']
+    domain = domain_url['1.86']
     updateURI(domain)
     
     print("Finding all children of the workflow")

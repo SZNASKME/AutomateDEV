@@ -55,3 +55,18 @@ def readCSV(filename='config.csv', parent_dir_level=3, *dirs):
     except Exception as e:
         print(f"Error loading {csv_path}: {e}")
         return None
+    
+    
+def readFolderTextFiles(folder_path, *file_names):
+    try:
+        folder = Path(folder_path)
+        files = {}
+        for file_name in file_names:
+            file_path = folder / file_name
+            with open(file_path, 'r') as file:
+                files[file_name] = file.readlines()
+            print(f"{file_path} loaded successfully")
+        return files
+    except Exception as e:
+        print(f"Error loading files from {folder_path}: {e}")
+        return None
