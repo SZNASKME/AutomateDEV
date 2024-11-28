@@ -12,7 +12,7 @@ from utils.readFile import readFolderTextFiles
 from utils.createFile import createExcel
 
 
-OUTPUT_PATH = "\\output\\"
+OUTPUT_PATH = "output\\"
 
 JIL_FILENAME = "jobfile.txt"
 STDCAL_FILENAME = "stdcal.txt"
@@ -116,9 +116,6 @@ def extcelParseData(lines):
         data.append(current_entry)
     return data
 
-
-
-
 def main():
     current_path = os.path.dirname(__file__)
     folder_path = input("Enter the folder path: ")
@@ -137,11 +134,11 @@ def main():
     df_jil = pd.DataFrame(jil_in_array, columns = jil_fieldnames)
     df_stdcal = pd.DataFrame(stdcel_parsed_data)
     df_extcal = pd.DataFrame(extcel_parsed_data)
-    jil_output_file = current_path + OUTPUT_PATH + date_file_format + JIL_EXCELNAME
-    stdcal_output_file = current_path + OUTPUT_PATH + date_file_format + STDCAL_EXCELNAME
-    extcal_output_file = current_path + OUTPUT_PATH + date_file_format + EXTCAL_EXCELNAME
+    jil_output_file = OUTPUT_PATH + date_file_format + JIL_EXCELNAME
+    stdcal_output_file = OUTPUT_PATH + date_file_format + STDCAL_EXCELNAME
+    extcal_output_file = OUTPUT_PATH + date_file_format + EXTCAL_EXCELNAME
     createExcel(jil_output_file, (JIL_SHEETNAME, df_jil))
-    customExcel(jil_output_file)
+    customExcel(current_path + "\\" + jil_output_file)
     createExcel(stdcal_output_file, (STDCAL_SHEETNAME, df_stdcal))
     createExcel(extcal_output_file, (EXTCAL_SHEETNAME, df_extcal))
     

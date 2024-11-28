@@ -78,7 +78,7 @@ def compareBusinessServices(df_jil, task_dict):
         if business_service:
             if app_name != business_service:
                 change_count += 1
-                print(f"{row_count}/{max_count} | ({change_count}) {job_name} change Business Service to {business_service}")
+                print(f"{row_count}/{max_count} | (C{change_count}) {job_name} change Business Service to {business_service}")
                 task_log.append({
                     'jobName': job_name,
                     'oldBusinessService': app_name,
@@ -90,7 +90,7 @@ def compareBusinessServices(df_jil, task_dict):
                 new_df_jil.loc[new_df_jil[JOBNAME_COLUMN] == job_name, APPNAME_COLUMN] = app_name
         else:
             err_count += 1
-            print(f"{row_count}/{max_count} | ({err_count}) {job_name} is not found in UAC")
+            print(f"{row_count}/{max_count} | (E{err_count}) {job_name} is not found in UAC")
             task_log.append({
                 'jobName': job_name,
                 'oldBusinessService': None,
