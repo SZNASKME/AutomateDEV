@@ -11,7 +11,7 @@ from utils.readFile import loadText
 
 
 
-XML_PATH = './Stonebranch/Excel_BMC/XmlConvert/Open-CTE1-20092024.xml'
+#XML_PATH = './Stonebranch/Excel_BMC/XmlConvert/XML-NONPROD-CTE2-13-08-2024.xml'
 
 ROOT_KEY = 'DEFTABLE'
 JSON_COLUMN_CHAR = '@'
@@ -92,14 +92,15 @@ def XJsonToDataFrame(xjson_dict, reorder = True):
 
 
 def main():
-    XML_text = loadText(XML_PATH)
+    xml_path = input("Enter the path of the XML file: ")
+    XML_text = loadText(xml_path)
     json_data = xmltodict.parse(XML_text)
     
     xjson_dict = prepareXJson(json_data)
-    createJson('XmlConvert.json', xjson_dict)
+    createJson('XmlConvert_POC2.json', xjson_dict)
     
     df_list = XJsonToDataFrame(xjson_dict)
-    createExcel('XmlConvert.xlsx', *df_list)
+    createExcel('XmlConvert_POC2.xlsx', *df_list)
 
 if __name__ == '__main__':
     main()
