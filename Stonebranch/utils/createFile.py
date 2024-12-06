@@ -1,6 +1,7 @@
 import json
 import pandas as pd
 from io import StringIO
+from pathlib import Path
 
 # Create JSON file
 def createJson(filename, data, show_response = True):
@@ -53,3 +54,11 @@ def prepareOutputFile(data_response, filename, format_str, sheetname = 'Sheet'):
     elif format_str == "xml":
         data = data_response.text
         createXml(f"{filename}.xml", data)
+        
+# Create folder
+def createFolder(foldername):
+    try:
+        Path(foldername).mkdir(parents=True, exist_ok=True)
+        print(f"{foldername} folder created successfully")
+    except Exception as e:
+        print(f"Error creating {foldername} folder: {e}")

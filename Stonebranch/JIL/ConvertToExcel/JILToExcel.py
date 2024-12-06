@@ -9,8 +9,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.readExcel import getExcelProcess
 from utils.readFile import readFolderTextFiles
-from utils.createFile import createExcel
+from utils.createFile import createExcel, createFolder
 
+JOBNAME_COLUNM = "jobName"
 
 OUTPUT_PATH = "output\\"
 
@@ -18,7 +19,8 @@ JIL_FILENAME = "jobfile.txt"
 STDCAL_FILENAME = "stdcal.txt"
 EXTCAL_FILENAME = "extcal.txt"
 
-JIL_EXCELNAME = "_JIL.xlsx"
+JIL_ORI_EXCELNAME = "_JIL.xlsx"
+JIL_EXCEPT_EXCELNAME = "_JIL_ex.xlsx"
 STDCAL_EXCELNAME = "_stdcal.xlsx"
 EXTCAL_EXCELNAME = "_extcal.xlsx"
 
@@ -126,19 +128,30 @@ def main():
     jil_in_array = readJILFile(jil_path)
     if jil_except_path != 'n':
         df_jil_except = getExcelProcess(jil_except_path)
-        jil_except_list = df_jil_except['jobName'].tolist()
-        jil_in_array = [job for job in jil_in_array if job['jobName'] not in jil_except_list]
+        jil_except_list = df_jil_except[JOBNAME_COLUNM].tolist()
+        jil_in_array_except = [job for job in jil_in_array if job[JOBNAME_COLUNM] not in jil_except_list]
         
     stdcel_parsed_data = stdcelParseData(files[STDCAL_FILENAME])
     extcel_parsed_data = extcelParseData(files[EXTCAL_FILENAME])
-    df_jil = pd.DataFrame(jil_in_array, columns = jil_fieldnames)
+    
+    df_jil_ori = pd.DataFrame(jil_in_array, columns = jil_fieldnames)
+    if jil_except_path != 'n':
+        df_jil_except = pd.DataFrame(jil_in_array_except, columns = jil_fieldnames)
     df_stdcal = pd.DataFrame(stdcel_parsed_data)
     df_extcal = pd.DataFrame(extcel_parsed_data)
-    jil_output_file = OUTPUT_PATH + date_file_format + JIL_EXCELNAME
-    stdcal_output_file = OUTPUT_PATH + date_file_format + STDCAL_EXCELNAME
-    extcal_output_file = OUTPUT_PATH + date_file_format + EXTCAL_EXCELNAME
-    createExcel(jil_output_file, (JIL_SHEETNAME, df_jil))
-    customExcel(current_path + "\\" + jil_output_file)
+    
+    folder_name = OUTPUT_PATH + date_file_format + "\\"
+    jil_ori_output_file = folder_name + date_file_format + JIL_ORI_EXCELNAME
+    jil_except_output_file = folder_name + date_file_format + JIL_EXCEPT_EXCELNAME
+    stdcal_output_file = folder_name + date_file_format + STDCAL_EXCELNAME
+    extcal_output_file = folder_name + date_file_format + EXTCAL_EXCELNAME
+    
+    createFolder(folder_name)
+    createExcel(jil_ori_output_file, (JIL_SHEETNAME, df_jil_ori))
+    customExcel(current_path + "\\" + jil_ori_output_file)
+    if jil_except_path != 'n':
+        createExcel(jil_except_output_file, (JIL_SHEETNAME, df_jil_except))
+        customExcel(current_path + "\\" + jil_except_output_file)
     createExcel(stdcal_output_file, (STDCAL_SHEETNAME, df_stdcal))
     createExcel(extcal_output_file, (EXTCAL_SHEETNAME, df_extcal))
     
