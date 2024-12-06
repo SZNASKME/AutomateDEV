@@ -147,12 +147,16 @@ def main():
     extcal_output_file = folder_name + date_file_format + EXTCAL_EXCELNAME
     
     createFolder(folder_name)
+    # Original JIL file
     createExcel(jil_ori_output_file, (JIL_SHEETNAME, df_jil_ori))
     customExcel(current_path + "\\" + jil_ori_output_file)
     if jil_except_path != 'n':
+        # JIL except JOB file
         createExcel(jil_except_output_file, (JIL_SHEETNAME, df_jil_except))
         customExcel(current_path + "\\" + jil_except_output_file)
+    # Standard Calendar file
     createExcel(stdcal_output_file, (STDCAL_SHEETNAME, df_stdcal))
+    # Extclude Calendar file
     createExcel(extcal_output_file, (EXTCAL_SHEETNAME, df_extcal))
     
     
