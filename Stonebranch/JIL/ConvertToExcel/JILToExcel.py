@@ -123,6 +123,9 @@ def main():
     folder_path = input("Enter the folder path: ")
     jil_except_path = input("Enter the jil except path ('n' -> skip): ")
     date_file_format = input("Enter the date file format: ")
+    while date_file_format == "":
+        date_file_format = input("Enter the date file format: ")
+        
     files = readFolderTextFiles(folder_path, STDCAL_FILENAME, EXTCAL_FILENAME)
     jil_path = folder_path + "\\"+ JIL_FILENAME
     jil_in_array = readJILFile(jil_path)
