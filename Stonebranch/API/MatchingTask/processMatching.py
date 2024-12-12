@@ -115,8 +115,6 @@ def analysisCase(compared_dict):
     print(f"Total Task not found in Both: {len(both_not_found)}")
     print(f"Total Task not match: {len(not_match)}")
 
-# http://172.16.1.86:8080/u/resources
-# https://ttbdevstb.stonebranch.cloud/resources
 
 def main():
     try:

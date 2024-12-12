@@ -179,7 +179,7 @@ def main():
     print("Finding all children of the workflow")
     all_children_dict = searchAllChildrenInWorkflow(workflow_list)
     #print(json.dumps(all_children_dict, indent=10))
-    createJson("DeepWF\\All Children.json", all_children_dict, False)
+    createJson("Deep\\All Children.json", all_children_dict, False)
     print("Preparing the children list")
     df_workflow_children_list = listChildrenHierarchyToDataFrame(all_children_dict)
     #print(df_workflow_children_list)

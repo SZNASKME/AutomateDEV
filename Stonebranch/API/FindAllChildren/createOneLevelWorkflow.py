@@ -31,5 +31,5 @@ for root_node in json_data["Children"]:
 flat_workflow = list(flat_list.values())
 
 # Optionally, save to a new JSON file
-with open('./OLWF/DWH_DAILY_B.json', 'w') as f:
+with open('./OneLevel/DWH_DAILY_B.json', 'w') as f:
     json.dump(flat_workflow, f, indent=4)
