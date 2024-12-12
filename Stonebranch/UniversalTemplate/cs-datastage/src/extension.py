@@ -1,7 +1,8 @@
 from __future__ import (print_function)
+from time import sleep
 from universal_extension import UniversalExtension
 from universal_extension import ExtensionResult
-from universal_extension import logger
+from universal_extension import event
 
 
 class Extension(UniversalExtension):
@@ -13,6 +14,9 @@ class Extension(UniversalExtension):
         """
         # Call the base class initializer
         super(Extension, self).__init__()
+
+        # Flag to control the event loop below
+        self.run = True
 
     def extension_start(self, fields):
         """Required method that serves as the starting point for work performed
@@ -32,22 +36,28 @@ class Extension(UniversalExtension):
             can be passed to the ExtensionResult class constructor
         """
 
-        # Get the value of the 'action' field
-        action_field = fields.get('action', [])
-        if len(action_field) != 1:
-            # 'action' field was not specified or is invalid
-            action = ''
-        else:
-            action = action_field[0]
+        # Get the value of the 'sleep_value' field
+        sleep_value = fields.get('sleep_value', 3)
 
-        if action.lower() == 'print':
-            # Print to standard output...
-            print("Hello STDOUT!")
-        else:
-            # Log to standard error...
-            logger.info('Hello STDERR!')
+        # loop that publishes events continuously as long as self.run is True
+        while self.run:
+            # Publish an event
+            event.publish(
+                'publisher_event',
+                {}
+            )
 
-        # Return the result with a payload containing a Hello message...
+            # sleep before publishing next event
+            sleep(sleep_value)
+
+        # Return the result with a payload marking the end of extension_start()
         return ExtensionResult(
-            unv_output='Hello Extension!'
+            unv_output='extension_start() finished'
         )
+
+    def extension_cancel(self):
+        """Optional method that allows the Extension to do any cleanup work
+        before finishing
+        """
+        # Set self.run to False which will end the event loop above
+        self.run = False

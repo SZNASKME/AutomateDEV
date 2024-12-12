@@ -1,0 +1,3 @@
+properties:
+  agent:
+    logLevel: Info

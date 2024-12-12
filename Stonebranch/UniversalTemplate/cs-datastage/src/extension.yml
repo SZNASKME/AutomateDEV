@@ -1,11 +1,11 @@
 extension:
-  name: ue_ssm
+  name: cs-datastage
   version: "1.0.0"
   api_level: "1.4.0"
-  requires_python: ">=2.6"
+  requires_python: ">=3.7"
   zip_safe: True
 owner:
   name: Stonebranch
   organization: Stonebranch Inc.
 comments: |
-  Created using ue-task template
+  Created using ue-publisher template
