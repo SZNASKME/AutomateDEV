@@ -22,3 +22,4 @@ __pycache__/
 
 .env
 *.cfg
+/Stonebranch/UniversalTemplate/CS_DataStage
