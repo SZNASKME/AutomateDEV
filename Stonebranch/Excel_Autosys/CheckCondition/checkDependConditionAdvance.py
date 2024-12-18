@@ -12,17 +12,18 @@ from utils.createFile import createExcel
 JOBNAME_COLUMN = 'jobName'
 CONDITION_COLUMN = 'condition'
 BOXNAME_COLUMN = 'box_name'
-SPECIFIC_COLUMN_01 = 'Update Survey'
+SPECIFIC_COLUMN_LIST = ['Update Survey', 'date_conditions', 'days_of_week', 'start_times', 'run_calendar', 'exclude_calendar']
 
 JOB_COLUMN_OUTPUT = 'jobName'
 BOX_COLUMN_OUTPUT = 'box_name'
-SPECIFIC_COLUMN_01_OUTPUT = 'Update Survey'
+SPECIFIC_COLUMN_LIST_OUTPUT = ['Update Survey', 'date_conditions', 'days_of_week', 'start_times', 'run_calendar', 'exclude_calendar']
 CONDITION_COLUMN_OUTPUT = 'Condition'
 FOUND_CONDITION_COLUMN_OUTPUT = 'Found_Condition'
-EXCEL_FILENAME = 'job_condition_depend_INACT.xlsx'
+
+EXCEL_FILENAME = 'job_condition_depend_INACT_All.xlsx'
 
 SELECTED_COLUMN = 'jobName'
-FILTER_COLUMN = 'jobName'
+FILTER_COLUMN = 'rootBox'
 #FILTER_VALUE_LIST = ['DWH_MTHLY_B']
 FILTER_VALUE_LIST = [
     'ODS_DAILY_B'
@@ -79,7 +80,7 @@ def getNamefromCondition(condition):
 def checkJobConditionInList(df_jil, in_list_condition_dict):
     found_list_dict = {}
     for in_list_name, in_list_condition in in_list_condition_dict.items():
-        
+        #print(in_list_name, len(in_list_condition))
         #print(in_list_condition)
         found_list = []
         for index, row in df_jil.iterrows():
@@ -99,14 +100,16 @@ def checkJobConditionInList(df_jil, in_list_condition_dict):
             
             if len(found_condition_list) == 0:
                 continue
+            row_data = {}
+            row_data[JOB_COLUMN_OUTPUT] = row[JOBNAME_COLUMN]
+            row_data[BOX_COLUMN_OUTPUT] = row[BOXNAME_COLUMN]
+            for specific_column in SPECIFIC_COLUMN_LIST:
+                index = SPECIFIC_COLUMN_LIST.index(specific_column)
+                row_data[specific_column] = row[SPECIFIC_COLUMN_LIST_OUTPUT[index]]
+            row_data[CONDITION_COLUMN_OUTPUT] = condition
+            row_data[FOUND_CONDITION_COLUMN_OUTPUT] = ", ".join(found_condition_list)
             
-            found_list.append({
-                JOB_COLUMN_OUTPUT: row[JOBNAME_COLUMN],
-                BOX_COLUMN_OUTPUT: row[BOXNAME_COLUMN],
-                SPECIFIC_COLUMN_01_OUTPUT: row[SPECIFIC_COLUMN_01],
-                CONDITION_COLUMN_OUTPUT: condition,
-                FOUND_CONDITION_COLUMN_OUTPUT: ", ".join(found_condition_list)
-            })
+            found_list.append(row_data)
         df_condition_matched = pd.DataFrame(found_list)
         found_list_dict[in_list_name] = df_condition_matched
         print(in_list_name," completed")

@@ -6,7 +6,7 @@ from universal_extension import event
 from universal_extension import logger
 from universal_extension import ui
 from universal_extension.deco import dynamic_choice_command
-import subprocess,os
+import subprocess,os,sys
 
 
 class Extension(UniversalExtension):
@@ -30,7 +30,10 @@ class Extension(UniversalExtension):
         logger.info("Intiating CLI Call to Datastage")
         try:
             # Run the dsjob command to list jobs for the specified project
-            command = ['dsjob', '-lprojects', '-server', fields['server'], '-user', fields['cred.user'], '-password', fields['cred.password']]
+            if fields['specific_server']:
+                command = ['dsjob', '-lprojects', '-server', fields['server'], '-user', fields['cred.user'], '-password', fields['cred.password']]
+            else:
+                command = ['dsjob', '-lprojects', '-user', fields['cred.user'], '-password', fields['cred.password']]
             logger.info("Command:"+str(command))
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             output, error = process.communicate()
@@ -61,7 +64,10 @@ class Extension(UniversalExtension):
         logger.info("Intiating CLI Call to Datastage to fetch Jobs list")
         try:
             # Run the dsjob command to list jobs for the specified project
-            command = ['dsjob', '-ljobs', '-server', fields['server'], '-user', fields['cred.user'], '-password', fields['cred.password'],fields['project'][0]]
+            if fields['specific_server']:
+                command = ['dsjob', '-ljobs', '-server', fields['server'], '-user', fields['cred.user'], '-password', fields['cred.password'],fields['project'][0]]
+            else:
+                command = ['dsjob', '-ljobs', '-user', fields['cred.user'], '-password', fields['cred.password'],fields['project'][0]]
             logger.info("Command:"+str(command))
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             output, error = process.communicate()
@@ -92,7 +98,10 @@ class Extension(UniversalExtension):
         logger.info("Intiating CLI Call to Datastage to fetch Job's Parameters")
         try:
             # Run the dsjob command to list jobs for the specified project
-            command = ['dsjob', '-lparams '+fields['job'][0], '-server', fields['server'], '-user', fields['cred.user'], '-password', fields['cred.password'],fields['project'][0]]
+            if fields['specific_server']:
+                command = ['dsjob', '-lparams '+fields['job'][0], '-server', fields['server'], '-user', fields['cred.user'], '-password', fields['cred.password'],fields['project'][0]]
+            else:
+                command = ['dsjob', '-lparams '+fields['job'][0], '-user', fields['cred.user'], '-password', fields['cred.password'],fields['project'][0]]
             logger.info("Command:"+str(command))
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             output, error = process.communicate()
@@ -119,12 +128,30 @@ class Extension(UniversalExtension):
 
     def extension_start(self, fields):
         logger.info("Execute DSjob CLI to trigger Datastage Job")
-        #call datastage function 
+        #call datastage function
+        self.load_profile(fields)
         self.run_job(fields)
     
     #############################################################################
     # Function to trigger Datastage 
     ###############################################################################
+    
+    def load_profile(self,fields):
+        logger.info("Loading the Datastage Profile")
+        try:
+            profile_command=". "+fields['profile_file']
+            profile_response = subprocess.run(profile_command, shell=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if profile_response.returncode == 0:
+                logger.info("Datastage Profile Loaded Successfully")
+            else:
+                logger.error("Error in Loading Datastage Profile")
+                logger.error("Error Message: "+str(profile_response.stderr))
+                os._exit(1)
+        except Exception as e:
+            logger.error("Error with profile loading:"+str(e))
+            os._exit(1)
+
+    
     def run_job(self,fields):
         logger.info("In Run Job Function :")
         try:
@@ -148,21 +175,28 @@ class Extension(UniversalExtension):
                 other_options.append("-mode RESET")
                 logger.info("Reset the Job option enabled")
             other_options_str = " ".join(other_options)
-            ##Form the Datastage command for execution #########
-            dsjob_command="dsjob -server "+fields['server']+" -domain " +fields['domain']+ " -user " + fields['cred.user'] \
+            profile_command = ". "+fields["profile_file"]+" && "
+            if fields["specific_server"]:
+                job_command = "dsjob -server "+fields['server']+" -domain " +fields['domain']+ " -user " + fields['cred.user'] \
             +" -password " + fields['cred.password'] + " -run " + other_options_str + " "+fields['project'][0]+" "+fields['job'][0]
+            else:
+                job_command = "dsjob -user " + fields['cred.user'] +" -password " + fields['cred.password'] \
+            + " -run " + other_options_str + " "+fields['project'][0]+" "+fields['job'][0]
+            dsjob_command = profile_command + job_command
             logger.debug("dsjob_command:"+str(dsjob_command))
-            exec_response = os.system(dsjob_command)
-            logger.info("Job Run Output:"+str(exec_response))
-            if exec_response == 0:
+            exec_response = subprocess.run(dsjob_command, shell=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            logger.debug("Job Run Output:"+str(exec_response))
+            if exec_response.returncode == 0:
                 logger.info("DataStage Job executed Successfully")
                 print("job ran successfully")
                 if fields['print_logs']:
                     self.fetch_logs(fields)
                 os._exit(0)
             else:
-                logger.error("Problems in Job execution:"+str(exec_response))
+                logger.error("Problems in Job execution")
+                logger.error("Error Message:"+str(exec_response.stderr))
                 self.fetch_logs(fields)
+                os._exit(exec_response.returncode)
         except Exception as e:
             logger.error("Error with DSJOB run:"+str(e))
             os._exit(1)
@@ -172,7 +206,8 @@ class Extension(UniversalExtension):
     ###############################################################################
     def fetch_logs(self,fields):
         logger.info("Attempting to fetch logs:")
-        log_command="dsjob -logdetail "+fields['project'][0]+" "+fields['job'][0]
+        profile_command=". "+fields['profile_file'] + " && "
+        log_command = profile_command + "dsjob -logdetail "+fields['project'][0]+" "+fields['job'][0]
         logger.info("Log fetch command:"+str(log_command))
         try:
             log_output=subprocess.check_output(log_command,shell=True)
@@ -181,9 +216,6 @@ class Extension(UniversalExtension):
             print(log_output_decode)
         except Exception as e:
             logger.error("Failure to fetch the Logs :"+str(e))
-
-
-
 
 
 
