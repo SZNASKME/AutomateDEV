@@ -93,8 +93,8 @@ def getDataExcel(prompt="Enter PATH of the file and sheetname [pathfile/sheetnam
 
 
 def getDataExcelAllSheet(prompt="Enter PATH of the file and sheetname [pathfile/sheetname]: "):
-    excel_configs = inputMethod(prompt)
     print('Reading excel file...')
+    excel_configs = inputMethod(prompt)
     pathfile = excel_configs['path']
     excel_file = pd.ExcelFile(pathfile)
     if excel_file is None:
@@ -107,33 +107,3 @@ def getDataExcelAllSheet(prompt="Enter PATH of the file and sheetname [pathfile/
     
     print('Excel data read successfully')
     return dfs
-
-# def getDataExcelOnline(prompt="Enter Sharepoint Folder PATH of the file, and sheetname [folderpath|filename|sheetname]: "):
-#     excel_configs = inputMethod(prompt, 'sharepoint')
-#     print('Loading Sharepoint credentials...')
-#     auth = loadJson('Auth.json')
-#     userpass = auth['Sharepoint']
-#     URL, site_url, username, password = userpass['URL'], userpass['SITE_URL'], userpass['USERNAME'], userpass['PASSWORD']
-#     authcookie = Office365(URL, username = username, password = password).GetCookies()
-#     print('Connecting to Sharepoint...')
-#     site = Site(site_url, authcookie=authcookie)
-#     if site is None:
-#         print('Error connecting to Sharepoint')
-#         return None
-#     folder = site.Folder(excel_configs['folderpath'])
-#     file = folder.get_file(excel_configs['filename'])
-#     file_content = BytesIO(file)
-#     print('Reading excel file...')
-#     dfs = readExcelMultipleSheet(file_content, excel_configs['sheetname'])
-#     if dfs is None:
-#         print('Error reading excel file')
-#         return None
-    
-#     if isinstance(dfs, dict) and excel_configs['sheetname'] is not None:
-#         print('selecting sheet . . .')
-#         dfs_sheet = selectSheet(dfs, excel_configs['sheetname'])
-#     else:
-#         dfs_sheet = dfs
-        
-#     print('Excel data read successfully')
-#     return dfs_sheet
