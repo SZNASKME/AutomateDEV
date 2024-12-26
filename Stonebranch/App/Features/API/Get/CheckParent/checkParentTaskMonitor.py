@@ -75,20 +75,10 @@ def checkParentTaskMonitor(task_list):
 
 
 
-def main():
-    auth = loadJson('Auth.json')
-    userpass = auth['TTB']
-    updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
-    domain_url = loadJson('Domain.json')
-    domain = domain_url['TTB_UAT']
-    updateURI(domain)
+def CheckParentTaskMonitor():
     task_monitor_list = getListTaskbyBussinessService(BUSSINESS_SERVICE_LIST)
     parent_list, non_parent_list = checkParentTaskMonitor(task_monitor_list)
     df_parent = pd.DataFrame(parent_list)
     df_non_parent = pd.DataFrame(non_parent_list)
     
     createExcel('ParentTaskMonitor.xlsx', ('Parent Task Monitor', df_parent), ('Non Parent Task Monitor',df_non_parent))
-    
-    
-if __name__ == '__main__':
-    main()

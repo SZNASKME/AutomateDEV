@@ -6,7 +6,7 @@ import math
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from utils.readExcel import getDataExcel
-from utils.stbAPI import updateURI, updateAuth, createTaskAPI, getListTaskAPI
+from utils.stbAPI import createTaskAPI, getListTaskAPI
 from utils.readFile import loadJson
 
 task_configs_temp = {
@@ -107,14 +107,7 @@ def createTaskList(df, map_fields):
 
 
 def main():
-    auth = loadJson("auth.json")
-    userpass = auth["ASKME_STB"]
-    updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
-    domain_url = loadJson('Domain.json')
-    #domain = domain_url['TTB_UAT']
-    domain = domain_url['1.86']
-    updateURI(domain)
-    
+
     df = getDataExcel()
     exist_task_list = ListTask()
     

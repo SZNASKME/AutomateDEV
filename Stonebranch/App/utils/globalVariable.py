@@ -16,5 +16,3 @@ class GlobalVariable(object):
             
     def clear(self):
         self._globalVariable.clear()
-    
-        
