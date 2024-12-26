@@ -15,11 +15,7 @@ class FeatureManager:
         except FileNotFoundError:
             print("Features JSON file not found. Creating a default one.")
             # Default features if the file is missing
-            return [
-                {"name": "feature_1", "enabled": True},
-                {"name": "feature_2", "enabled": False},
-                {"name": "feature_3", "enabled": True},
-            ]
+            return []
     
     def updateFeature(self, feature_name, enabled):
         """Enable or disable a feature and update the JSON file."""
