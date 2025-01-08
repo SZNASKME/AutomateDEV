@@ -23,6 +23,7 @@ __pycache__/
 .env
 *.cfg
 /Stonebranch/UniversalTemplate/CS_DataStage
+/Stonebranch/UniversalTemplate/Jira
 
 Azure
 Azure/
