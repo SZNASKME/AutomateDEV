@@ -19,7 +19,7 @@ __pycache__/
 
 /XCT
 /Decoder
-/App
+/Stonebranch/App
 
 .env
 *.cfg
