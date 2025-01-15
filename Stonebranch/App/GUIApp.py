@@ -10,6 +10,8 @@ from tkinter import filedialog
 from utils.pathHolder import APP_LOGO_PATH
 from utils.featuresManager import FeatureManager
 from utils.globalVariable import GlobalVariable
+from utils.textHelper import TextHandler, TruncatedLabel
+from utils.InputConfigManager import UserConfigPopUp
 
 # Sets the appearance of the window
 ctk.set_appearance_mode("light")
@@ -17,21 +19,11 @@ ctk.set_default_color_theme("blue")
 
 # Dimensions of the window
 appWidth, appHeight = 1600, 900
+appFont = ("Arial", 12)
 
-
-class TextHandler(logging.Handler):
-    """Custom logging handler to redirect logs to a tkinter Text widget."""
-    def __init__(self, widget):
-        super().__init__()
-        self.widget = widget
-
-    def emit(self, record):
-        log_entry = self.format(record)
-        self.widget.configure(state="normal")
-        self.widget.insert(tk.END, log_entry + "\n")
-        self.widget.configure(state="disabled")
-        self.widget.yview(tk.END)  # Auto-scroll to the latest log
-
+TOP_FRAME_INDEX = 0
+TOP_MENU_INDEX = 0
+USER_CONFIG_INDEX = 2
 
 class App(ctk.CTk):
     def __init__(self, *args, **kwargs):
@@ -55,6 +47,7 @@ class App(ctk.CTk):
         self.setupUI()
         self.setupConsole()
         self.dynamicInputs()
+        #self.setUpUserConfig()
         self.setupLogging()
 
     def appIcon(self, path):
@@ -109,27 +102,34 @@ class App(ctk.CTk):
     def setupUI(self):
         # Main Form Area
         self.form_frame = ctk.CTkFrame(self)
-        self.form_frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+        self.form_frame.grid(row=TOP_FRAME_INDEX, column=0, sticky="nsew", padx=10, pady=10)
 
         # Menu for feature selection using Tkinter Menu
         self.menu_button = ctk.CTkButton(self.form_frame, text="Select Feature", command=self.showCategoriesMenu)
-        self.menu_button.grid(row=0, column=0, padx=20, pady=20, sticky="ew")
+        self.menu_button.grid(row=TOP_MENU_INDEX, column=0, padx=20, pady=20, sticky="ew")
 
         # Label to show selected feature
         self.selected_item = ctk.StringVar(value="No Feature Selected")
-        self.selection_label = ctk.CTkLabel(self.form_frame, textvariable=self.selected_item)
-        self.selection_label.grid(row=0, column=1, padx=20, pady=20, sticky="ew")
+        self.selection_label = TruncatedLabel(self.form_frame, text_var=self.selected_item, max_width=300, font=appFont)
+        self.selection_label.grid(row=TOP_MENU_INDEX, column=1, columnspan = 2, padx=20, pady=20, sticky="w")
 
         # Execute Button
-        self.executeButton = ctk.CTkButton(self.form_frame, text="Execute", command=self.executeSelectedFeature)
-        self.executeButton.grid(row=0, column=5, padx=20, pady=20, sticky="ew")
+        self.executeButton = ctk.CTkButton(self.form_frame, text="Execute", command=self.executeSelectedFeature, fg_color="#FF5733", hover_color="#BF470B")
+        self.executeButton.grid(row=TOP_MENU_INDEX, column=3, padx=20, pady=20, sticky="ew")
 
         self.save_button = ctk.CTkButton(self.form_frame, text="Save", command=self.saveSelectedFeatureSettings)
-        self.save_button.grid(row=0, column=6, padx=20, pady=20, sticky="ew")
+        self.save_button.grid(row=TOP_MENU_INDEX, column=4, padx=20, pady=20, sticky="ew")
 
         # Toggle Console Button
         self.toggle_button = ctk.CTkButton(self.form_frame, text="Hide Log Console", command=self.toggle_sidebar)
-        self.toggle_button.grid(row=0, column=7, columnspan=1, sticky="ew", padx=10, pady=10)
+        self.toggle_button.grid(row=TOP_MENU_INDEX, column=5, columnspan=1, sticky="ew", padx=10, pady=10)
+
+        # User Config Button
+        self.form_frame.grid_rowconfigure(USER_CONFIG_INDEX, weight=1)
+        self.userconfig_button = ctk.CTkButton(self.form_frame, text="User Config", command=self.toggleUserConfig)
+        self.userconfig_button.grid(row=USER_CONFIG_INDEX, column=0, padx=20, pady=20, sticky="sw")
+
+
 
     def showCategoriesMenu(self):
         self.categories_menu = tk.Menu(self, tearoff=0)
@@ -146,7 +146,7 @@ class App(ctk.CTk):
             self.log_frame.grid()  # Show the sidebar
             self.grid_columnconfigure(1, weight=1)  # Enable sidebar column
             self.toggle_button.configure(text="Hide Log Console")
-        self.sidebar_visible = not self.sidebar_visibl
+        self.sidebar_visible = not self.sidebar_visible
 
 
     def transferWidgetValues(self):
@@ -195,10 +195,12 @@ class App(ctk.CTk):
         self.updateInputs(name)  # Update inputs based on the selected feature
 
 
+        
+
     # Sidebar Log Console
     def setupConsole(self):
         self.log_frame = ctk.CTkFrame(self)
-        self.log_frame.grid(row=0, column=1, sticky="nse", pady=10)
+        self.log_frame.grid(row=TOP_FRAME_INDEX, column=1, sticky="nse", pady=10)
         self.log_frame.grid_rowconfigure(1, weight=1)
 
         self.log_console = ScrolledText(self.log_frame, state="disabled", wrap="word")
@@ -206,7 +208,14 @@ class App(ctk.CTk):
         
     def dynamicInputs(self):
         self.input_frame = ctk.CTkFrame(self.form_frame)
-        self.input_frame.grid(row=1, column=0, columnspan=10, padx=20, pady=20, sticky="nsew")
+        self.input_frame.grid(row=1, column=0, columnspan=7, padx=20, pady=20, sticky="nsew")
+
+    def toggleUserConfig(self):
+        UserConfigPopUp(self, self.userconfig_button, self.saveUserConfig)
+        
+    def saveUserConfig(self, value):
+        self.logger.info(f"User config value saved: {value}")
+        
 
 
     def updateInputs(self, feature_name):
@@ -220,7 +229,7 @@ class App(ctk.CTk):
         self.queryInputsOutputs(inputs, self.input_frame, self.input_widgets)
         
     
-    def queryInputsOutputs(self, IO, frame, widgets: list):
+    def queryInputsOutputs(self, IO, frame : ctk.CTkFrame, widgets: list):
         index = 0
         # Dynamically create input fields
         for IO_field in IO:
