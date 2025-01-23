@@ -27,6 +27,8 @@ LIST_PARENT_TASK_URI = f"{DOMAIN}/task/parent/list"
 
 RUN_REPORT_URI = f"{DOMAIN}/report/run"
 
+BUSINESS_SERVICE_URI = f"{DOMAIN}/businessservice"
+
 auth = HTTPBasicAuth('?','?')
 
 def createURI(uri, configs):
@@ -41,7 +43,7 @@ def createURI(uri, configs):
 def updateURI(changed_domain):
     global TASK_URI, LIST_TASK_URI, LIST_TASK_ADV_URI, TRIGGER_URI, LIST_TRIGGER_URI
     global LIST_TRIGGER_ADV_URI, LIST_QUALIFYING_TRIGGER_URI, PROMOTE_BUNDLE_URI, TASK_IN_WORKFLOW_URI
-    global DEPEN_IN_WORKFLOW_URI, VARIABLE_URI, LIST_PARENT_TASK_URI, RUN_REPORT_URI
+    global DEPEN_IN_WORKFLOW_URI, VARIABLE_URI, LIST_PARENT_TASK_URI, RUN_REPORT_URI, BUSINESS_SERVICE_URI
     TASK_URI = f"{changed_domain}/task"
     LIST_TASK_URI = f"{changed_domain}/task/list"
     LIST_TASK_ADV_URI = f"{changed_domain}/task/listadv"
@@ -55,6 +57,7 @@ def updateURI(changed_domain):
     VARIABLE_URI = f"{changed_domain}/variable"
     LIST_PARENT_TASK_URI = f"{changed_domain}/task/parent/list"
     RUN_REPORT_URI = f"{changed_domain}/report/run"
+    BUSINESS_SERVICE_URI = f"{changed_domain}/businessservice"
 
 def updateAuth(username, password):
     global auth
@@ -305,6 +308,27 @@ def runReportAPI(report_configs, show_response = True, format_str ='json'):
     uri = createURI(RUN_REPORT_URI, report_configs)
     header = formatHeader('Accept', format_str)
     response = requests.get(url = uri, json = report_configs, auth = auth, headers = header)
+    if show_response:
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
+    return response
+
+
+##############################             Business Service              ##########################################
+
+def getBusinessServiceAPI(business_service_configs, show_response = True, format_str ='json'):
+    uri = createURI(BUSINESS_SERVICE_URI, business_service_configs)
+    header = formatHeader('Accept', format_str)
+    response = requests.get(url = uri, auth = auth, headers = header)
+    if show_response:
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
+    return response
+
+
+def createBusinessServiceAPI(business_service_configs, show_response = True, format_str ='json'):
+    header = formatHeader('Content-Type', format_str)
+    response = requests.post(url = BUSINESS_SERVICE_URI, json = business_service_configs, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")

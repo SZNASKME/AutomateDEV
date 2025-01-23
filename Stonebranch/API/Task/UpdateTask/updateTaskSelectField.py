@@ -27,7 +27,7 @@ task_configs_temp = {
 specific_field_list = [
     "description",
     "command",
-    "application"
+    "group"
 ]
 
 
@@ -73,7 +73,7 @@ def prepareUpdateTaskConfigs(task_data, update_fields):
                 success_fields.append(field)
             else:
                 no_change_fields.append(field)
-        if field == "application":
+        if field == "group":
             if "customField1" not in task_update:
                 task_update["customField1"] = {"label": "Application"}
             if task_update["customField1"].get("value", "") != value:
@@ -138,11 +138,11 @@ def updateTask(df_update):
 
 def main():
     auth = loadJson('Auth.json')
-    userpass = auth['TTB']
+    userpass = auth['ASKME_STB']
     #userpass = auth['ASKME_STB']
     updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
     domain_url = loadJson('Domain.json')
-    domain = domain_url['TTB_UAT']
+    domain = domain_url['1.170']
     #domain = domain_url['1.86']
     updateURI(domain)
     
@@ -150,7 +150,11 @@ def main():
     #print(df_update)
     result = updateTask(df_update)
     print(json.dumps(result, indent=4))
-    createJson("updateTaskResult_241220.json", result)
+    createJson("updateTaskResult_250113.json", result)
     
 if __name__ == '__main__':
     main()
+    
+    
+    
+## update some field of task in UAC

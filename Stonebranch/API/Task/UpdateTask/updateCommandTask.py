@@ -4,7 +4,7 @@ import json
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from utils.stbAPI import updateAuth, updateURI, getListTaskAPI, getTaskAPI
+from utils.stbAPI import updateAuth, updateURI, getListTaskAPI, getTaskAPI, updateTaskAPI
 from utils.readFile import loadJson
 from utils.createFile import createJson
 
@@ -14,7 +14,6 @@ API_TASK_TYPE = [3,4,99]
 
 task_list_configs_temp = {
     "name": "*",
-    "businessServices": "A0076 - Data Warehouse ETL",
     "type": None,
 }
 
@@ -34,8 +33,8 @@ def getTaskList():
     
     return task_list
 
-def checkCommandTask(task_list):
-    err_list = []
+def updateCommandTask(task_list):
+    update_log = []
     for task in task_list:
         task_config = task_configs_temp.copy()
         task_config['taskname'] = task['name']
@@ -51,23 +50,34 @@ def checkCommandTask(task_list):
             continue
         if command:
             char = "\""
-            indices = [i for i, c in enumerate(command) if c == char]
-            for index in indices:
-                if command[index-1] != "\\":
-                    err_list.append({
-                        "taskname": task['name'],
-                        "command": command,
-                        "index": index,
-                    })
-    return err_list
+            new_char = "\\\""
+            if char in command:
+                command = command.replace(new_char, char)
+                command = command.replace(char, new_char)
+            task_data['largeTextField1']['value'] = command
+            response_update = updateTaskAPI(task_data)
+            if response_update.status_code == 200:
+                update_log.append({
+                    "taskname": task['name'],
+                    "message": "Command updated"
+                })
+            elif response_update.status_code != 200:
+                update_log.append({
+                    "taskname": task['name'],
+                    "error": f"{response_update.status_code} - {response_update.text}"
+                })
+                
+        
+           
+    return update_log
 
 
 def main():
     auth = loadJson('auth.json')
-    userpass = auth['TTB']
+    userpass = auth['ASKME_STB']
     updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
     domain_url = loadJson('Domain.json')
-    domain = domain_url['TTB_UAT']
+    domain = domain_url['1.170']
     updateURI(domain)
     
     task_list = getTaskList()
@@ -75,9 +85,9 @@ def main():
     if not task_list:
         print("No task found.")
     else:
-        err_list = checkCommandTask(task_list)
-        print(json.dumps(err_list, indent=4))
-        createJson('CommandTaskError.json', err_list)
+        update_log = updateCommandTask(task_list)
+        print(json.dumps(update_log, indent=4))
+        createJson('CommandTaskLog.json', update_log)
 
 
         

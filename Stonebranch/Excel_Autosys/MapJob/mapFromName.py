@@ -10,8 +10,8 @@ from utils.createFile import createExcel
 
 
 JOBNAME_COLUMN = 'jobName'
-SELECT_MAP_COLUMN = 'jobs'
-EXCEL_NAME = 'mappedJobs.xlsx'
+SELECT_MAP_COLUMN = 'Taskname'
+EXCEL_NAME = 'mappedJobs-Interval.xlsx'
 
 
 

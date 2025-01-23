@@ -141,3 +141,6 @@ def main():
     
 if __name__ == '__main__':
     main()
+    
+## Get Task and Trigger Information from UAC and restructure to JSON
+## To create Excel file, go to cleanJsonToExcel.py
