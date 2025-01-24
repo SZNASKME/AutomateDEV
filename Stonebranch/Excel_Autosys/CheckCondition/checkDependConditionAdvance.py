@@ -115,15 +115,15 @@ def checkJobConditionInList(df_jil, in_list_condition_dict):
         print(in_list_name," completed")
     return found_list_dict
     
-def getSpecificColumn(df, column_name, filter_column_name = None, filter_value_list = None):
+def getSpecificColumn(df_root, column_name, filter_column_name = None, filter_value_list = None):
     column_list_dict = {}
     for filter_value in filter_value_list:
-        df_filtered = df.copy()
+        df_filtered = df_root.copy()
         if filter_column_name is not None:
             df_filtered = df_filtered[df_filtered[filter_column_name].isin([filter_value])]
 
         #column_list_dict[filter_value] = []
-        column_list_dict[filter_value] = df[df[column_name] == filter_value][column_name].tolist()
+        column_list_dict[filter_value] = df_root[df_root[column_name] == filter_value][column_name].tolist()
         for index, row in df_filtered.iterrows():
             if row[column_name] not in column_list_dict[filter_value]:
                 column_list_dict[filter_value].append(row[column_name])
@@ -148,8 +148,9 @@ def main():
     
     
     df_jil = getDataExcel("Enter the path of the main excel file")
-    df_in_list_condition = getDataExcel("Enter the path of the excel file with the conditions to be checked")
-    in_list_condition_dict = getSpecificColumn(df_in_list_condition, SELECTED_COLUMN, FILTER_COLUMN, FILTER_VALUE_LIST)
+    df_root = getDataExcel("Enter the path of the excel file with the conditions to be checked")
+    
+    in_list_condition_dict = getSpecificColumn(df_root, SELECTED_COLUMN, FILTER_COLUMN, FILTER_VALUE_LIST)
     for key, value in in_list_condition_dict.items():
         print(key, len(value))
     found_condition_matched_dict = checkJobConditionInList(df_jil, in_list_condition_dict)
