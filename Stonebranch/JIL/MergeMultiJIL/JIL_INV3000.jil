@@ -1,0 +1,4327 @@
+insert_job: DWH_P_MF_INV3000_D_B    job_type: box
+description: "MF INV3000 daily box"
+owner: dsoper@dsdbprd_vr
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 88
+date_conditions: y
+days_of_week: all
+start_times: "06:40"
+send_notification: n
+
+insert_job: DWH_P_LD_MF_INV3000_D_B    job_type: box
+description: "LOAD SOURCE FILES"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 88
+date_conditions: y
+days_of_week: all
+start_times: "06:40"
+send_notification: n
+
+
+insert_job: DWH_P_LD_MFTSCKDSC_01_D_B    job_type: box
+description: "FILE_ID = 2908,FILE = A0362_MF_TS_CODEBOOK_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFTSCKDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_TS_CODEBOOK_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSCKDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_TS_CODEBOOK_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFTSCKDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTSCKDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSCKDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_TS_CODEBOOK_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFTSCKDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTSCKDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSCKDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_TS_CODEBOOK_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFTSCKDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTSCKDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSCKDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFTSCKDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFTSCKDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTSCKDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSCKDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_TS_CODEBOOK_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFTSCKDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFTSCKDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSCKDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_TS_CODEBOOK_DEL
+
+
+insert_job: DWH_P_LD_MFMFNACDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFTSCKDSC_01_D_B)
+description: "FILE_ID = 2909, FILE_NAME = A0362_MF_M_FCN_AMC_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFMFNACDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_M_FCN_AMC_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNACDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_FCN_AMC_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFMFNACDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNACDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNACDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_M_FCN_AMC_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFMFNACDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNACDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNACDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_M_FCN_AMC_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFMFNACDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNACDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNACDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFMFNACDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFMFNACDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNACDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNACDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_M_FCN_AMC_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFMFNACDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFMFNACDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNACDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_FCN_AMC_DEL
+
+
+insert_job: DWH_P_LD_MFMFNFDDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFMFNACDSC_01_D_B)
+description: "FILE_ID =2910, FILE = A0362_MF_M_FCN_FUND_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFMFNFDDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_M_FCN_FUND_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_FCN_FUND_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFMFNFDDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_M_FCN_FUND_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFMFNFDDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_M_FCN_FUND_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFMFNFDDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFMFNFDDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFMFNFDDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_M_FCN_FUND_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFMFNFDDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFMFNFDDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_FCN_FUND_DEL
+
+
+insert_job: DWH_P_LD_MFMFNFDNVDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFMFNFDDSC_01_D_B)
+description: "FILE_ID = 2911,FILE = A0362_MF_M_FCN_FUND_NAV_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFMFNFDNVDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_M_FCN_FUND_NAV_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDNVDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_FCN_FUND_NAV_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFMFNFDNVDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDNVDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDNVDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_M_FCN_FUND_NAV_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFMFNFDNVDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDNVDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDNVDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_M_FCN_FUND_NAV_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFMFNFDNVDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDNVDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDNVDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFMFNFDNVDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFMFNFDNVDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDNVDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDNVDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_M_FCN_FUND_NAV_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFMFNFDNVDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFMFNFDNVDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDNVDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_FCN_FUND_NAV_DEL
+
+
+insert_job: DWH_P_LD_MFMFNFDFEDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFMFNFDNVDSC_01_D_B)
+description: "FILE_ID = 2912,FILE = A0362_MF_M_FCN_FUND_FEE_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFMFNFDFEDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_M_FCN_FUND_FEE_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_FCN_FUND_FEE_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFMFNFDFEDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDFEDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_M_FCN_FUND_FEE_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFMFNFDFEDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDFEDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_M_FCN_FUND_FEE_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFMFNFDFEDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDFEDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFMFNFDFEDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFMFNFDFEDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDFEDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_M_FCN_FUND_FEE_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFMFNFDFEDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFMFNFDFEDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_FCN_FUND_FEE_DEL
+
+
+insert_job: DWH_P_LD_MFMFNFDFETRD_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFMFNFDFEDSC_01_D_B)
+description: "FILE_ID=2913,FILE = A0362_MF_M_FCN_FUND_FEE_TIER_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFMFNFDFETRD_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_M_FCN_FUND_FEE_TIER_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFETRD_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_FCN_FUND_FEE_TIER_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFMFNFDFETRD_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDFETRD_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFETRD_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_M_FCN_FUND_FEE_TIER_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFMFNFDFETRD_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDFETRD_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFETRD_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_M_FCN_FUND_FEE_TIER_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFMFNFDFETRD_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDFETRD_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFETRD_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFMFNFDFETRD_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFMFNFDFETRD_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDFETRD_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFETRD_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_M_FCN_FUND_FEE_TIER_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFMFNFDFETRD_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFMFNFDFETRD_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFETRD_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_FCN_FUND_FEE_TIER_DEL
+
+
+insert_job: DWH_P_LD_MFMFNFDFEPMD_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFMFNFDFETRD_01_D_B)
+description: "FILE_ID = 2915,FILE = A0362_MF_M_FCN_FUND_FEE_PROMOTION_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFMFNFDFEPMD_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_M_FCN_FUND_FEE_PROMOTION_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEPMD_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_FCN_FUND_FEE_PROM_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFMFNFDFEPMD_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDFEPMD_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEPMD_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_M_FCN_FUND_FEE_PROMOTION_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFMFNFDFEPMD_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDFEPMD_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEPMD_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_M_FCN_FUND_FEE_PROMOTION_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFMFNFDFEPMD_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDFEPMD_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEPMD_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFMFNFDFEPMD_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFMFNFDFEPMD_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDFEPMD_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEPMD_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_M_FCN_FUND_FEE_PROMOTION_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFMFNFDFEPMD_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFMFNFDFEPMD_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEPMD_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_FCN_FUND_FEE_PROM_DEL
+
+
+insert_job: DWH_P_LD_MFMFNFDFEPMF_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFMFNFDFEPMD_01_D_B)
+description: "FILE_ID = 2916,FILE = A0362_MF_M_FCN_FUND_FEE_PROMOTION_FUND_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFMFNFDFEPMF_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_M_FCN_FUND_FEE_PROMOTION_FUND_YYYYMMDD.txt,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEPMF_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_FCN_FUND_FEE_PROM_F_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFMFNFDFEPMF_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDFEPMF_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEPMF_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_M_FCN_FUND_FEE_PROMOTION_FUND_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFMFNFDFEPMF_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDFEPMF_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEPMF_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_M_FCN_FUND_FEE_PROMOTION_FUND_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFMFNFDFEPMF_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDFEPMF_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEPMF_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFMFNFDFEPMF_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFMFNFDFEPMF_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDFEPMF_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEPMF_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_M_FCN_FUND_FEE_PROMOTION_FUND_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFMFNFDFEPMF_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFMFNFDFEPMF_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEPMF_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_FCN_FUND_FEE_PROM_F_DEL
+
+
+insert_job: DWH_P_LD_MFMFNFDFEPMT_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFMFNFDFEPMF_01_D_B)
+description: "FILE_ID=2917,FILE = A0362_MF_M_FCN_FUND_FEE_PROMOTION_TIER_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFMFNFDFEPMT_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_M_FCN_FUND_FEE_PROMOTION_TIER_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEPMT_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_FCN_FUND_FEE_PROM_T_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFMFNFDFEPMT_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDFEPMT_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEPMT_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_M_FCN_FUND_FEE_PROMOTION_TIER_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFMFNFDFEPMT_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDFEPMT_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEPMT_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_M_FCN_FUND_FEE_PROMOTION_TIER_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFMFNFDFEPMT_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDFEPMT_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEPMT_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFMFNFDFEPMT_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFMFNFDFEPMT_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDFEPMT_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEPMT_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_M_FCN_FUND_FEE_PROMOTION_TIER_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFMFNFDFEPMT_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFMFNFDFEPMT_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDFEPMT_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_FCN_FUND_FEE_PROM_T_DEL
+
+
+insert_job: DWH_P_LD_MFMCLGPDEDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFMFNFDFEPMT_01_D_B)
+description: "FILE_ID=2918,FILE = A0362_MF_M_CALENDAR_GROUP_DATE_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFMCLGPDEDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_M_CALENDAR_GROUP_DATE_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMCLGPDEDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_CAL_GRP_DATE_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFMCLGPDEDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMCLGPDEDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMCLGPDEDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_M_CALENDAR_GROUP_DATE_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFMCLGPDEDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMCLGPDEDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMCLGPDEDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_M_CALENDAR_GROUP_DATE_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFMCLGPDEDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMCLGPDEDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMCLGPDEDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFMCLGPDEDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFMCLGPDEDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMCLGPDEDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMCLGPDEDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_M_CALENDAR_GROUP_DATE_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFMCLGPDEDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFMCLGPDEDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMCLGPDEDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_CAL_GRP_DATE_DEL
+
+
+insert_job: DWH_P_LD_MFMFNFDHYDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFMCLGPDEDSC_01_D_B)
+description: "FILE_ID=2919,FILE = A0362_MF_M_FCN_FUND_HOLIDAY_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFMFNFDHYDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_M_FCN_FUND_HOLIDAY_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDHYDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_FCN_FUND_HLDY_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFMFNFDHYDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDHYDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDHYDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_M_FCN_FUND_HOLIDAY_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFMFNFDHYDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDHYDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDHYDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_M_FCN_FUND_HOLIDAY_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFMFNFDHYDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDHYDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDHYDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFMFNFDHYDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFMFNFDHYDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMFNFDHYDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDHYDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_M_FCN_FUND_HOLIDAY_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFMFNFDHYDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFMFNFDHYDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMFNFDHYDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_FCN_FUND_HLDY_DEL
+
+
+insert_job: DWH_P_LD_MFTCRDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFMFNFDHYDSC_01_D_B)
+description: "FILE_ID = 2920,FILE = A0362_MF_T_CUSTOMER_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFTCRDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_T_CUSTOMER_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTCRDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_CUSTOMER_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFTCRDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTCRDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTCRDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_T_CUSTOMER_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFTCRDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTCRDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTCRDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_T_CUSTOMER_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFTCRDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTCRDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTCRDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFTCRDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFTCRDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTCRDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTCRDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_T_CUSTOMER_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFTCRDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFTCRDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTCRDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_CUSTOMER_DEL
+
+
+insert_job: DWH_P_LD_MFTCTJTRLDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFTCRDSC_01_D_B)
+description: "FILE_ID=2921,FILE = A0362_MF_T_CUSTOMER_JOINT_RELATION_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFTCTJTRLDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_T_CUSTOMER_JOINT_RELATION_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTCTJTRLDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_CUST_JOINT_REL_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFTCTJTRLDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTCTJTRLDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTCTJTRLDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_T_CUSTOMER_JOINT_RELATION_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFTCTJTRLDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTCTJTRLDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTCTJTRLDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_T_CUSTOMER_JOINT_RELATION_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFTCTJTRLDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTCTJTRLDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTCTJTRLDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFTCTJTRLDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFTCTJTRLDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTCTJTRLDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTCTJTRLDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_T_CUSTOMER_JOINT_RELATION_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFTCTJTRLDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFTCTJTRLDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTCTJTRLDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_CUST_JOINT_REL_DEL
+
+
+insert_job: DWH_P_LD_MFMSTQNDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFTCTJTRLDSC_01_D_B)
+description: "FILE_ID=2922,FILE = A0362_MF_M_SUITABILITY_QUESTION_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFMSTQNDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_M_SUITABILITY_QUESTION_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMSTQNDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_SUIT_QSTN_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFMSTQNDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMSTQNDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMSTQNDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_M_SUITABILITY_QUESTION_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFMSTQNDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMSTQNDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMSTQNDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_M_SUITABILITY_QUESTION_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFMSTQNDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMSTQNDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMSTQNDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFMSTQNDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFMSTQNDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMSTQNDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMSTQNDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_M_SUITABILITY_QUESTION_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFMSTQNDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFMSTQNDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMSTQNDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_SUIT_QSTN_DEL
+
+
+insert_job: DWH_P_LD_MFMSTCEDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFMSTQNDSC_01_D_B)
+description: "FILE_ID =2923,FILE = A0362_MF_M_SUITABILITY_CHOICE_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFMSTCEDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_M_SUITABILITY_CHOICE_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMSTCEDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_SUIT_CHOICE_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFMSTCEDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMSTCEDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMSTCEDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_M_SUITABILITY_CHOICE_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFMSTCEDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMSTCEDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMSTCEDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_M_SUITABILITY_CHOICE_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFMSTCEDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMSTCEDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMSTCEDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFMSTCEDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFMSTCEDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFMSTCEDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMSTCEDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_M_SUITABILITY_CHOICE_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFMSTCEDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFMSTCEDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFMSTCEDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_M_SUIT_CHOICE_DEL
+
+
+insert_job: DWH_P_LD_MFTSTDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFMSTCEDSC_01_D_B)
+description: "FILE_ID=2924,FILE = A0362_MF_T_SUITABILITY_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFTSTDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_T_SUITABILITY_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSTDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_SUIT_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFTSTDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTSTDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSTDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_T_SUITABILITY_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFTSTDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTSTDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSTDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_T_SUITABILITY_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFTSTDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTSTDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSTDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFTSTDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFTSTDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTSTDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSTDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_T_SUITABILITY_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFTSTDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFTSTDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSTDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_SUIT_DEL
+
+
+insert_job: DWH_P_LD_MFTSTARDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFTSTDSC_01_D_B)
+description: "FILE_ID=2924,FILE = A0362_MF_T_SUITABILITY_ANSWER_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFTSTARDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_T_SUITABILITY_ANSWER_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSTARDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_SUIT_ANSWER_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFTSTARDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTSTARDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSTARDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_T_SUITABILITY_ANSWER_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFTSTARDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTSTARDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSTARDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_T_SUITABILITY_ANSWER_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFTSTARDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTSTARDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSTARDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFTSTARDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFTSTARDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTSTARDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSTARDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_T_SUITABILITY_ANSWER_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFTSTARDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFTSTARDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSTARDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_SUIT_ANSWER_DEL
+
+
+insert_job: DWH_P_LD_MFTPODSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFTSTARDSC_01_D_B)
+description: "FILE_ID=2926,FILE = A0362_MF_T_PORTFOLIO_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFTPODSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_T_PORTFOLIO_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTPODSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_PORTFOLIO_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFTPODSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTPODSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTPODSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_T_PORTFOLIO_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFTPODSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTPODSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTPODSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_T_PORTFOLIO_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFTPODSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTPODSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTPODSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFTPODSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFTPODSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTPODSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTPODSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_T_PORTFOLIO_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFTPODSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFTPODSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTPODSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_PORTFOLIO_DEL
+
+
+insert_job: DWH_P_LD_MFTDADSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFTPODSC_01_D_B)
+description: "FILE_ID=2927,FILE = A0362_MF_T_DCA_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFTDADSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_T_DCA_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTDADSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_DCA_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFTDADSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTDADSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTDADSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_T_DCA_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFTDADSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTDADSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTDADSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_T_DCA_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFTDADSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTDADSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTDADSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFTDADSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFTDADSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTDADSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTDADSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_T_DCA_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFTDADSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFTDADSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTDADSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_DCA_DEL
+
+
+insert_job: DWH_P_LD_MFTORDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFTDADSC_01_D_B)
+description: "FILE_ID=2928,FILE = A0362_MF_T_ORDER_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFTORDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_T_ORDER_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTORDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_ORDER_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFTORDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTORDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTORDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_T_ORDER_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFTORDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTORDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTORDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_T_ORDER_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFTORDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTORDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTORDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFTORDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFTORDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTORDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTORDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_T_ORDER_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFTORDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFTORDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTORDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_ORDER_DEL
+
+
+insert_job: DWH_P_LD_MFTURDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFTORDSC_01_D_B)
+description: "FILE_ID=2929,FILE = A0362_MF_T_UNITHOLDER_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFTURDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_T_UNITHOLDER_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTURDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_UNITHOLDER_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFTURDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTURDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTURDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_T_UNITHOLDER_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFTURDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTURDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTURDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_T_UNITHOLDER_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFTURDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTURDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTURDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFTURDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFTURDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTURDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTURDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_T_UNITHOLDER_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFTURDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFTURDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTURDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_UNITHOLDER_DEL
+
+
+insert_job: DWH_P_LD_MFTPOAEDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFTURDSC_01_D_B)
+description: "FILE_ID=2930,FILE = A0362_MF_T_PORTFOLIO_AVERAGE_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFTPOAEDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_T_PORTFOLIO_AVERAGE_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTPOAEDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_PORTFOLIO_AVERAGE_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFTPOAEDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTPOAEDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTPOAEDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_T_PORTFOLIO_AVERAGE_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFTPOAEDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTPOAEDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTPOAEDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_T_PORTFOLIO_AVERAGE_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFTPOAEDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTPOAEDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTPOAEDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFTPOAEDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFTPOAEDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTPOAEDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTPOAEDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_T_PORTFOLIO_AVERAGE_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFTPOAEDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFTPOAEDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTPOAEDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_PORTFOLIO_AVERAGE_DEL
+
+
+insert_job: DWH_P_LD_MFTPOPNDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFTPOAEDSC_01_D_B)
+description: "FILE_ID=2931,FILE = A0362_MF_T_PORTFOLIO_POSITION_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFTPOPNDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_T_PORTFOLIO_POSITION_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTPOPNDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_PORTFOLIO_POSITION_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFTPOPNDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTPOPNDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTPOPNDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_T_PORTFOLIO_POSITION_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFTPOPNDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTPOPNDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTPOPNDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_T_PORTFOLIO_POSITION_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFTPOPNDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTPOPNDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTPOPNDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFTPOPNDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFTPOPNDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTPOPNDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTPOPNDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_T_PORTFOLIO_POSITION_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFTPOPNDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFTPOPNDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTPOPNDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_PORTFOLIO_POSITION_DEL
+
+
+insert_job: DWH_P_LD_MFPOBEDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFTPOPNDSC_01_D_B)
+description: "FILE_ID=2932,FILE = A0362_MF_PORTFOLIO_BALANCE_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFPOBEDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_PORTFOLIO_BALANCE_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFPOBEDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_PORTFOLIO_BALANCE_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFPOBEDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFPOBEDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFPOBEDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_PORTFOLIO_BALANCE_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFPOBEDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFPOBEDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFPOBEDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_PORTFOLIO_BALANCE_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFPOBEDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFPOBEDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFPOBEDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFPOBEDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFPOBEDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFPOBEDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFPOBEDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_PORTFOLIO_BALANCE_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFPOBEDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFPOBEDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFPOBEDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_PORTFOLIO_BALANCE_DEL
+
+update_job: DWH_P_LD_MFEDOGDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFPOBEDSC_01_D_B)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+send_notification: n
+
+# 1. move file
+update_job: DWH_P_LD_MFEDOGDSC_01_D.FTP_C    job_type: cmd
+description: "FILE_ID=2933,FILE = A0362_MF_ESD_OMNIFLG_YYYYMMDD.txt ,Premwat Kusollerkdee"
+command: ${STDPTH}/DWH_SFTP.sh MF_ESD_OMNIFLG_GET
+
+
+# 2. watch file
+update_job: DWH_P_LD_MFEDOGDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFEDOGDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFEDOGDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_ESD_OMNIFLG_D_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+update_job: DWH_P_LD_MFEDOGDSC_01_D.UTF82UNIX_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFEDOGDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFEDOGDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_ESD_OMNIFLG_D_$(date -d "1 day ago" +%Y%m%d).txt
+
+# 4. load file
+update_job: DWH_P_LD_MFEDOGDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFEDOGDSC_01_D.UTF82UNIX_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFEDOGDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFEDOGDSC_01_D "$(getdate -1)" "R"
+
+# 5. backup file
+update_job: DWH_P_BK_MFEDOGDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFEDOGDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFEDOGDSC_01_D_B
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_ESD_OMNIFLG_D_$(date -d "1 day ago" +%Y%m%d).txt
+
+# 6. delete file
+#update_job: DWH_P_BK_MFEDOGDSC_01_D.DEL_FTP_C    job_type: cmd
+#machine: dsdbprd_vr
+#condition: s(DWH_P_BK_MFEDOGDSC_01_D_C)
+#owner: dsoper@dsdbprd_vr
+#box_name: DWH_P_LD_MFEDOGDSC_01_D_B
+#command: ${STDPTH}/DWH_SFTP.sh MF_ESD_OMNIFLG_DEL
+
+
+insert_job: DWH_P_BK_MFEDOGDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFEDOGDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFEDOGDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_ESD_OMNIFLG_DEL
+
+
+
+insert_job: DWH_P_LD_MFTDDORDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFEDOGDSC_01_D_B)
+description: "FILE_ID=2967,FILE = A0362_MF_T_DIVIDEND_ORDER_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFTDDORDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_T_DIVIDEND_ORDER_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTDDORDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_DIVIDEND_ORDER_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFTDDORDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTDDORDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTDDORDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_T_DIVIDEND_ORDER_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFTDDORDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTDDORDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTDDORDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_T_DIVIDEND_ORDER_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFTDDORDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTDDORDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTDDORDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFTDDORDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFTDDORDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTDDORDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTDDORDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_T_DIVIDEND_ORDER_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFTDDORDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFTDDORDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTDDORDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_DIVIDEND_ORDER_DEL
+
+
+insert_job: DWH_P_LD_MFTDDFDDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFTDDORDSC_01_D_B)
+description: "FILE_ID=2968,FILE = A0362_MF_T_DIVIDEND_FUND_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFTDDFDDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_T_DIVIDEND_FUND_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTDDFDDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_DIVIDEND_FUND_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFTDDFDDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTDDFDDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTDDFDDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_T_DIVIDEND_FUND_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFTDDFDDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTDDFDDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTDDFDDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_T_DIVIDEND_FUND_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFTDDFDDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTDDFDDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTDDFDDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFTDDFDDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFTDDFDDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTDDFDDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTDDFDDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_T_DIVIDEND_FUND_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFTDDFDDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFTDDFDDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTDDFDDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_DIVIDEND_FUND_DEL
+
+
+insert_job: DWH_P_LD_MFTCTJCPNDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFTDDFDDSC_01_D_B)
+description: "FILE_ID=2969,FILE = A0362_MF_T_CUSTOMER_JURISTIC_PERSON_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFTCTJCPNDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_T_CUSTOMER_JURISTIC_PERSON_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTCTJCPNDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_CUST_JRSTC_PERSON_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFTCTJCPNDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTCTJCPNDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTCTJCPNDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_T_CUSTOMER_JURISTIC_PERSON_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFTCTJCPNDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTCTJCPNDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTCTJCPNDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_T_CUSTOMER_JURISTIC_PERSON_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFTCTJCPNDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTCTJCPNDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTCTJCPNDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFTCTJCPNDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFTCTJCPNDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTCTJCPNDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTCTJCPNDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_T_CUSTOMER_JURISTIC_PERSON_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFTCTJCPNDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFTCTJCPNDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTCTJCPNDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_CUST_JRSTC_PERSON_DEL
+
+insert_job: DWH_MF_INV3000_AMC_D_B    job_type: box
+description: "AMC"
+condition: s(DWH_P_LD_MF_INV3000_D_B)
+owner: dwhoper@dwhprod_vr
+box_name: DWH_P_MF_INV3000_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+send_notification: n
+
+insert_job: DWH_P_SK_SKPY_MFTBTDPYDSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 775,AMC SK_PARTY"
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_AMC_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_SK_SKPY_MFTBTDPYDSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_CRPY_MFTBTDPYDSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 783,AMC COR_PARTY"
+condition: s(DWH_P_SK_SKPY_MFTBTDPYDSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_AMC_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_CRPY_MFTBTDPYDSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_J_TX_MF_AMC_D_C    job_type: cmd
+description: "JOB_ID = 39, Job for load MF-AMC"
+condition: s(DWH_P_TX_CRPY_MFTBTDPYDSC_01_D_C) & s(DWH_P_SK_PARTY_SCS_D_B) & s(DWH_P_SK_SKAT_WVSTDPSGSC_D_B) & s(DWH_P_SK_SKAT_DPCTSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_AMC_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_JOB.RUN_JOB(P_JOB_NAME => 'J_TX_MF_AMC_D',P_RUN_DATE  => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE  => 'N')"
+
+
+#---------------------------------------------------------------------------
+insert_job: DWH_MF_INV3000_PROD_D_B    job_type: box
+description: "MF PRODUCT"
+condition: s(DWH_MF_INV3000_AMC_D_B)
+owner: dwhoper@dwhprod_vr
+box_name: DWH_P_MF_INV3000_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+send_notification: n
+
+insert_job: DWH_J_TX_MF_PROD_D_C    job_type: cmd
+description: "JOB_ID = 49, Job for load MF-PROD"
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_PROD_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_JOB.RUN_JOB(P_JOB_NAME => 'J_TX_MF_PROD_D',P_RUN_DATE  => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE  => 'N')"
+
+
+insert_job: DWH_P_TX_CRPDDG_MFMFNFDDSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 11390, COR_PROD_DEMOG"
+condition: s(DWH_J_TX_MF_PROD_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_PROD_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_CRPDDG_MFMFNFDDSC_01_D',P_RUN_DATE  => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE  => 'R')"
+
+insert_job: DWH_P_TX_CRPDDG_MFMFNFDDSC_02_D_C    job_type: cmd
+description: "PRCS_ID = 11391, COR_PROD_DEMOG"
+condition: s(DWH_P_TX_CRPDDG_MFMFNFDDSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_PROD_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_CRPDDG_MFMFNFDDSC_02_D',P_RUN_DATE  => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE  => 'R')"
+
+
+#-----------------------------------------------------------------------------
+
+insert_job: DWH_MF_INV3000_JT_CUS_D_B    job_type: box
+description: "JT_CUS"
+condition: s(DWH_MF_INV3000_PROD_D_B)
+owner: dwhoper@dwhprod_vr
+box_name: DWH_P_MF_INV3000_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+send_notification: n
+
+insert_job: DWH_P_TX_SKPY_MFTCTJTRLDSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 11324,JT_CUS SK_PARTY"
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_JT_CUS_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_SKPY_MFTCTJTRLDSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_CRPY_MFTCTJTRLDSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 11343,JT_CUS COR_PARTY"
+condition: s(DWH_P_TX_SKPY_MFTCTJTRLDSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_JT_CUS_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_CRPY_MFTCTJTRLDSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_CRPYRT_MFTCTJTRLDSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 11344,JT_CUS COR_PARTY_RLT"
+condition: s(DWH_P_TX_CRPY_MFTCTJTRLDSC_01_D_C) & s(DWH_P_SK_PARTY_EC_D_B) & s(DWH_P_SK_SKPY_CMCRSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_JT_CUS_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_CRPYRT_MFTCTJTRLDSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+#-----------------------------------------------------------------------------------------------------
+
+insert_job: DWH_MF_INV3000_PARTY_DTL_D_B    job_type: box
+description: "PARTY_DTL"
+condition: s(DWH_MF_INV3000_JT_CUS_D_B)
+owner: dwhoper@dwhprod_vr
+box_name: DWH_P_MF_INV3000_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+send_notification: n
+
+insert_job: DWH_J_TX_MF_PARTY_DTL_D_C    job_type: cmd
+description: "JOB_ID = 50, Job for load MF-PARTY_DTL"
+condition: s(DWH_P_SK_PARTY_EC_D_B) & s(DWH_P_SK_SKPY_CMCRSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_PARTY_DTL_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_JOB.RUN_JOB(P_JOB_NAME => 'J_TX_MF_PARTY_DTL_D',P_RUN_DATE  => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE  => 'N')"
+
+#-----------------------------------------------------------------------------------------------------
+
+insert_job: DWH_MF_INV3000_PTFOL_D_B    job_type: box
+description: "MF Portfolio"
+condition: s(DWH_MF_INV3000_PARTY_DTL_D_B)
+owner: dwhoper@dwhprod_vr
+box_name: DWH_P_MF_INV3000_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+send_notification: n
+
+insert_job: DWH_P_SK_SKAT_MFTBPODSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 776,PTFOL SK_AGMT"
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_PTFOL_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_SK_SKAT_MFTBPODSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_CRAT_MFTBPODSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 793,PTFOL COR_AGMT"
+condition: s(DWH_P_SK_SKAT_MFTBPODSC_01_D_C) & s(DWH_P_SK_PARTY_EC_D_B) & s(DWH_P_SK_SKPY_CMCRSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_PTFOL_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_CRAT_MFTBPODSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_J_TX_MF_PTFOL_D_C    job_type: cmd
+description: "JOB_ID = 51, Job for load MF-PTFOL"
+condition: s(DWH_P_TX_CRAT_MFTBPODSC_01_D_C) & s(DWH_P_SK_SKAT_WVSTDPSGSC_D_B) & s(DWH_P_SK_SKAT_DPCTSC_01_D_C) & s(DWH_P_SK_PARTY_HCM_B) & s(DWH_P_COR_INTRNL_ORG_HCM_B)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_PTFOL_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_JOB.RUN_JOB(P_JOB_NAME => 'J_TX_MF_PTFOL_D',P_RUN_DATE  => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE  => 'N')"
+
+insert_job: DWH_P_TX_SIMFPL_WVMFFDPENV_01_D_C    job_type: cmd
+description: "PRCS_ID = 11385,PTFOL SI_MF_PTFOL"
+condition: s(DWH_J_TX_MF_PTFOL_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_PTFOL_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_SIMFPL_WVMFFDPENV_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_CRPYAT_MFTBPODSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 795,PTFOL COR_PARTY_AGMT"
+condition: s(DWH_P_TX_SIMFPL_WVMFFDPENV_01_D_C) & s(DWH_P_TX_SIRMCMCTAT_CMCTATSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_PTFOL_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_CRPYAT_MFTBPODSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+
+#--------------------------------------------------------------------------
+
+insert_job: DWH_MF_INV3000_PTFOL_FUND_D_B    job_type: box
+description: "PTFOL_FUND"
+condition: s(DWH_MF_INV3000_PTFOL_D_B)
+owner: dwhoper@dwhprod_vr
+box_name: DWH_P_MF_INV3000_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+send_notification: n
+
+insert_job: DWH_P_SK_SKAT_WVMFPLHGSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 777,PTFOL_FUND SK_AGMT"
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_PTFOL_FUND_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_SK_SKAT_WVMFPLHGSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_CRAT_WVMFPLHGSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 796,PTFOL_FUND COR_AGMT"
+condition: s(DWH_P_SK_SKAT_WVMFPLHGSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_PTFOL_FUND_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_CRAT_WVMFPLHGSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_CRATBL_MFTLDSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 1363,PTFOL_FUND COR_AGMT_BAL"
+condition: s(DWH_P_TX_CRAT_WVMFPLHGSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_PTFOL_FUND_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_CRATBL_MFTLDSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+
+insert_job: DWH_P_TX_CRPYAT_WVMFPLHGSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 797,PTFOL COR_PARTY_AGMT"
+condition: s(DWH_P_TX_CRATBL_MFTLDSC_01_D_C) & s(DWH_P_TX_SIRMCMCTAT_CMCTATSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_PTFOL_FUND_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_CRPYAT_WVMFPLHGSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+#------------------------------------------------------------------------------
+
+insert_job: DWH_MF_INV3000_FUND_PRICE_D_B    job_type: box
+description: "FUND_PRICE"
+condition: s(DWH_MF_INV3000_PTFOL_FUND_D_B)
+owner: dwhoper@dwhprod_vr
+box_name: DWH_P_MF_INV3000_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+send_notification: n
+
+insert_job: DWH_P_TX_WTMFFDPE_WVMFFDPENV_01_D_C    job_type: cmd
+description: "PRCS_ID = 11383,FUND_PRICE WPT_MF_FUND_PRICE"
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_FUND_PRICE_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_WTMFFDPE_WVMFFDPENV_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_WTMFFDPE_WVMFFDPEPV_01_D_C    job_type: cmd
+description: "PRCS_ID = 11384,FUND_PRICE WPT_MF_FUND_PRICE"
+condition: s(DWH_P_TX_WTMFFDPE_WVMFFDPENV_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_FUND_PRICE_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_WTMFFDPE_WVMFFDPEPV_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_ASMFFDPE_WVMFFDPENV_01_D_C    job_type: cmd
+description: "PRCS_ID = 11367,FUND_PRICE ACS_MF_FUND_PRICE"
+condition: s(DWH_P_TX_WTMFFDPE_WVMFFDPEPV_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_FUND_PRICE_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASMFFDPE_WVMFFDPENV_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_CRATBL_MFTBPNVWDSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 803,FUND_PRICE COR_AGMT_BAL"
+condition: s(DWH_P_TX_ASMFFDPE_WVMFFDPENV_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_FUND_PRICE_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_CRATBL_MFTBPNVWDSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_CRATBL_MFTBPNVWDSC_02_D_C    job_type: cmd
+description: "PRCS_ID = 804,FUND_PRICE COR_AGMT_BAL"
+condition: s(DWH_P_TX_CRATBL_MFTBPNVWDSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_FUND_PRICE_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_CRATBL_MFTBPNVWDSC_02_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+#--------------------------------------------------------------------------------
+
+insert_job: DWH_MF_INV3000_ACS_G1_D_B    job_type: box
+description: "ACS_G1"
+condition: s(DWH_MF_INV3000_FUND_PRICE_D_B)
+owner: dwhoper@dwhprod_vr
+box_name: DWH_P_MF_INV3000_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+send_notification: n
+
+
+#*****
+update_job: DWH_P_TX_ASMFACATDL_VRPYAT_01_D_C    job_type: cmd
+description: "PRCS_ID = 9259,ACS_G1 ACS_MF_AMC_ACCT_DETAIL"
+condition: s(DWH_P_TX_CRAT_DPCTSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_ACS_G1_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASMFACATDL_VRPYAT_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+#**********
+
+insert_job: DWH_P_TX_ASMFPFTTDOD_MFTUDSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 11360,ACS_G1 ACS_MF_PTFOL_FST_TRD_ORD"
+condition: s(DWH_P_TX_ASMFACATDL_VRPYAT_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_ACS_G1_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASMFPFTTDOD_MFTUDSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_ASMFORTN_MFTORDSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 11361,ACS_G1 ACS_MF_ORDER_TRAN"
+condition: s(DWH_P_TX_ASMFPFTTDOD_MFTUDSC_01_D_C) & s(DWH_P_SK_SKAT_WVSTDPSGSC_D_B) & s(DWH_P_SK_SKAT_DPCTSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_ACS_G1_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASMFORTN_MFTORDSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_ASMFDATN_MFTDADSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 11362,ACS_G1 ACS_MF_DCA_TRAN"
+condition: s(DWH_P_TX_ASMFORTN_MFTORDSC_01_D_C) & s(DWH_P_SK_SKAT_WVSTDPSGSC_D_B) & s(DWH_P_SK_SKAT_DPCTSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_ACS_G1_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASMFDATN_MFTDADSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_ASMFPLAG_MFTPOAEDSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 11365,ACS_G1 ACS_MF_PTFOL_AVG"
+condition: s(DWH_P_TX_ASMFDATN_MFTDADSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_ACS_G1_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASMFPLAG_MFTPOAEDSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_ASMFTXFDPS_MFTPPDSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 11366,ACS_G1 ACS_MF_TAX_FUND_POS"
+condition: s(DWH_P_TX_ASMFPLAG_MFTPOAEDSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_ACS_G1_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASMFTXFDPS_MFTPPDSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+#-------------------------------------------------------------------------------------------------------
+
+insert_job: DWH_MF_INV3000_ACS_FUND_FEE_D_B    job_type: box
+description: "ACS_FUND_FEE"
+condition: s(DWH_MF_INV3000_ACS_G1_D_B)
+owner: dwhoper@dwhprod_vr
+box_name: DWH_P_MF_INV3000_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+send_notification: n
+
+insert_job: DWH_J_TX_MF_REF_FUND_FEE_D_C    job_type: cmd
+description: "JOB_ID = 52, Job for load MF-ACS_FUND_FEE"
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_ACS_FUND_FEE_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_JOB.RUN_JOB(P_JOB_NAME => 'J_TX_MF_REF_FUND_FEE_D',P_RUN_DATE  => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE  => 'N')"
+
+#-------------------------------------------------------------------------------------------------------
+
+insert_job: DWH_MF_INV3000_ACS_G2_D_B    job_type: box
+description: "ACS_G2"
+condition: s(DWH_MF_INV3000_ACS_FUND_FEE_D_B)
+owner: dwhoper@dwhprod_vr
+box_name: DWH_P_MF_INV3000_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+send_notification: n
+
+insert_job: DWH_P_TX_ASMFDDOR_MFTDDORDSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 11378,ACS_G2 ACS_MF_DIVD_ORDER"
+condition: s(DWH_P_SK_SKAT_WVSTDPSGSC_D_B) & s(DWH_P_SK_SKAT_DPCTSC_01_D_C )
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_ACS_G2_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASMFDDOR_MFTDDORDSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_ASMFDDFD_MFTDDFDDSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 11379,ACS_G2 ACS_MF_DIVD_FUND"
+condition: s(DWH_P_TX_ASMFDDOR_MFTDDORDSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_ACS_G2_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASMFDDFD_MFTDDFDDSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_ASMFFDATD_VRAT_01_D_C    job_type: cmd
+description: "PRCS_ID = 11372,ACS_G2 ACS_MF_FUND_ACCOUNT_D"
+condition: s(DWH_P_TX_ASMFDDFD_MFTDDFDDSC_01_D_C) & s(DWH_J_TX_DWH_CTUNI_D_C) & s(DWH_P_COR_AGMT_ST_D_B) & s(DWH_P_TX_CRAT_DPCTSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_ACS_G2_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASMFFDATD_VRAT_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_ASMFFDTND_VRMFORTN_01_D_C    job_type: cmd
+description: "PRCS_ID = 11374,ACS_G2 ACS_MF_FUND_TXN_D"
+condition: s(DWH_P_TX_ASMFFDATD_VRAT_01_D_C) & s(DWH_J_TX_DWH_CTUNI_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_ACS_G2_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASMFFDTND_VRMFORTN_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_ASMFFDIOD_VHPD_01_D_C    job_type: cmd
+description: "PRCS_ID = 11376,ACS_G2 ACS_MF_FUND_INFO_D"
+condition: s(DWH_P_TX_ASMFFDTND_VRMFORTN_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_ACS_G2_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASMFFDIOD_VHPD_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+#-------------------------------------------------------------------------------------------------------
+
+insert_job: DWH_MF_INV3000_ACCT_TO_CUST_D_B    job_type: box
+description: "ACCT_TO_CUST"
+condition: s(DWH_MF_INV3000_ACS_G2_D_B)
+owner: dwhoper@dwhprod_vr
+box_name: DWH_P_MF_INV3000_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+send_notification: n
+
+insert_job: DWH_P_TX_ASATTOCT_VRPYAT_01_D_C    job_type: cmd
+description: "PRCS_ID = 11388,ACCT_TO_CUST ACS_ACCT_TO_CUST"
+condition: s(DWH_P_TX_CRPY_CMCRSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_ACCT_TO_CUST_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASATTOCT_VRPYAT_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_ASATTOCT_VRPYAT_02_D_C    job_type: cmd
+description: "PRCS_ID = 11389,ACCT_TO_CUST ACS_ACCT_TO_CUST"
+condition: s(DWH_P_TX_ASATTOCT_VRPYAT_01_D_C) & s(DWH_P_TX_CRPY_CMCRSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_ACCT_TO_CUST_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASATTOCT_VRPYAT_02_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+#-------------------------------------------------------------------------------------------------------
+
+insert_job: DWH_MF_INV3000_SRVY_D_B    job_type: box
+description: "MF Survey"
+condition: s(DWH_MF_INV3000_ACCT_TO_CUST_D_B)
+owner: dwhoper@dwhprod_vr
+box_name: DWH_P_MF_INV3000_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+send_notification: n
+
+insert_job: DWH_P_SK_SKQN_WVMFSTQN_01_D_C    job_type: cmd
+description: "PRCS_ID = 831,SRVY SK_QSTN"
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_SRVY_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_SK_SKQN_WVMFSTQN_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_SK_SKQR_MFTBQEHSDSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 888,SRVY SK_QNR"
+condition: s(DWH_P_SK_SKQN_WVMFSTQN_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_SRVY_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_SK_SKQR_MFTBQEHSDSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_SKAS_MFMSTCEDSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 11325,SRVY SK_ANS"
+condition: s(DWH_P_SK_SKQR_MFTBQEHSDSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_SRVY_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_SKAS_MFMSTCEDSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_WTSTARUT_MFTSTARDSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 11358,SRVY WPT_SUIT_ANSWER_UNPIVOT"
+condition: s(DWH_P_SK_SKQR_MFTBQEHSDSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_SRVY_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_WTSTARUT_MFTSTARDSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_CRSYQN_WVMFSTQN_01_D_C    job_type: cmd
+description: "PRCS_ID = 859,SRVY COR_SRVY_QSTN"
+condition: s(DWH_P_TX_WTSTARUT_MFTSTARDSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_SRVY_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_CRSYQN_WVMFSTQN_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_CRSYAS_MFMSTCEDSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 11356,SRVY COR_SRVY_ANS"
+condition: s(DWH_P_TX_CRSYQN_WVMFSTQN_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_SRVY_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_CRSYAS_MFMSTCEDSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+insert_job: DWH_P_TX_CRPYSYQR_MFTSTDSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 11357,SRVY COR_PARTY_SRVY_QNR"
+condition: s(DWH_P_TX_CRSYAS_MFMSTCEDSC_01_D_C) & s(DWH_P_SK_PARTY_EC_D_B) & s(DWH_P_SK_SKPY_CMCRSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_SRVY_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_CRPYSYQR_MFTSTDSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+
+insert_job: DWH_P_TX_CRPYSYRP_MFTBQEHS_01_D_C    job_type: cmd
+description: "PRCS_ID = 860,SRVY COR_PARTY_SRVY_RESP"
+condition: s(DWH_P_TX_CRPYSYQR_MFTSTDSC_01_D_C) & s(DWH_P_SK_PARTY_EC_D_B) & s(DWH_P_SK_SKPY_CMCRSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_MF_INV3000_SRVY_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_CRPYSYRP_MFTBQEHS_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+#--------------------------------------------------------------------------------------------------------------------------------------------
+
+
+update_job: DWH_P_SK_SKET_MFEDOGDSC_01_D_C    job_type: cmd
+description: "PRCS_ID=4657,VK_SKET_MFEDOGDSC_01,SK_EVT"
+condition: s(DWH_P_LD_MFEDOGDSC_01_D_B)
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_SK_SKET_MFEDOGDSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+
+update_job: DWH_P_TX_CRET_MFEDOGDSC_01_D_C    job_type: cmd
+description: "PRCS_ID = 4659,E_DUTY_STAMP COR_EVT"
+condition: s(DWH_P_SK_SKET_MFEDOGDSC_01_D_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_CRET_MFEDOGDSC_01_D',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_D,P_RUN_TYPE => 'R')"
+insert_job: DWH_P_MF_INV3000_M_B    job_type: box
+description: "MF Monthly"
+condition: s(DWH_P_LD_MF_INV3000_D_B)
+owner: dwhoper@dwhprod_vr
+application: DWH_MTHLY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+date_conditions: y
+run_calendar: DWH_MIS_D01
+send_notification: n
+
+
+update_job: DWH_P_TX_CRATBL_VRATBL_01_M_C    job_type: cmd
+description: "PRCS_ID = 1271,MTHLY COR_AGMT_BAL"
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_P_MF_INV3000_M_B
+application: DWH_MTHLY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_CRATBL_VRATBL_01_M',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_MTHLY,P_RUN_TYPE => 'R')"
+
+
+insert_job: DWH_P_TX_ASMFFDAT_VRMFFDATD_01_M_C    job_type: cmd
+description: "PRCS_ID = 11373,MTHLY ACS_MF_FUND_ACCOUNT"
+condition: s(DWH_P_TX_CRATBL_VRATBL_01_M_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_P_MF_INV3000_M_B
+application: DWH_MTHLY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASMFFDAT_VRMFFDATD_01_M',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_MTHLY,P_RUN_TYPE => 'R')"
+
+
+insert_job: DWH_P_TX_ASMFFDIO_VRMFFDIOD_01_M_C    job_type: cmd
+description: "PRCS_ID = 11377,MTHLY ACS_MF_FUND_INFO"
+condition: s(DWH_P_TX_ASMFFDAT_VRMFFDATD_01_M_C)
+machine: dwhprod_vr
+owner: dwhoper@dwhprod_vr
+box_name: DWH_P_MF_INV3000_M_B
+application: DWH_MTHLY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+send_notification: n
+std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASMFFDIO_VRMFFDIOD_01_M',P_RUN_DATE => ADMINTMB.TMB_ETL_PARAM_DATE_MTHLY,P_RUN_TYPE => 'R')"

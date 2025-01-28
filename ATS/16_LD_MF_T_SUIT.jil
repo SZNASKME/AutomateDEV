@@ -1,0 +1,119 @@
+
+insert_job: DWH_P_LD_MFTSTDSC_01_D_B    job_type: box
+condition: s(DWH_P_LD_MFMSTCEDSC_01_D_B)
+description: "FILE_ID=2924,FILE = A0362_MF_T_SUITABILITY_YYYYMMDD.txt"
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MF_INV3000_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+send_notification: n
+
+# 1. move file
+insert_job: DWH_P_LD_MFTSTDSC_01_D.FTP_C    job_type: cmd
+description: "FILE = A0362_MF_T_SUITABILITY_YYYYMMDD.txt ,Premwat Kusollerkdee"
+machine: dsdbprd_vr
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSTDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_SUIT_GET
+
+
+# 2. watch file
+
+insert_job: DWH_P_LD_MFTSTDSC_01_D_F    job_type: fw
+description: "CONTACT - Premwat Kusollerkdee"
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTSTDSC_01_D.FTP_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSTDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+term_run_time: 30
+send_notification: n
+watch_file: ${FILPTH}/A0362_MF_T_SUITABILITY_`/bin/date -d '1 day ago' +\%Y\%m\%d`.txt
+watch_file_min_size: 30
+watch_interval: 60
+
+# 3. convert file
+insert_job: DWH_P_LD_MFTSTDSC_01_D_C_CONV_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTSTDSC_01_D_F)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSTDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/utf8_2unix.sh ${FILPTH}/A0362_MF_T_SUITABILITY_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 4. load file
+insert_job: DWH_P_LD_MFTSTDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTSTDSC_01_D_C_CONV_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSTDSC_01_D_B
+application: DWH_DAILY
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+avg_runtime: 1
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/call_dsjob.sh P_LD_MFTSTDSC_01_D "$(getdate -1)" "R"
+
+
+# 5. backup file
+insert_job: DWH_P_BK_MFTSTDSC_01_D_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_LD_MFTSTDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSTDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/backup_src_file.sh ${FILPTH}/A0362_MF_T_SUITABILITY_$(date -d "1 day ago" +%Y%m%d).txt
+
+
+# 6. delete file
+insert_job: DWH_P_BK_MFTSTDSC_01_D.DEL_FTP_C    job_type: cmd
+machine: dsdbprd_vr
+condition: s(DWH_P_BK_MFTSTDSC_01_D_C)
+owner: dsoper@dsdbprd_vr
+box_name: DWH_P_LD_MFTSTDSC_01_D_B
+application: DWH_DAILY
+permission: gx
+max_run_alarm: 0
+alarm_if_fail: y
+n_retrys: 3
+profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+box_terminator: y
+send_notification: n
+std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+command: ${STDPTH}/DWH_SFTP.sh MF_T_SUIT_DEL
