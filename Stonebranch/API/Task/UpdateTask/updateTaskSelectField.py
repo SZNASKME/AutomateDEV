@@ -4,7 +4,7 @@ import json
 import pandas as pd
 import copy
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 from utils.stbAPI import updateURI, updateAuth, updateTaskAPI, getTaskAPI
 from utils.readFile import loadJson
@@ -142,7 +142,7 @@ def main():
     #userpass = auth['ASKME_STB']
     updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
     domain_url = loadJson('Domain.json')
-    domain = domain_url['1.170']
+    domain = domain_url['1.226']
     #domain = domain_url['1.86']
     updateURI(domain)
     
@@ -150,7 +150,7 @@ def main():
     #print(df_update)
     result = updateTask(df_update)
     print(json.dumps(result, indent=4))
-    createJson("updateTaskResult_250113.json", result)
+    createJson("updateTaskResult_250127.json", result)
     
 if __name__ == '__main__':
     main()

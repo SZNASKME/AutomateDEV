@@ -92,127 +92,129 @@ def getReport(report_title):
         return None
 
 
-def compareTaskValue(row_jil, row_task_report):
+def compareValueNormal(value1, value2):
+    if value1 != value2:
+        return FALSE_COMPARE
+    else:
+        return TRUE_COMPARE
+
+
+def compareTaskValue(row_jil, row_task_report, format_date, variable_path):
     result = {}
     
     # compare command
     row_jil_command = row_jil[COMMAND_COLUMN]
     if not '$(date' in row_jil_command:
         row_jil_command = row_jil_command.replace('\"', '\\\"')
-    #row_jil_command = replace_quotes_except_in_date(row_jil_command)
-    row_task_report_command = row_task_report[UAC_COMMAND_COLUMN]
-    #row_task_report_command = row_task_report_command.replace('\\\"', '\"')
-    if row_jil_command != row_task_report_command:
-        result[UAC_COMMAND_COLUMN] = FALSE_COMPARE
-        #print(row_jil_command)
-        #print(row_task_report_command)
-    else:
-        result[UAC_COMMAND_COLUMN] = TRUE_COMPARE
+    result[UAC_COMMAND_COLUMN] = compareValueNormal(row_jil_command, row_task_report[UAC_COMMAND_COLUMN])
     
     # compare stdout
     row_jil_stdout = row_jil[STDOUT_COLUMN]
     row_jil_stdout = re.sub('AUTO_JOB_NAME', r'{ops_task_name}', row_jil_stdout)
     row_jil_stdout = row_jil_stdout.replace('\%', '%')
-    row_task_report_stdout = row_task_report[UAC_STDOUT_COLUMN]
-    if row_jil_stdout != row_task_report_stdout:
-        result[UAC_STDOUT_COLUMN] = FALSE_COMPARE
-        #print(row_jil_stdout)
-        #print(row_task_report_stdout)
-    else:
-        result[UAC_STDOUT_COLUMN] = TRUE_COMPARE
+    result[UAC_STDOUT_COLUMN] = compareValueNormal(row_jil_stdout, row_task_report[UAC_STDOUT_COLUMN])
 
     # compare stderr
     row_jil_stderr = row_jil[STDERR_COLUMN]
     row_jil_stderr = re.sub('AUTO_JOB_NAME', r'{ops_task_name}', row_jil_stderr)
     row_jil_stderr = row_jil_stderr.replace('\%', '%')
-    row_task_report_stderr = row_task_report[UAC_STDERR_COLUMN]
-    if row_jil_stderr != row_task_report_stderr:
-        result[UAC_STDERR_COLUMN] = FALSE_COMPARE
-        #print(row_jil_stderr)
-        #print(row_task_report_stderr)
-    else:
-        result[UAC_STDERR_COLUMN] = TRUE_COMPARE
+    result[UAC_STDERR_COLUMN] = compareValueNormal(row_jil_stderr, row_task_report[UAC_STDERR_COLUMN])
     
     # compare Agent Cluster
-    row_jil_machine = row_jil[MACHINE_COLUMN]
-    row_task_report_agent_cluster = row_task_report[UAC_AGENT_CLUSTER_COLUMN]
-    if row_jil_machine != row_task_report_agent_cluster:
-        result[UAC_AGENT_CLUSTER_COLUMN] = FALSE_COMPARE
-        #print(row_jil_machine)
-        #print(row_task_report_agent_cluster)
-    else:
-        result[UAC_AGENT_CLUSTER_COLUMN] = TRUE_COMPARE
-        
+    result[UAC_AGENT_CLUSTER_COLUMN] = compareValueNormal(row_jil[MACHINE_COLUMN], row_task_report[UAC_AGENT_CLUSTER_COLUMN])
         
     # compare Credentials
-    row_jil_owner = row_jil[OWNER_COLUMN]
-    row_task_report_credentials = row_task_report[UAC_CREDENTIAL_COLUMN]
-
-    if row_jil_owner != row_task_report_credentials:
-        result[UAC_CREDENTIAL_COLUMN] = FALSE_COMPARE
-        #print(row_jil_owner)
-        #print(row_task_report_credentials)
-    else:
-        result[UAC_CREDENTIAL_COLUMN] = TRUE_COMPARE
+    result[UAC_CREDENTIAL_COLUMN] = compareValueNormal(row_jil[OWNER_COLUMN], row_task_report[UAC_CREDENTIAL_COLUMN])
         
     # compare format date
+    result[FORMAT_DATE_COLUMN] = compareValueNormal(format_date['JIL'], format_date['STB'])
     
+    # compare variable path
+    result[VARIABLE_PATH_COLUMN] = compareValueNormal(variable_path['JIL'], variable_path['STB'])
     
     return result
     
-def compareFileMonitorValue(row_jil, row_file_monitor_report):
+def compareFileMonitorValue(row_jil, row_file_monitor_report, format_date, variable_path):
     result = {}
     
     # compare watch file
-    row_jil_watch_file = row_jil[WATCH_FILE_COLUMN]
-    #row_jil_watch_file = re.sub('AUTO_JOB_NAME', r'{ops_task_name}', row_jil_watch_file)
-    row_file_monitor_report_watch_file = row_file_monitor_report[UAC_FILE_MONITOR_COLUMN]
-    
-    if row_jil_watch_file != row_file_monitor_report_watch_file:
-        result[UAC_FILE_MONITOR_COLUMN] = FALSE_COMPARE
-        #print(row_jil_watch_file)
-        #print(row_file_monitor_report_watch_file)
-    else:
-        result[UAC_FILE_MONITOR_COLUMN] = TRUE_COMPARE
-        
+    result[UAC_FILE_MONITOR_COLUMN] = compareValueNormal(row_jil[WATCH_FILE_COLUMN], row_file_monitor_report[UAC_FILE_MONITOR_COLUMN])
         
     # compare Agent Cluster
-    row_jil_machine = row_jil[MACHINE_COLUMN]
-    row_file_monitor_report_agent_cluster = row_file_monitor_report[UAC_AGENT_CLUSTER_COLUMN]
-    if row_jil_machine != row_file_monitor_report_agent_cluster:
-        result[UAC_AGENT_CLUSTER_COLUMN] = FALSE_COMPARE
-        #print(row_jil_machine)
-        #print(row_file_monitor_report_agent_cluster)
-    else:
-        result[UAC_AGENT_CLUSTER_COLUMN] = TRUE_COMPARE
+    result[UAC_AGENT_CLUSTER_COLUMN] = compareValueNormal(row_jil[MACHINE_COLUMN], row_file_monitor_report[UAC_AGENT_CLUSTER_COLUMN])
         
     # compare Credentials
-    row_jil_owner = row_jil[OWNER_COLUMN]
-    row_file_monitor_report_credentials = row_file_monitor_report[UAC_CREDENTIAL_COLUMN]
-    if row_jil_owner != row_file_monitor_report_credentials:
-        result[UAC_CREDENTIAL_COLUMN] = FALSE_COMPARE
-        #print(row_jil_owner)
-        #print(row_file_monitor_report_credentials)
-    else:
-        result[UAC_CREDENTIAL_COLUMN] = TRUE_COMPARE
-        
+    result[UAC_CREDENTIAL_COLUMN] = compareValueNormal(row_jil[OWNER_COLUMN], row_file_monitor_report[UAC_CREDENTIAL_COLUMN])
+    
+    # compare format date
+    result[FORMAT_DATE_COLUMN] = compareValueNormal(format_date['JIL'], format_date['STB'])
+    
+    # compare variable path
+    result[VARIABLE_PATH_COLUMN] = compareValueNormal(variable_path['JIL'], variable_path['STB'])
+    
+    
     #print(result)
     return result
 
 
 
+############################################################################################################
+def extractOutermostPatterns(text, start_pattern, end_pattern, start_len=0):
+    
+    stack = []
+    results = []
+    
+    i = 0
+    while i < len(text):
+        if text[i:i+start_len] == start_pattern:  # Start of a new pattern
+            stack.append(i)
+        elif text[i] == end_pattern and stack:  # Closing brace for a pattern
+            start = stack.pop()
+            if not stack:  # Only store the outermost pattern
+                results.append(text[start:i+1])
+        i += 1
+    
+    return results
+
 def getTaskFormatDate(row_jil, row_task_report):
-    pass
+    format_date = {}
+    
+    jil_matches = extractOutermostPatterns(row_jil[COMMAND_COLUMN], '$(date', ')', 6)
+    task_matches = extractOutermostPatterns(row_task_report[UAC_COMMAND_COLUMN], '$(date', ')', 6)
+    
+    format_date['JIL'] = ','.join(jil_matches)
+    format_date['STB'] = ','.join(task_matches)
+    
+    return format_date
 
 def getFileMonitorFormatDate(row_jil, row_file_monitor_report):
-    pass
+    format_date = {}
+    
+    jil_matches = extractOutermostPatterns(row_jil[WATCH_FILE_COLUMN], '$(date', ')', 6)
+    task_matches = extractOutermostPatterns(row_file_monitor_report[UAC_FILE_MONITOR_COLUMN], '${_date', '}', 7)
+    
+    format_date['JIL'] = ','.join(jil_matches)
+    format_date['STB'] = ','.join(task_matches)
+    
+    return format_date
 
+############################################################################################################
+def removeIndexContainIn(list_data, pattern):
+    return [data for data in list_data if pattern not in data]
 
-def getTaskVariablePath(row_jil, row_task_report):
+def getVariablePath(row_jil, row_task_report, jil_column, task_column):
     variable_path = {}
-    pattern = r"\$\{.*?\}"
-    jil_matches = re.findall(pattern, row_jil[COMMAND_COLUMN])
-    task_matches = re.findall(pattern, row_task_report[UAC_COMMAND_COLUMN])
+    pattern = r"(\$\{.*?\})|(\$.*?\/)"
+    
+    jil_matches = re.findall(pattern, row_jil[jil_column])
+    jil_matches = [match[0] if match[0] else match[1].replace('/','') for match in jil_matches]
+    jil_matches = removeIndexContainIn(jil_matches, 'date')
+    jil_matches = removeIndexContainIn(jil_matches, 'TZ')
+    
+    task_matches = re.findall(pattern, row_task_report[task_column])
+    task_matches = [match[0] if match[0] else match[1].replace('/','') for match in task_matches]
+    task_matches = removeIndexContainIn(task_matches, 'date')
+    task_matches = removeIndexContainIn(task_matches, 'TZ')
 
     variable_path['JIL'] = ','.join(jil_matches)
     variable_path['STB'] = ','.join(task_matches)
@@ -221,16 +223,7 @@ def getTaskVariablePath(row_jil, row_task_report):
 
 
 
-def getFileMonitorVariablePath(row_jil, row_file_monitor_report):
-    variable_path = {}
-    pattern = r"\$\{.*?\}"
-    jil_matches = re.findall(pattern, row_jil[WATCH_FILE_COLUMN])
-    task_matches = re.findall(pattern, row_file_monitor_report[UAC_FILE_MONITOR_COLUMN])
-
-    variable_path['JIL'] = ','.join(jil_matches)
-    variable_path['STB'] = ','.join(task_matches)
-    
-    return variable_path
+############################################################################################################
 
 
 def createCompareTaskRow(row_jil, row_task_report, format_date, variable_path, compare_result):
@@ -239,29 +232,34 @@ def createCompareTaskRow(row_jil, row_task_report, format_date, variable_path, c
     row_data[JOBNAME_COLUMN] = row_jil[JOBNAME_COLUMN]
     row_data[BOXNAME_COLUMN] = row_jil[BOXNAME_COLUMN]
     
-    row_data['JIL' + COMMAND_COLUMN] = row_jil[COMMAND_COLUMN]
-    row_data['STB' + UAC_COMMAND_COLUMN] = row_task_report[UAC_COMMAND_COLUMN]
+    row_data['JIL ' + COMMAND_COLUMN] = row_jil[COMMAND_COLUMN]
+    row_data['STB ' + UAC_COMMAND_COLUMN] = row_task_report[UAC_COMMAND_COLUMN]
     row_data[UAC_COMMAND_COLUMN + ' Compare'] = compare_result[UAC_COMMAND_COLUMN]
     
-    row_data['JIL' + STDOUT_COLUMN] = row_jil[STDOUT_COLUMN]
-    row_data['STB' + UAC_STDOUT_COLUMN] = row_task_report[UAC_STDOUT_COLUMN]
+    row_data['JIL ' + STDOUT_COLUMN] = row_jil[STDOUT_COLUMN]
+    row_data['STB ' + UAC_STDOUT_COLUMN] = row_task_report[UAC_STDOUT_COLUMN]
     row_data[UAC_STDOUT_COLUMN + ' Compare'] = compare_result[UAC_STDOUT_COLUMN]
     
-    row_data['JIL' + STDERR_COLUMN] = row_jil[STDERR_COLUMN]
-    row_data[UAC_STDERR_COLUMN] = row_task_report[UAC_STDERR_COLUMN]
+    row_data['JIL ' + STDERR_COLUMN] = row_jil[STDERR_COLUMN]
+    row_data['STB ' + UAC_STDERR_COLUMN] = row_task_report[UAC_STDERR_COLUMN]
     row_data[UAC_STDERR_COLUMN + ' Compare'] = compare_result[UAC_STDERR_COLUMN]
     
-    row_data['JIL' + MACHINE_COLUMN] = row_jil[MACHINE_COLUMN]
-    row_data['STB' + UAC_AGENT_CLUSTER_COLUMN] = row_task_report[UAC_AGENT_CLUSTER_COLUMN]
+    row_data['JIL ' + MACHINE_COLUMN] = row_jil[MACHINE_COLUMN]
+    row_data['STB ' + UAC_AGENT_CLUSTER_COLUMN] = row_task_report[UAC_AGENT_CLUSTER_COLUMN]
     row_data[UAC_AGENT_CLUSTER_COLUMN + ' Compare'] = compare_result[UAC_AGENT_CLUSTER_COLUMN]
     
-    row_data['JIL' + OWNER_COLUMN] = row_jil[OWNER_COLUMN]
-    row_data['STB' + UAC_CREDENTIAL_COLUMN] = row_task_report[UAC_CREDENTIAL_COLUMN]
+    row_data['JIL ' + OWNER_COLUMN] = row_jil[OWNER_COLUMN]
+    row_data['STB ' + UAC_CREDENTIAL_COLUMN] = row_task_report[UAC_CREDENTIAL_COLUMN]
     row_data[UAC_CREDENTIAL_COLUMN + ' Compare'] = compare_result[UAC_CREDENTIAL_COLUMN]
     
-    row_data['JIL' + VARIABLE_PATH_COLUMN] = variable_path['JIL']
-    row_data['STB' + VARIABLE_PATH_COLUMN] = variable_path['STB']
-
+    row_data['JIL ' + VARIABLE_PATH_COLUMN] = variable_path['JIL']
+    row_data['STB ' + VARIABLE_PATH_COLUMN] = variable_path['STB']
+    row_data[VARIABLE_PATH_COLUMN + ' Compare'] = compare_result[VARIABLE_PATH_COLUMN]
+    
+    row_data['JIL ' + FORMAT_DATE_COLUMN] = format_date['JIL']
+    row_data['STB ' + FORMAT_DATE_COLUMN] = format_date['STB']
+    row_data[FORMAT_DATE_COLUMN + ' Compare'] = compare_result[FORMAT_DATE_COLUMN]
+    
     
     return row_data
 
@@ -271,17 +269,25 @@ def createCompareFileMonitorRow(row_jil, row_file_monitor_report, format_date, v
     row_data[JOBNAME_COLUMN] = row_jil[JOBNAME_COLUMN]
     row_data[BOXNAME_COLUMN] = row_jil[BOXNAME_COLUMN]
     
-    row_data['JIL' + WATCH_FILE_COLUMN] = row_jil[WATCH_FILE_COLUMN]
-    row_data['STB' + UAC_FILE_MONITOR_COLUMN] = row_file_monitor_report[UAC_FILE_MONITOR_COLUMN]
+    row_data['JIL ' + WATCH_FILE_COLUMN] = row_jil[WATCH_FILE_COLUMN]
+    row_data['STB ' + UAC_FILE_MONITOR_COLUMN] = row_file_monitor_report[UAC_FILE_MONITOR_COLUMN]
     row_data[UAC_FILE_MONITOR_COLUMN + ' Compare'] = compare_result[UAC_FILE_MONITOR_COLUMN]
     
-    row_data['JIL' + MACHINE_COLUMN] = row_jil[MACHINE_COLUMN]
-    row_data['STB' + UAC_AGENT_CLUSTER_COLUMN] = row_file_monitor_report[UAC_AGENT_CLUSTER_COLUMN]
+    row_data['JIL ' + MACHINE_COLUMN] = row_jil[MACHINE_COLUMN]
+    row_data['STB ' + UAC_AGENT_CLUSTER_COLUMN] = row_file_monitor_report[UAC_AGENT_CLUSTER_COLUMN]
     row_data[UAC_AGENT_CLUSTER_COLUMN + ' Compare'] = compare_result[UAC_AGENT_CLUSTER_COLUMN]
     
-    row_data['JIL' + OWNER_COLUMN] = row_jil[OWNER_COLUMN]
-    row_data['STB' + UAC_CREDENTIAL_COLUMN] = row_file_monitor_report[UAC_CREDENTIAL_COLUMN]
+    row_data['JIL ' + OWNER_COLUMN] = row_jil[OWNER_COLUMN]
+    row_data['STB ' + UAC_CREDENTIAL_COLUMN] = row_file_monitor_report[UAC_CREDENTIAL_COLUMN]
     row_data[UAC_CREDENTIAL_COLUMN + ' Compare'] = compare_result[UAC_CREDENTIAL_COLUMN]
+    
+    row_data['JIL ' + VARIABLE_PATH_COLUMN] = variable_path['JIL']
+    row_data['STB ' + VARIABLE_PATH_COLUMN] = variable_path['STB']
+    row_data[VARIABLE_PATH_COLUMN + ' Compare'] = compare_result[VARIABLE_PATH_COLUMN]
+    
+    row_data['JIL ' + FORMAT_DATE_COLUMN] = format_date['JIL']
+    row_data['STB ' + FORMAT_DATE_COLUMN] = format_date['STB']
+    row_data[FORMAT_DATE_COLUMN + ' Compare'] = compare_result[FORMAT_DATE_COLUMN]
     
     return row_data
 
@@ -329,8 +335,9 @@ def compareFormat(df_jil, list_dict, df_task_report, df_file_monitor_report):
         if len(task_row_data) != 0:
             task_row_data = task_row_data.iloc[0]
             format_date = getTaskFormatDate(row, task_row_data)
-            variable_path = getTaskVariablePath(row, task_row_data)
-            compare_task_result = compareTaskValue(row, task_row_data)
+            variable_path = getVariablePath(row, task_row_data, COMMAND_COLUMN, UAC_COMMAND_COLUMN)
+            compare_task_result = compareTaskValue(row, task_row_data, format_date, variable_path)
+            
             row_data = createCompareTaskRow(row, task_row_data, format_date, variable_path, compare_task_result)
             task_in_list.append(row_data)
             
@@ -338,27 +345,24 @@ def compareFormat(df_jil, list_dict, df_task_report, df_file_monitor_report):
             row_compare[JOBNAME_COLUMN] = job_name
             file_monitor_row_data = file_monitor_row_data.iloc[0]
             format_date = getFileMonitorFormatDate(row, file_monitor_row_data)
-            variable_path = getTaskVariablePath(row, file_monitor_row_data)
-            compare_file_monitor_result =  compareFileMonitorValue(row, file_monitor_row_data)
+            variable_path = getVariablePath(row, file_monitor_row_data, WATCH_FILE_COLUMN, UAC_FILE_MONITOR_COLUMN)
+            compare_file_monitor_result =  compareFileMonitorValue(row, file_monitor_row_data, format_date, variable_path)
             
             row_data = createCompareFileMonitorRow(row, file_monitor_row_data, format_date, variable_path, compare_file_monitor_result)
             file_monitor_in_list.append(row_data)
             
         if len(task_row_data) == 0 and len(file_monitor_row_data) == 0:
             continue
-        
+    print("Results")
     print("Task in list: ", len(task_in_list))
     print("File monitor in list: ", len(file_monitor_in_list))
+    
     df_command = pd.DataFrame(task_in_list)
     df_file_monitor = pd.DataFrame(file_monitor_in_list)
-    createExcel(OUTPUT_EXCEL_NAME, ('Command', df_command), ('File Monitor', df_file_monitor))
+    return df_command, df_file_monitor
     
             
         
-
-    
-    
-    
 
     
 def main():
@@ -388,8 +392,8 @@ def main():
     df_task_report = getReport(TASK_REPORT_NAME)
     df_file_monitor_report = getReport(FILE_MONITOR_REPORT_NAME)
     
-    compareFormat(df_jil, list_dict, df_task_report, df_file_monitor_report)
-    
+    df_command, df_file_monitor = compareFormat(df_jil, list_dict, df_task_report, df_file_monitor_report)
+    createExcel(OUTPUT_EXCEL_NAME, ('Command', df_command), ('File Monitor', df_file_monitor))
     
     
     
