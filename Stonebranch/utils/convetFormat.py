@@ -9,7 +9,7 @@ def convertDictToList(nested_dict, key_field = 'name'):
     for key, value in nested_dict.items():
         if isinstance(value, dict):
             value[key_field] = key
-            converted_list_of_dict.append(value)
+            print("converted_list_of_dict.append(value)")
         elif isinstance(value, list):
             for item in value:
                 item[key_field] = key
