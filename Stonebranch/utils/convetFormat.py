@@ -5,17 +5,17 @@ import json
 
 
 def convertDictToList(nested_dict, key_field = 'name'):
-    converted_list_of_dict____ = []
+    converted_list_of_dict = []
     for key, value in nested_dict.items():
         if isinstance(value, dict):
             value[key_field] = key
-            converted_list_of_dict____.append(value)
+            converted_list_of_dict.append(value)
         elif isinstance(value, list):
             for item in value:
                 item[key_field] = key
-                converted_list_of_dict____.append(item)
+                converted_list_of_dict.append(item)
                 
-    return converted_list_of_dict____
+    return converted_list_of_dict
                 
                 
 def convertListToDict(list_of_dict, key_field = 'name'):
