@@ -48,6 +48,9 @@ def selectSheet(dfs, sheetname):
     elif isinstance(dfs, pd.DataFrame):
         return dfs
     else:
+        if sheetname not in dfs:
+            print(f"Sheetname {sheetname} not found")
+            return None
         return dfs[sheetname]
 
 def getExcelProcess(pathfile, sheetname=None):

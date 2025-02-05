@@ -39,6 +39,8 @@ def readJILFile(jil_filepath):
     with open(jil_filepath, "rt") as jil:
         jilLines = jil.readlines()
         for linesInJill in jilLines:
+            if linesInJill.startswith("#"):
+                continue
             if "insert_job:" in linesInJill:
                 jil_in_array.append(oneJob)
                 linesInJill = linesInJill.strip()
@@ -133,15 +135,18 @@ def main():
         df_jil_except = getExcelProcess(jil_except_path)
         jil_except_list = df_jil_except[JOBNAME_COLUNM].tolist()
         jil_in_array_except = [job for job in jil_in_array if job[JOBNAME_COLUNM] not in jil_except_list]
-        
-    stdcel_parsed_data = stdcelParseData(files[STDCAL_FILENAME])
-    extcel_parsed_data = extcelParseData(files[EXTCAL_FILENAME])
+    
     
     df_jil_ori = pd.DataFrame(jil_in_array, columns = jil_fieldnames)
     if jil_except_path != 'n':
         df_jil_except = pd.DataFrame(jil_in_array_except, columns = jil_fieldnames)
-    df_stdcal = pd.DataFrame(stdcel_parsed_data)
-    df_extcal = pd.DataFrame(extcel_parsed_data)
+        
+    if files and STDCAL_EXCELNAME in files:
+        stdcel_parsed_data = stdcelParseData(files[STDCAL_FILENAME])
+        df_stdcal = pd.DataFrame(stdcel_parsed_data)
+    if files and EXTCAL_EXCELNAME in files:
+        extcel_parsed_data = extcelParseData(files[EXTCAL_FILENAME])
+        df_extcal = pd.DataFrame(extcel_parsed_data)
     
     folder_name = OUTPUT_PATH + date_file_format + "\\"
     jil_ori_output_file = folder_name + date_file_format + JIL_ORI_EXCELNAME
@@ -158,9 +163,11 @@ def main():
         createExcel(jil_except_output_file, (JIL_SHEETNAME, df_jil_except))
         customExcel(current_path + "\\" + jil_except_output_file)
     # Standard Calendar file
-    createExcel(stdcal_output_file, (STDCAL_SHEETNAME, df_stdcal))
+    if files and STDCAL_EXCELNAME in files:
+        createExcel(stdcal_output_file, (STDCAL_SHEETNAME, df_stdcal))
     # Extclude Calendar file
-    createExcel(extcal_output_file, (EXTCAL_SHEETNAME, df_extcal))
+    if files and EXTCAL_EXCELNAME in files:
+        createExcel(extcal_output_file, (EXTCAL_SHEETNAME, df_extcal))
     
     
 if __name__ == "__main__":

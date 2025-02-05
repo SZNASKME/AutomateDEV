@@ -1,0 +1,509 @@
+
+
+/* ----------------- DWH_P_FLPN_M_B ----------------- */ 
+
+insert_job: DWH_P_FLPN_M_B   job_type: BOX 
+box_name: DWH_AUTO_LOAN_MTHLY_B
+owner: dsoper@dsdbprd_vr
+permission: gx
+date_conditions: 0
+run_calendar: DWH_MIS_D01
+start_times: "06:05"
+alarm_if_fail: 1
+application: DWH_MTHLY
+
+
+ /* ----------------- DWH_P_FP_MONTHLY_ACCRUED_NEW_M_B ----------------- */ 
+
+ insert_job: DWH_P_FP_MONTHLY_ACCRUED_NEW_M_B   job_type: BOX 
+ box_name: DWH_P_FLPN_M_B
+ owner: dsoper@dsdbprd_vr
+ permission: gx
+ date_conditions: 0
+ alarm_if_fail: 1
+ application: DWH_MTHLY
+
+
+  /* ----------------- DWH_LD_P_FP_MONTHLY_ACCRUED_NEW_M_F ----------------- */ 
+
+  insert_job: DWH_LD_P_FP_MONTHLY_ACCRUED_NEW_M_F   job_type: FW 
+  box_name: DWH_P_FP_MONTHLY_ACCRUED_NEW_M_B
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  condition: s(DWH_P_FP_MONTHLY_ACCRUED_NEW_M.FTP_C)
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+  watch_file: ${FILPTH}/FP_MONTHLY_ACCRUED_NEW.TXT
+  watch_file_min_size: 1
+  watch_interval: 60
+
+
+  /* ----------------- DWH_CH_P_FP_MONTHLY_ACCRUED_NEW_M_C ----------------- */ 
+
+  insert_job: DWH_CH_P_FP_MONTHLY_ACCRUED_NEW_M_C   job_type: CMD 
+  box_name: DWH_P_FP_MONTHLY_ACCRUED_NEW_M_B
+  command: ${STDPTH}/utf8_2ascii.sh ${FILPTH}/FP_MONTHLY_ACCRUED_NEW.TXT
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  condition: s(DWH_P_FP_MONTHLY_ACCRUED_NEW_M.WIN2UTF8_C)
+  std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+  std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+
+
+  /* ----------------- DWH_P_LD_FNADMSC_01_M_C ----------------- */ 
+
+  insert_job: DWH_P_LD_FNADMSC_01_M_C   job_type: CMD 
+  box_name: DWH_P_FP_MONTHLY_ACCRUED_NEW_M_B
+  command: ${STDPTH}/call_dsjob.sh "P_LD_FNADMSC_01_M" "last_month" "R"
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  condition: s(DWH_CH_P_FP_MONTHLY_ACCRUED_NEW_M_C)
+  description: "${STDPTH}/call_dsjob.sh \"P_LD_FNADMSC_01_M\" \"$(getdate -1)\" \"N\""
+  n_retrys: 3
+  std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+  std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+
+
+  /* ----------------- DWH_BK_P_FP_MONTHLY_ACCRUED_NEW_M_C ----------------- */ 
+
+  insert_job: DWH_BK_P_FP_MONTHLY_ACCRUED_NEW_M_C   job_type: CMD 
+  box_name: DWH_P_FP_MONTHLY_ACCRUED_NEW_M_B
+  command: ${STDPTH}/backup_src_file.sh ${FILPTH}/FP_MONTHLY_ACCRUED_NEW.TXT
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  condition: s(DWH_P_LD_FNADMSC_01_M_C)
+  std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+  std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+
+
+  /* ----------------- DWH_P_FP_MONTHLY_ACCRUED_NEW_M.FTP_C ----------------- */ 
+
+  insert_job: DWH_P_FP_MONTHLY_ACCRUED_NEW_M.FTP_C   job_type: CMD 
+  box_name: DWH_P_FP_MONTHLY_ACCRUED_NEW_M_B
+  command: ${STDPTH}/DWH_SFTP.sh FP_MONTHLY_ACCRUED_NEW_GET
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  n_retrys: 3
+  std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+  std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+
+
+  /* ----------------- DWH_P_FP_MONTHLY_ACCRUED_NEW_M.DEL_FTP_C ----------------- */ 
+
+  insert_job: DWH_P_FP_MONTHLY_ACCRUED_NEW_M.DEL_FTP_C   job_type: CMD 
+  box_name: DWH_P_FP_MONTHLY_ACCRUED_NEW_M_B
+  command: ${STDPTH}/DWH_SFTP.sh FP_MONTHLY_ACCRUED_NEW_DEL
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  condition: s(DWH_BK_P_FP_MONTHLY_ACCRUED_NEW_M_C)
+  n_retrys: 3
+  std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+  std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+
+
+  /* ----------------- DWH_P_FP_MONTHLY_ACCRUED_NEW_M.WIN2UTF8_C ----------------- */ 
+
+  insert_job: DWH_P_FP_MONTHLY_ACCRUED_NEW_M.WIN2UTF8_C   job_type: CMD 
+  box_name: DWH_P_FP_MONTHLY_ACCRUED_NEW_M_B
+  command: ${STDPTH}/win874_2utf8.sh ${FILPTH}/FP_MONTHLY_ACCRUED_NEW.TXT
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  condition: s(DWH_LD_P_FP_MONTHLY_ACCRUED_NEW_M_F)
+  std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+  std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+
+
+ /* ----------------- DWH_P_FP_MONTHLY_OVERDUE_M_B ----------------- */ 
+
+ insert_job: DWH_P_FP_MONTHLY_OVERDUE_M_B   job_type: BOX 
+ box_name: DWH_P_FLPN_M_B
+ owner: dsoper@dsdbprd_vr
+ permission: gx
+ date_conditions: 0
+ alarm_if_fail: 1
+ application: DWH_MTHLY
+
+
+  /* ----------------- DWH_LD_P_FP_MONTHLY_OVERDUE_M_F ----------------- */ 
+
+  insert_job: DWH_LD_P_FP_MONTHLY_OVERDUE_M_F   job_type: FW 
+  box_name: DWH_P_FP_MONTHLY_OVERDUE_M_B
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  condition: s(DWH_P_FP_MONTHLY_OVERDUE_M.FTP_C)
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+  watch_file: ${FILPTH}/FP_MONTHLY_OVERDUE.TXT
+  watch_file_min_size: 1
+  watch_interval: 60
+
+
+  /* ----------------- DWH_CH_P_FP_MONTHLY_OVERDUE_M_C ----------------- */ 
+
+  insert_job: DWH_CH_P_FP_MONTHLY_OVERDUE_M_C   job_type: CMD 
+  box_name: DWH_P_FP_MONTHLY_OVERDUE_M_B
+  command: ${STDPTH}/utf8_2ascii.sh ${FILPTH}/FP_MONTHLY_OVERDUE.TXT
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  condition: s(DWH_P_FP_MONTHLY_OVERDUE_M.WIN2UTF8_C)
+  std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+  std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+
+
+  /* ----------------- DWH_P_LD_FNOEMSC_01_M_C ----------------- */ 
+
+  insert_job: DWH_P_LD_FNOEMSC_01_M_C   job_type: CMD 
+  box_name: DWH_P_FP_MONTHLY_OVERDUE_M_B
+  command: ${STDPTH}/call_dsjob.sh "P_LD_FNOEMSC_01_M" "last_month" "R"
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  condition: s(DWH_CH_P_FP_MONTHLY_OVERDUE_M_C)
+  n_retrys: 3
+  std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+  std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+
+
+  /* ----------------- DWH_BK_P_FP_MONTHLY_OVERDUE_M_C ----------------- */ 
+
+  insert_job: DWH_BK_P_FP_MONTHLY_OVERDUE_M_C   job_type: CMD 
+  box_name: DWH_P_FP_MONTHLY_OVERDUE_M_B
+  command: ${STDPTH}/backup_src_file.sh ${FILPTH}/FP_MONTHLY_OVERDUE.TXT
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  condition: s(DWH_P_LD_FNOEMSC_01_M_C)
+  std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+  std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+
+
+  /* ----------------- DWH_P_FP_MONTHLY_OVERDUE_M.FTP_C ----------------- */ 
+
+  insert_job: DWH_P_FP_MONTHLY_OVERDUE_M.FTP_C   job_type: CMD 
+  box_name: DWH_P_FP_MONTHLY_OVERDUE_M_B
+  command: ${STDPTH}/DWH_SFTP.sh FP_MONTHLY_OVERDUE_GET
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  n_retrys: 3
+  std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+  std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+
+
+  /* ----------------- DWH_P_FP_MONTHLY_OVERDUE_M.DEL_FTP_C ----------------- */ 
+
+  insert_job: DWH_P_FP_MONTHLY_OVERDUE_M.DEL_FTP_C   job_type: CMD 
+  box_name: DWH_P_FP_MONTHLY_OVERDUE_M_B
+  command: ${STDPTH}/DWH_SFTP.sh FP_MONTHLY_OVERDUE_DEL
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  condition: s(DWH_BK_P_FP_MONTHLY_OVERDUE_M_C)
+  n_retrys: 3
+  std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+  std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+
+
+  /* ----------------- DWH_P_FP_MONTHLY_OVERDUE_M.WIN2UTF8_C ----------------- */ 
+
+  insert_job: DWH_P_FP_MONTHLY_OVERDUE_M.WIN2UTF8_C   job_type: CMD 
+  box_name: DWH_P_FP_MONTHLY_OVERDUE_M_B
+  command: ${STDPTH}/win874_2utf8.sh ${FILPTH}/FP_MONTHLY_OVERDUE.TXT
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  condition: s(DWH_LD_P_FP_MONTHLY_OVERDUE_M_F)
+  std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+  std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+
+
+ /* ----------------- DWH_P_FP_MONTHLY_NCB_M_B ----------------- */ 
+
+ insert_job: DWH_P_FP_MONTHLY_NCB_M_B   job_type: BOX 
+ box_name: DWH_P_FLPN_M_B
+ owner: dsoper@dsdbprd_vr
+ permission: gx
+ date_conditions: 0
+ alarm_if_fail: 1
+ application: DWH_MTHLY
+
+
+  /* ----------------- DWH_LD_P_FP_MONTHLY_NCB_M_F ----------------- */ 
+
+  insert_job: DWH_LD_P_FP_MONTHLY_NCB_M_F   job_type: FW 
+  box_name: DWH_P_FP_MONTHLY_NCB_M_B
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  condition: s(DWH_P_FP_MONTHLY_NCB_M.FTP_C)
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+  watch_file: ${FILPTH}/FP_MONTHLY_NCB.TXT
+  watch_file_min_size: 1
+  watch_interval: 60
+
+
+  /* ----------------- DWH_CH_P_FP_MONTHLY_NCB_M_C ----------------- */ 
+
+  insert_job: DWH_CH_P_FP_MONTHLY_NCB_M_C   job_type: CMD 
+  box_name: DWH_P_FP_MONTHLY_NCB_M_B
+  command: ${STDPTH}/utf8_2ascii.sh ${FILPTH}/FP_MONTHLY_NCB.TXT
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  condition: s(DWH_P_FP_MONTHLY_NCB_M.WIN2UTF8_C)
+  std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+  std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+
+
+  /* ----------------- DWH_P_LD_FNNBMSC_01_M_C ----------------- */ 
+
+  insert_job: DWH_P_LD_FNNBMSC_01_M_C   job_type: CMD 
+  box_name: DWH_P_FP_MONTHLY_NCB_M_B
+  command: ${STDPTH}/call_dsjob.sh "P_LD_FNNBMSC_01_M" "last_month" "R"
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  condition: s(DWH_CH_P_FP_MONTHLY_NCB_M_C)
+  description: "${STDPTH}/call_dsjob.sh \"P_LD_FNNBMSC_01_M\" \"$(getdate -1)\" \"R\""
+  n_retrys: 3
+  std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+  std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+
+
+  /* ----------------- DWH_BK_P_FP_MONTHLY_NCB_M_C ----------------- */ 
+
+  insert_job: DWH_BK_P_FP_MONTHLY_NCB_M_C   job_type: CMD 
+  box_name: DWH_P_FP_MONTHLY_NCB_M_B
+  command: ${STDPTH}/backup_src_file.sh ${FILPTH}/FP_MONTHLY_NCB.TXT
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  condition: s(DWH_P_LD_FNNBMSC_01_M_C)
+  std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+  std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+
+
+  /* ----------------- DWH_P_FP_MONTHLY_NCB_M.FTP_C ----------------- */ 
+
+  insert_job: DWH_P_FP_MONTHLY_NCB_M.FTP_C   job_type: CMD 
+  box_name: DWH_P_FP_MONTHLY_NCB_M_B
+  command: ${STDPTH}/DWH_SFTP.sh FP_MONTHLY_NCB_GET
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  n_retrys: 3
+  std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+  std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+
+
+  /* ----------------- DWH_P_FP_MONTHLY_NCB_M.DEL_FTP_C ----------------- */ 
+
+  insert_job: DWH_P_FP_MONTHLY_NCB_M.DEL_FTP_C   job_type: CMD 
+  box_name: DWH_P_FP_MONTHLY_NCB_M_B
+  command: ${STDPTH}/DWH_SFTP.sh FP_MONTHLY_NCB_DEL
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  condition: s(DWH_BK_P_FP_MONTHLY_NCB_M_C)
+  n_retrys: 3
+  std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d`
+  std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d`
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+
+
+  /* ----------------- DWH_P_FP_MONTHLY_NCB_M.WIN2UTF8_C ----------------- */ 
+
+  insert_job: DWH_P_FP_MONTHLY_NCB_M.WIN2UTF8_C   job_type: CMD 
+  box_name: DWH_P_FP_MONTHLY_NCB_M_B
+  command: ${STDPTH}/win874_2utf8.sh ${FILPTH}/FP_MONTHLY_NCB.TXT
+  machine: dsdbprd_vr
+  owner: dsoper@dsdbprd_vr
+  permission: gx
+  date_conditions: 0
+  condition: s(DWH_LD_P_FP_MONTHLY_NCB_M_F)
+  std_out_file: /u01/ds_logs/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+  std_err_file: /u01/ds_logs/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+  alarm_if_fail: 1
+  profile: /v01/IBM/InformationServer/Server/DSEngine/dsenv
+  application: DWH_MTHLY
+
+
+ /* ----------------- DWH_P_FLPN_MODEL_M_B ----------------- */ 
+
+ insert_job: DWH_P_FLPN_MODEL_M_B   job_type: BOX 
+ box_name: DWH_P_FLPN_M_B
+ owner: dwhoper@dwhprod_vr
+ permission: 
+ date_conditions: 0
+ alarm_if_fail: 1
+ application: DWH_MTHLY
+
+
+  /* ----------------- DWH_P_ACS_FLPN_ACCRD_MTHLY_M_B ----------------- */ 
+
+  insert_job: DWH_P_ACS_FLPN_ACCRD_MTHLY_M_B   job_type: BOX 
+  box_name: DWH_P_FLPN_MODEL_M_B
+  owner: dwhoper@dwhprod_vr
+  permission: 
+  date_conditions: 0
+  alarm_if_fail: 1
+  application: DWH_MTHLY
+
+
+   /* ----------------- DWH_P_TX_ASFNADMY_FNADMSC_01_M_C ----------------- */ 
+
+   insert_job: DWH_P_TX_ASFNADMY_FNADMSC_01_M_C   job_type: CMD 
+   box_name: DWH_P_ACS_FLPN_ACCRD_MTHLY_M_B
+   command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASFNADMY_FNADMSC_01_M',P_RUN_DATE  => ADMINTMB.TMB_ETL_PARAM_DATE_MTHLY,P_RUN_TYPE  => 'N')"
+   machine: dwhprod_vr
+   owner: dwhoper@dwhprod_vr
+   permission: gx
+   date_conditions: 0
+   condition: s(DWH_P_COR_AGMT_FLPN_D_B) & s(DWH_P_COR_IDENT_FLPN_D_B) & s(DWH_P_FP_MONTHLY_ACCRUED_NEW_M_B)
+   description: "PRCS_ID=4992,VX_ASFNADMY_FNADMSC_01,ACS_FLPN_ACCRD_MTHLY"
+   std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+   std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+   alarm_if_fail: 1
+   profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+   application: DWH_MTHLY
+
+
+  /* ----------------- DWH_P_ACS_FLPN_OVD_MTHLY_M_B ----------------- */ 
+
+  insert_job: DWH_P_ACS_FLPN_OVD_MTHLY_M_B   job_type: BOX 
+  box_name: DWH_P_FLPN_MODEL_M_B
+  owner: dwhoper@dwhprod_vr
+  permission: 
+  date_conditions: 0
+  alarm_if_fail: 1
+  application: DWH_MTHLY
+
+
+   /* ----------------- DWH_P_TX_ASFNODMY_FNOEMSC_01_M_C ----------------- */ 
+
+   insert_job: DWH_P_TX_ASFNODMY_FNOEMSC_01_M_C   job_type: CMD 
+   box_name: DWH_P_ACS_FLPN_OVD_MTHLY_M_B
+   command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASFNODMY_FNOEMSC_01_M',P_RUN_DATE  => ADMINTMB.TMB_ETL_PARAM_DATE_MTHLY,P_RUN_TYPE  => 'N')"
+   machine: dwhprod_vr
+   owner: dwhoper@dwhprod_vr
+   permission: gx
+   date_conditions: 0
+   condition: s(DWH_P_COR_AGMT_FLPN_D_B) & s(DWH_P_COR_IDENT_FLPN_D_B) & s(DWH_P_COR_CR_AGMT_SUM_FLPN_D_B) & s(DWH_P_FP_MONTHLY_OVERDUE_M_B)
+   description: "PRCS_ID=4993,VX_ASFNODMY_FNOEMSC_01,ACS_FLPN_OVD_MTHLY"
+   std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+   std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+   alarm_if_fail: 1
+   profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+   application: DWH_MTHLY
+
+
+  /* ----------------- DWH_P_ACS_FLPN_NCB_MTHLY_M_B ----------------- */ 
+
+  insert_job: DWH_P_ACS_FLPN_NCB_MTHLY_M_B   job_type: BOX 
+  box_name: DWH_P_FLPN_MODEL_M_B
+  owner: dwhoper@dwhprod_vr
+  permission: 
+  date_conditions: 0
+  alarm_if_fail: 1
+  application: DWH_MTHLY
+
+
+   /* ----------------- DWH_P_TX_ASFNNBMY_FNNBMSC_01_M_C ----------------- */ 
+
+   insert_job: DWH_P_TX_ASFNNBMY_FNNBMSC_01_M_C   job_type: CMD 
+   box_name: DWH_P_ACS_FLPN_NCB_MTHLY_M_B
+   command: ${STDPTH}/CALL_PROCEDURE.sh "ADMINTMB.PK_ETL_MAIN.RUN_PRCS(P_PRCS_NAME => 'P_TX_ASFNNBMY_FNNBMSC_01_M',P_RUN_DATE  => ADMINTMB.TMB_ETL_PARAM_DATE_MTHLY,P_RUN_TYPE  => 'N')"
+   machine: dwhprod_vr
+   owner: dwhoper@dwhprod_vr
+   permission: gx
+   date_conditions: 0
+   condition: s(DWH_P_COR_AGMT_FLPN_D_B) & s(DWH_P_FP_MONTHLY_NCB_M_B)
+   description: "PRCS_ID=5099,VX_ASFNNBMY_FNNBMSC_01,ACS_FLPN_NCB_MTHLY"
+   std_out_file: ${DWHLOG}/std_out/$AUTO_JOB_NAME.out.`/bin/date +\%Y\%m\%d\%H\%M%S`
+   std_err_file: ${DWHLOG}/std_err/$AUTO_JOB_NAME.err.`/bin/date +\%Y\%m\%d\%H\%M%S`
+   alarm_if_fail: 1
+   profile: /ofsaprod/prog/AutoSys/autoscp/dwhoper.ats.profile
+   application: DWH_MTHLY

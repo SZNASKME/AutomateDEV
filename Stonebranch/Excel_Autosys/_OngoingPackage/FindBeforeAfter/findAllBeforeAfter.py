@@ -84,7 +84,7 @@ def searchBeforeJob(df_jil):
     #max_depth = 0
     for row in df_jil_processed.itertuples(index=False):
         job_name = getattr(row, JOBNAME_COLUMN)
-        app_name = getattr(row, 'AppName')
+        #app_name = getattr(row, 'AppName')
         cache = {}
         result = iterativeSearchPreviousDepenCondition(df_dict, job_name, cache)
         #print(json.dumps(result, indent=4))
@@ -96,10 +96,10 @@ def searchBeforeJob(df_jil):
         all_sorted_condition_names = [cond for cond, depth in sorted_conditions]
         previous_depth_condition = [cond for cond, depth in sorted_conditions if depth == 1]
         furthest_depth_condition = [cond for cond, depth in sorted_conditions if depth == depth_len]
-        row = [app_name, job_name] + [", ".join(previous_depth_condition)] + [", ".join(furthest_depth_condition)] + [", ".join(all_sorted_condition_names)]
+        row = [job_name] + [", ".join(previous_depth_condition)] + [", ".join(furthest_depth_condition)] + [", ".join(all_sorted_condition_names)]
         job_before_list.append(row)
     
-    columns = ['AppName','JobName', 'Previous conditions', 'Furthest conditions', 'All Before Conditions']
+    columns = ['JobName', 'Previous conditions', 'Furthest conditions', 'All Before Conditions']
     #df_jil_before = pd.DataFrame(job_before_list)
     
     # for job_name, sorted_conditions in stored_conditions_dict.items():
@@ -183,7 +183,7 @@ def searchAfterJob(df_jil):
                 
     for row in df_jil_processed.itertuples(index=False):
         job_name = getattr(row, JOBNAME_COLUMN)
-        app_name = getattr(row, 'AppName')
+        #app_name = getattr(row, 'AppName')
         cache = {}
         result = iterativeSearchAfterDepenCondition(job_conditions_dict, job_child_dict, job_name, cache)
         # Sort conditions by depth (descending)
@@ -196,7 +196,7 @@ def searchAfterJob(df_jil):
         job_after_list.append(row)
 
             
-    columns = ['AppName','JobName', 'Next conditions', 'Furthest conditions', 'All After Conditions']
+    columns = ['JobName', 'Next conditions', 'Furthest conditions', 'All After Conditions']
     df_jil_after = pd.DataFrame(job_after_list, columns=columns)
     return df_jil_after
 

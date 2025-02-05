@@ -14,13 +14,16 @@ JOBNAME_COLUMN = 'jobName'
 CONDITION_COLUMN = 'condition'
 BOXNAME_COLUMN = 'box_name'
 
-
+sys.setrecursionlimit(10000)
 
 
 OUTPUT_EXCEL_FILE = 'FindBeforeAfter.xlsx'
 
 CONDITION_PATTERN = re.compile(r"[a-z]\([A-Za-z0-9_\.]+\)")
 PARENTHESES_PATTERN = re.compile(r"\(([^()]+)\)")
+
+SELECTED_COLUMN = 'jobName'
+FILTER_COLUMN = 'rootBox'
 
 
 # def getAllInnermostSubstrings(string, start_char, end_char):
@@ -35,147 +38,268 @@ PARENTHESES_PATTERN = re.compile(r"\(([^()]+)\)")
 
 def getNamefromCondition(condition):
     return PARENTHESES_PATTERN.findall(condition)
+
+
+def getSpecificColumn(df, column_name, filter_column_name = None, filter_value_list = None):
+    column_list_dict = {}
+    for filter_value in filter_value_list:
+        df_filtered = df.copy()
+        if filter_column_name is not None:
+            df_filtered = df_filtered[df_filtered[filter_column_name].isin([filter_value])]
+
+        #column_list_dict[filter_value] = []
+        column_list_dict[filter_value] = df[df[column_name] == filter_value][column_name].tolist()
+        if filter_column_name is not None:
+            for index, row in df_filtered.iterrows():
+                if row[column_name] not in column_list_dict[filter_value]:
+                    column_list_dict[filter_value].append(row[column_name])
         
-
-
-################ Before Job ####################
-
-def iterativeSearchPreviousDepenCondition(df_dict, task_name, cache):
-    stack = [(task_name, 0, None)]  # (task_name, depth, parent_task)
-    result = {}  # {condition_name: (depth, parent_task)}
-    
-    while stack:
-        current_task, current_depth, parent_task = stack.pop()
-        
-        if current_task in cache:
-            for cond, (depth, parent) in cache[current_task].items():
-                if cond not in result or result[cond][0] < depth:
-                    result[cond] = (depth, parent)
-            continue
-        
-        row_data = df_dict.get(current_task)
-        if row_data:
-            condition = row_data[CONDITION_COLUMN]
-            box_name = row_data[BOXNAME_COLUMN]
-            
-            if pd.notna(condition):
-                condition_name_list = getNamefromCondition(condition)
-                for condition_name in condition_name_list:
-                    if condition_name not in result or result[condition_name][0] < current_depth + 1:
-                        stack.append((condition_name, current_depth + 1, current_task))
-                        result[condition_name] = (current_depth + 1, current_task)
-            elif pd.notna(box_name):
-                if box_name not in result or result[box_name][0] < current_depth + 1:
-                    stack.append((box_name, current_depth + 1, current_task))
-                    result[box_name] = (current_depth + 1, current_task)
-        
-        cache[current_task] = result.copy()
-    
-    return result
-
-
-def searchBeforeJob(df_jil):
-    df_jil_processed = df_jil.copy()
-    df_dict = df_jil_processed.set_index(JOBNAME_COLUMN).to_dict(orient='index')
-    
-    job_before_list = []
-    sorted_conditions_dict = defaultdict(dict)
-    for row in df_jil_processed.itertuples(index=False):
-        job_name = getattr(row, JOBNAME_COLUMN)
-        app_name = getattr(row, 'AppName')
-        cache = {}
-        result = iterativeSearchPreviousDepenCondition(df_dict, job_name, cache)
-        
-        # Sort conditions by depth (descending)
-        sorted_conditions = sorted(result.items(), key=lambda x: x[1][0], reverse=True)
-        sorted_conditions_dict[job_name] = {cond: depth for cond, (depth, parent) in sorted_conditions}
-        depth_len = max([depth for cond, (depth, parent) in sorted_conditions], default=0)
-        
-        all_sorted_condition_names = [f"{cond} (from {parent})" for cond, (depth, parent) in sorted_conditions]
-        previous_depth_condition = [f"{cond} (from {parent})" for cond, (depth, parent) in sorted_conditions if depth == 1]
-        furthest_depth_condition = [f"{cond} (from {parent})" for cond, (depth, parent) in sorted_conditions if depth == depth_len]
-
-        row = [app_name, job_name] + [", ".join(previous_depth_condition)] + [", ".join(furthest_depth_condition)] + [", ".join(all_sorted_condition_names)]
-        job_before_list.append(row)
-    
-    columns = ['AppName','JobName', 'Previous conditions', 'Furthest conditions', 'All Before Conditions']
-    df_jil_before = pd.DataFrame(job_before_list, columns=columns)
-
-    return df_jil_before, sorted_conditions_dict
-
+    return column_list_dict    
 
 ########################################################################################
 
 
-def buildDependencyDict(df_dict, task_name, cache, visited=None):
-    if visited is None:
-        visited = set()
+def findRootNodes(node_data):
+    all_keys = node_data.keys()
+    all_having_condition = set()
+    all_in_box = set()
+    for key, value in node_data.items():
+        if value['condition_list']:
+            all_having_condition.add(key)
+        if value['box_name']:
+            all_in_box.add(key)
+            
+    root_nodes = all_keys - all_having_condition - all_in_box
+    return root_nodes
+
+def createConditionPairs(node_data):
+    condition_pair_list = []
+    for name, value in node_data.items():
+        if value['condition_list'] and value['box_name']:
+            for condition in value['condition_list']:
+                condition_pair_list.append({
+                    "target": name, 
+                    "source": condition,
+                    "pair_type": "condition"
+                    })
+        elif value['condition_list'] and not value['box_name']:
+            for condition in value['condition_list']:
+                condition_pair_list.append({
+                    "target": name, 
+                    "source": condition,
+                    "pair_type": "root_condition"
+                    })
+        elif value['box_name'] and not value['condition_list']:
+            condition_pair_list.append({
+                "target": name, 
+                "source": value['box_name'],
+                "pair_type": "start_in_box"
+                })
+                
+    return condition_pair_list
+
+def createConditionPairsDict(node_data):
+    condition_pair_dict = {}
+    for name, value in node_data.items():
+        if value['condition_list'] and value['box_name']:
+            for condition in value['condition_list']:
+                if condition in condition_pair_dict:
+                    condition_pair_dict[condition].append({
+                        "target": name,
+                        "pair_type": "condition"
+                    })
+                else:
+                    condition_pair_dict[condition] = [{
+                        "target": name,
+                        "pair_type": "condition"
+                    }]
+        elif value['condition_list'] and not value['box_name']:
+            for condition in value['condition_list']:
+                if condition in condition_pair_dict:
+                    condition_pair_dict[condition].append({
+                        "target": name,
+                        "pair_type": "root_condition"
+                    })
+                else:
+                    condition_pair_dict[condition] = [{
+                        "target": name,
+                        "pair_type": "root_condition"
+                    }]
+        elif value['box_name'] and not value['condition_list']:
+            if value['box_name'] in condition_pair_dict:
+                condition_pair_dict[value['box_name']].append({
+                    "target": name,
+                    "pair_type": "start_in_box"
+                })
+            else:
+                condition_pair_dict[value['box_name']] = [{
+                    "target": name,
+                    "pair_type": "start_in_box"
+                }]
+    return condition_pair_dict
+
+def buildHierarchyTreeFromDict(root_node, condition_pair_dict, cache, visited_nodes = None):
     
-    if task_name in cache:
-        return cache[task_name]
-    
-    # Prevent infinite recursion due to circular references
-    if task_name in visited:
+    if visited_nodes is None:
+        visited_nodes = set()
+        
+    if root_node in visited_nodes:
         return {}
-
-    visited.add(task_name)  # Mark task as visited
-    row_data = df_dict.get(task_name, {})
     
-    dependencies = {}
+    if root_node not in condition_pair_dict:
+        cache[root_node] = {}
+        return {}
     
-    if row_data:
-        condition = row_data.get(CONDITION_COLUMN)
-        box_name = row_data.get(BOXNAME_COLUMN)
+    visited_nodes.add(root_node)
+    children = condition_pair_dict[root_node]
+    tree = {}
+    
+    #print("Current Node: ", root_node, "Children: ", len(children), "Cache: ", len(cache))
+    for child in children:
+        child_node = child['target']
+        pair_type = child['pair_type']
+        if pair_type == 'condition':
+            tree[child_node] = buildHierarchyTreeFromDict(child_node, condition_pair_dict, cache, visited_nodes)
+        elif pair_type == 'root_condition':
+            tree[child_node] = buildHierarchyTreeFromDict(child_node, condition_pair_dict, cache, visited_nodes)
+        elif pair_type == 'start_in_box':
+            tree[child_node] = buildHierarchyTreeFromDict(child_node, condition_pair_dict, cache, visited_nodes)
+        else:
+            tree[child_node] = {}
+            
+    
+    cache[root_node] = tree
+    return tree
 
-        if pd.notna(condition):
-            condition_names = getNamefromCondition(condition)
-            for condition_name in condition_names:
-                dependencies[condition_name] = buildDependencyDict(df_dict, condition_name, cache, visited.copy())
-
-        if pd.notna(box_name):
-            dependencies[box_name] = buildDependencyDict(df_dict, box_name, cache, visited.copy())
-
-    cache[task_name] = dependencies
-    return dependencies
-
-def getAllNestedKeys(data, result=None):
-    if result is None:
-        result = set()
-
-    if isinstance(data, dict):
-        for key, value in data.items():
-            result.add(key)  # Store the key
-            getAllNestedKeys(value, result)  # Recurse into nested dict
-
-    return result
-
+def buildHierarchyTreeFromList(root_node, condition_pair_list, cache, visited_nodes = None):
+    
+    if visited_nodes is None:
+        visited_nodes = set()
+        
+    if root_node in visited_nodes:
+        return {}
+    
+    children = [child for child in condition_pair_list if child['source'] == root_node]
+    if not children:
+        cache[root_node] = {}
+        return {}
+    
+    visited_nodes.add(root_node)
+    tree = {}
+    
+    #print("Current Node: ", root_node, "Children: ", len(children), "Cache: ", len(cache))
+    for child in children:
+        child_node = child['target']
+        pair_type = child['pair_type']
+        if pair_type == 'condition':
+            tree[child_node] = buildHierarchyTreeFromList(child_node, condition_pair_list, cache, visited_nodes)
+        elif pair_type == 'root_condition':
+            tree[child_node] = buildHierarchyTreeFromList(child_node, condition_pair_list, cache, visited_nodes)
+        elif pair_type == 'start_in_box':
+            tree[child_node] = buildHierarchyTreeFromList(child_node, condition_pair_list, cache, visited_nodes)
+        else:
+            tree[child_node] = {}
+            
+    
+    cache[root_node] = tree
+    return tree
+    
 def searchBeforeJobTree(df_jil):
-    df_jil_processed = df_jil.copy()
-    df_dict = df_jil_processed.set_index(JOBNAME_COLUMN).to_dict(orient='index')
+    try:
+        df_jil_processed = df_jil.copy()
+        #df_dict = df_jil_processed.set_index(JOBNAME_COLUMN).to_dict(orient='index')
+        job_dependency_tree = defaultdict(dict)
+        node_data = {}
+        print("Processing . . .")
+        print("Total Rows: ", len(df_jil_processed))
+        #print(df_jil_processed.columns)
+        for row in df_jil_processed.itertuples(index=False):
+            job_name = getattr(row, JOBNAME_COLUMN)
+            condition = getattr(row, CONDITION_COLUMN)
+            box_name = getattr(row, BOXNAME_COLUMN)
+            
+            if pd.notna(condition) and pd.notna(box_name):
+                condition_name_list = getNamefromCondition(condition)
+                node_data[job_name] = {
+                    'condition_list': condition_name_list,
+                    'box_name': box_name
+                }
+            elif pd.notna(condition) and not pd.notna(box_name):
+                node_data[job_name] = {
+                    'condition_list': getNamefromCondition(condition),
+                    'box_name': None
+                }
+            elif not pd.notna(condition) and pd.notna(box_name):
+                node_data[job_name] = {
+                    'condition_list': [],
+                    'box_name': box_name
+                }
+            else:
+                node_data[job_name] = {
+                    'condition_list': [],
+                    'box_name': None
+                }
+        
+        #t = createConditionPairs(node_data)
+        #print(len(condition_pair_list))
+        root_node_list = findRootNodes(node_data)
+        root_node_list = sorted(list(root_node_list))
+        print(len(root_node_list))
+        # condition_pair_list = createConditionPairs(node_data)
+        # print(len(condition_pair_list))
+        condition_pair_dict = createConditionPairsDict(node_data)
+        print(len(condition_pair_dict))
 
-    job_dependency_tree = {}
-    cache = {}
-    job_processed = set()
+        node_data.clear()
+        
+        #children_dict = preprocessDependencies(condition_pair_list)
+        for root_node in root_node_list:
+            cache = {}
+            print("Root Node: ", root_node)
+            #job_dependency_tree[root_node] = buildHierarchyTreeFromList(root_node, condition_pair_list, cache)
+            job_dependency_tree[root_node] = buildHierarchyTreeFromDict(root_node, condition_pair_dict, cache)
+            print("completed")
+        
+        #return job_dependency_tree, condition_pair_list
+        return job_dependency_tree, condition_pair_dict
 
-    for row in df_jil_processed.itertuples(index=False):
-        job_name = getattr(row, JOBNAME_COLUMN)
-        if job_name not in job_processed:
-            job_dependency_tree[job_name] = buildDependencyDict(df_dict, job_name, cache)
-            print(f"Processed {job_name}")
-            job_processed = job_processed.union(getAllNestedKeys(job_dependency_tree[job_name]))
-    
-    return job_dependency_tree
+    except Exception as e:
+        print("Error: ", e)
 
+      
 
 ########################################################################################
 
 def main():
     
-    df_jil = getDataExcel()
-    print("Processing Previous job dependencies . . .")
-    #df_jil_before, stored_conditions_dict = searchBeforeJobTree(df_jil)
-    job_dependency_tree = searchBeforeJobTree(df_jil)
-    createJson('stored_conditions_tree.json', job_dependency_tree)
+    df_jil = getDataExcel('get Excel path with main job file')
+    # root_list_option = input("Do you want to use the root or list? (r/l): ")
+    # if root_list_option == 'r':
+    #     df_root = getDataExcel("Enter the path of the excel file with the root jobs")
+    # df_list_job = getDataExcel("Enter the path of the excel file with the list of jobs")
+    # list_job_name = df_list_job[JOBNAME_COLUMN].tolist()
+    # if root_list_option == 'r':
+    #     list_dict = getSpecificColumn(df_root, SELECTED_COLUMN, FILTER_COLUMN, list_job_name)
+    # else:
+    #     list_dict = getSpecificColumn(df_jil, SELECTED_COLUMN, None, list_job_name)
+    # print("---------------------------------")
+    # #for key, value in list_dict.items():
+    # #    print(key, len(value))
+    # print("---------------------------------")
+    # print("Processing Previous job dependencies . . .")
+    # #print(list_dict)
+    # merged_list = [name for sublist in list_dict.values() for name in sublist]
+    # df_jil_merge = df_jil[df_jil[JOBNAME_COLUMN].isin(merged_list)]
+    df_jil_merge = df_jil.copy()
+    job_dependency_tree, condition_pair = searchBeforeJobTree(df_jil_merge)
+    createJson('condition_pair_all.json', condition_pair)
+    createJson('stored_conditions_tree_all.json', job_dependency_tree)
+        
+    # job_dependency_tree, condition_pair = searchBeforeJobTree()
+    # createJson('condition_pair.json', condition_pair)
+    # createJson('stored_conditions_tree.json', job_dependency_tree)
+    #job_dependency = searchBeforeJob(df_jil)
+    #createJson('stored_conditions.json', job_dependency)
     #createExcel(OUTPUT_EXCEL_FILE, ("Before", df_jil_before))
     
     

@@ -4,7 +4,7 @@ import pandas as pd
 import multiprocessing
 import json
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from utils.createFile import createExcel
 from utils.readExcel import getDataExcel
@@ -13,10 +13,10 @@ from utils.readFile import loadJson
 from delProcess import deleteProcess
 
 
-BUSINESS_SERVICES = "A0417 - AML Management System"
+DEL_EXCEL_FILE = 'delete_task_trigger_161.xlsx'
 
 #TASK_TYPE = ['taskWorkflow','taskUniversal','taskSleep','taskMonitor','taskFileMonitor']
-TASK_TYPE = ['Workflow','Timer','Windows','Linux/Unix','z/OS','Agent File Monitor','Manual','Email','File Transfer','SQL','Remote File Monitor','Task Monitor','Stored Procedure','Universal Command','System Monitor','Application Control','SAP','Variable Monitor','Web Service','Email Monitor','PeopleSoft','Recurring','Universal Monitor','Universal']
+TASK_TYPE = ['Workflow','Timer','Windows','Linux Unix','zOS','Agent File Monitor','Manual','Email','File Transfer','SQL','Remote File Monitor','Task Monitor','Stored Procedure','Universal Command','System Monitor','Application Control','SAP','Variable Monitor','Web Service','Email Monitor','PeopleSoft','Recurring','Universal Monitor','Universal']
 #API_TASK_TYPE = [1,99,2,12,6]
 API_TASK_TYPE = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,99]
 
@@ -31,7 +31,9 @@ BUSSINESS_SERVICE_LIST = [
     "A0356 - Big Data Foundation Platform",
     "A0360 - Oracle Financial Services Analytical App",
     "Phase 4",
-    "SEP04_2024"
+    "SEP04_2024",
+    "JAN13",
+    "JAN20_2025"
 ]
 
 task_adv_configs_temp = {
@@ -44,7 +46,7 @@ task_configs_temp = {
     'name': '*',
     #'type': None,
     #'businessServices': None,
-    'updatedTime': 'd',
+    #'updatedTime': 'd',
 }
 
 trigger_configs_temp = {
@@ -289,7 +291,7 @@ def main():
     updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
     domain_url = loadJson('Domain.json')
     #domain = domain_url['TTB_UAT']
-    domain = domain_url['1.226']
+    domain = domain_url['1.161']
     updateURI(domain)
     #df = getDataExcel()
     
@@ -315,14 +317,14 @@ def main():
         dftask_dict[key] = df
     dftrigger = pd.DataFrame(del_trigger_list_api)
     
-    createExcel('delete_task_trigger_226.xlsx', *df_list, ('Trigger', dftrigger))
+    createExcel(DEL_EXCEL_FILE, *df_list, ('Trigger', dftrigger))
     
     for key, value in dftask_dict.items():
         print(key, len(value))
     print("Do you want to delete these tasks and triggers? (y/n)")
     choice = input().lower()
     if choice == 'y':
-        confirm = input("confirm to continue delete? (confirm/...)").lower()
+        confirm = input("confirm to continue delete? (confirm/...) ").lower()
         if confirm == 'confirm':
             deleteProcess(dftask_dict, dftrigger, userpass, domain)
     

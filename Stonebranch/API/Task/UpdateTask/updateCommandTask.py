@@ -13,7 +13,7 @@ from utils.createFile import createJson
 API_TASK_TYPE = [99]
 
 BUSINESS_SERVICE_LIST = [
-    "AskMe - NewTasks INV3000"
+    "AskMe - New Floor Plan"
 ]
 
 task_list_configs_temp = {
@@ -88,16 +88,24 @@ def updateCommandTask(task_list):
             command = task_data['largeTextField1']['value']
         else:
             continue
+        
+        #if task_data['agentCluster'] == 'dsdbprd_vr':
+        #    update_task = True
+        #else:
+        #    update_task = False
+        #if command and update_task:
         if command:
+            #char = r'${FILPTH}'
             char = "\""
             new_char = "\\\""
+            #new_char = r'${DWH_DS_FILPTH}'
             if char in command:
                 #print(exclude_char_range)
                 replaced_command = replaceCommand(command, new_char, char, exclude_char_range)
                 replaced_command = replaceCommand(replaced_command, char, new_char, exclude_char_range)
                 #print(replaced_command)
                 task_data['largeTextField1']['value'] = replaced_command
-                #print(task_data['largeTextField1'])
+                #print(json.dumps(task_data, indent=4))
                 response_update = updateTaskAPI(task_data)
                 if response_update.status_code == 200:
                     update_log.append({
@@ -112,7 +120,7 @@ def updateCommandTask(task_list):
             else:
                 update_log.append({
                     "taskname": task['name'],
-                    "message": "No {char} in command"
+                    "message": "No char in command"
                 })
                 
     return update_log
@@ -123,7 +131,7 @@ def main():
     userpass = auth['ASKME_STB']
     updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
     domain_url = loadJson('Domain.json')
-    domain = domain_url['1.86']
+    domain = domain_url['1.226']
     updateURI(domain)
     
     task_list = getTaskList()

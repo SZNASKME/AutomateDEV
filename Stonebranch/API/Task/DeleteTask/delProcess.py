@@ -5,12 +5,15 @@ import multiprocessing
 import sys
 import os
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from utils.readExcel import getDataExcelAllSheet, selectSheet
 from utils.stbAPI import deleteTaskAPI, deleteTriggerAPI, updateTaskAPI, getTaskAPI, updateURI, updateAuth
 from utils.readFile import loadJson
 from utils.createFile import createJson
+
+
+DEL_JSON_FILE = 'delete_result_161.json'
 
 task_configs_temp = {
    'taskid': None,
@@ -26,7 +29,8 @@ trigger_configs_temp = {
 ##########################################################################################
 
 def delTask(df,userpass, domain, num_process = 4):
-    if df.empty:
+    if df is None or df.empty:
+        print("No Task to delete")
         return {
             "200": 0,
             "403": [],
@@ -59,7 +63,8 @@ def delTask(df,userpass, domain, num_process = 4):
         
 
 def delTrigger(df, userpass, domain, num_process = 4):
-    if df.empty:
+    if df is None or df.empty:
+        print("No Trigger to delete")
         return {
             "200": 0,
             "403": [],
@@ -106,13 +111,20 @@ def updateEmptyWorkflow(df, userpass, domain, num_process = 4, ):
     for index, row in dfworkflow.iterrows():
         task_id = row['sysId']
         response_workflow = getTaskAPI({'taskid': task_id})
+        check_workflow = True
+        check_run_criteria = True
         if response_workflow.status_code == 200:
             workflow = response_workflow.json()
             task_configs = getConfigs(workflow)
+            if task_configs['workflowVertices'] != [] :
+                check_workflow = False
+            if task_configs['runCriteria'] != [] :
+                check_run_criteria = False
             task_configs['runCriteria']= []
             task_configs['workflowEdges'] = []
             task_configs['workflowVertices'] = []
-            workflow_configs_list.append(task_configs)
+            if check_workflow or check_run_criteria:
+                workflow_configs_list.append(task_configs)
         
     with multiprocessing.Pool(num_process, initializer=initializer, initargs=(userpass, domain,)) as pool_workflow:
         result_workflow = pool_workflow.map(updateTaskAPI, workflow_configs_list)
@@ -223,9 +235,9 @@ def deleteProcess(dftask_dict, dftrigger, userpass, domain):
     print("Delete Process ...")
     
     print("Delete Trigger ...")
-    result_trigger = delTrigger(dftrigger, userpass, domain)
+    #result_trigger = delTrigger(dftrigger, userpass, domain)
     print("Empty Workflow ...")
-    result_empty_workflow = updateEmptyWorkflow(dftask_dict['Workflow'], userpass, domain)
+    #result_empty_workflow = updateEmptyWorkflow(dftask_dict['Workflow'], userpass, domain)
 
     print("Delete File Monitor ...")
     result_file_monitor = delTask(dftask_dict['Agent File Monitor'], userpass, domain)
@@ -278,8 +290,8 @@ def deleteProcess(dftask_dict, dftrigger, userpass, domain):
 
     print("Complete Process ...")
     result = {
-        'Trigger': result_trigger,
-        'Empty Workflow': result_empty_workflow,
+        #'Trigger': result_trigger,
+        #'Empty Workflow': result_empty_workflow,
         'Agent File Monitor': result_file_monitor,
         'Remote File Monitor': result_remote_monitor,
         'Task Monitor': result_task_monitor,
@@ -304,7 +316,7 @@ def deleteProcess(dftask_dict, dftrigger, userpass, domain):
         'Universal': result_universal_task,
         'Workflow': result_workflow,
     }
-    createJson('delete_result.json', result)
+    createJson(DEL_JSON_FILE, result)
     countResult(result)
     viewResult(result)
     

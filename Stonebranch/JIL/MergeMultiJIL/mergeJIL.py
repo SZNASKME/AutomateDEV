@@ -4,7 +4,7 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-output_file = 'outputJIL.txt'
+output_file = 'outputJIL_ATS_FLPN.txt'
 
 
 def main():

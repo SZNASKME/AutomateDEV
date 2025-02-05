@@ -4,10 +4,10 @@ from io import StringIO
 from pathlib import Path
 
 # Create JSON file
-def createJson(filename, data, show_response = True):
+def createJson(filename, data, show_response = True, indent = 4):
     try:
         with open(filename, 'w') as file:
-            json.dump(data, file, indent=4)
+            json.dump(data, file, indent=indent)
         if show_response:
             print(f"{filename} created successfully")
     except Exception as e:

@@ -20,6 +20,7 @@ CUT_COLUMN_LIST = [APPNAME_COLUMN, UAC_APPNAME_COLUMN, JOBNAME_COLUMN, BOXNAME_C
 FOUND_CONDITION_COLUMN_OUTPUT = 'Found_Condition'
 
 DEPEND_TO_OTHER = 'Depend to other'
+JIL_CUT = 'Job List'
 OTHER_DEPEND_TO = 'Other depend to'
 EXCEL_FILENAME = 'condition_depend_XXX.xlsx'
 
@@ -66,6 +67,7 @@ def checkJobInListConditionDependToOther(df_jil, in_list_condition_dict): # chec
     column_jil = [x for x in column_jil if x not in CUT_COLUMN_LIST]
     columns = CUT_COLUMN_LIST + [FOUND_CONDITION_COLUMN_OUTPUT] + column_jil
     df_job_in_list_depend_to_other = pd.DataFrame(found_list, columns=columns)
+    df_job_in_list_depend_to_other.rename(columns={JOBNAME_COLUMN: JOBNAME_COLUMN + ' (run after list)', FOUND_CONDITION_COLUMN_OUTPUT: FOUND_CONDITION_COLUMN_OUTPUT + ' (in list)'}, inplace=True)
     return df_job_in_list_depend_to_other
 
 
@@ -97,6 +99,7 @@ def checkOtherConditionDependToJobInList(df_jil, in_list_condition_dict): # chec
     column_jil = [x for x in column_jil if x not in CUT_COLUMN_LIST]
     columns = CUT_COLUMN_LIST + [FOUND_CONDITION_COLUMN_OUTPUT] + column_jil
     df_other_depend_to_job_in_list = pd.DataFrame(found_list, columns=columns)
+    df_other_depend_to_job_in_list.rename(columns={JOBNAME_COLUMN: JOBNAME_COLUMN + ' (in list)', FOUND_CONDITION_COLUMN_OUTPUT: FOUND_CONDITION_COLUMN_OUTPUT + ' (run before list)'}, inplace=True)
     return df_other_depend_to_job_in_list
 
 def getSpecificColumn(df, column_name, filter_column_name = None, filter_value_list = None):
@@ -129,6 +132,18 @@ def getSpecificColumn(df, column_name, filter_column_name = None, filter_value_l
 #         output_df.loc[output_df[JOB_COLUMN_OUTPUT] == job_name, FOUND_CONDITION_COLUMN_OUTPUT] = found_condition
 #     return output_df
 
+def matchJobInList(df, in_list_condition_dict):
+    all_list_condition = [job_name for job_name_list in in_list_condition_dict.values() for job_name in job_name_list] 
+    found_list = []
+    for index, row in df.iterrows():
+        if row[JOBNAME_COLUMN] not in all_list_condition: # skip the job not in list
+            continue
+        row_data = row.copy()
+        found_list.append(row_data)
+        
+    df_job_in_list = pd.DataFrame(found_list)
+    return df_job_in_list
+
 def main():
     
     
@@ -150,9 +165,10 @@ def main():
     df_job_condition = checkJobInListConditionDependToOther(df_jil, job_in_list_condition_dict)
     print("processing other depend to job in list . . .")
     df_other_condition = checkOtherConditionDependToJobInList(df_jil, job_in_list_condition_dict)
+    print("processing job in list . . .")
+    df_jil_in_list = matchJobInList(df_jil, job_in_list_condition_dict)
     print("---------------------------------")
-
-    createExcel(EXCEL_FILENAME, (OTHER_DEPEND_TO, df_other_condition), (DEPEND_TO_OTHER, df_job_condition))
+    createExcel(EXCEL_FILENAME, (OTHER_DEPEND_TO, df_other_condition), (JIL_CUT, df_jil_in_list), (DEPEND_TO_OTHER, df_job_condition))
     
 if __name__ == '__main__':
     main()
