@@ -77,13 +77,13 @@ def getNamefromCondition(condition):
     name_list = getAllInnermostSubstrings(condition, '(', ')')
     return name_list
 
-def checkJobConditionInList(df_jil, in_list_condition_dict):
+def checkJobConditionInList(df_job, in_list_condition_dict):
     found_list_dict = {}
     for in_list_name, in_list_condition in in_list_condition_dict.items():
         #print(in_list_name, len(in_list_condition))
         #print(in_list_condition)
         found_list = []
-        for index, row in df_jil.iterrows():
+        for index, row in df_job.iterrows():
             if row[JOBNAME_COLUMN] in in_list_condition:
                 continue
             condition = row[CONDITION_COLUMN]
@@ -147,13 +147,13 @@ def restructureDataFarmeDict(df_dict):
 def main():
     
     
-    df_jil = getDataExcel("Enter the path of the main excel file")
+    df_job = getDataExcel("Enter the path of the main excel file")
     df_root = getDataExcel("Enter the path of the excel file with the conditions to be checked")
     
     in_list_condition_dict = getSpecificColumn(df_root, SELECTED_COLUMN, FILTER_COLUMN, FILTER_VALUE_LIST)
     for key, value in in_list_condition_dict.items():
         print(key, len(value))
-    found_condition_matched_dict = checkJobConditionInList(df_jil, in_list_condition_dict)
+    found_condition_matched_dict = checkJobConditionInList(df_job, in_list_condition_dict)
     is_merge_sheet = input("Do you want to merge the sheets? (y/n): ")
     if is_merge_sheet == 'y':
         df_found_condition_matched_non_dup = restructureDataFarmeDict(found_condition_matched_dict)

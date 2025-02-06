@@ -204,16 +204,16 @@ def buildHierarchyTreeFromList(root_node, condition_pair_list, cache, visited_no
     cache[root_node] = tree
     return tree
     
-def searchBeforeJobTree(df_jil):
+def searchBeforeJobTree(df_job):
     try:
-        df_jil_processed = df_jil.copy()
-        #df_dict = df_jil_processed.set_index(JOBNAME_COLUMN).to_dict(orient='index')
+        df_job_processed = df_job.copy()
+        #df_dict = df_job_processed.set_index(JOBNAME_COLUMN).to_dict(orient='index')
         job_dependency_tree = defaultdict(dict)
         node_data = {}
         print("Processing . . .")
-        print("Total Rows: ", len(df_jil_processed))
-        #print(df_jil_processed.columns)
-        for row in df_jil_processed.itertuples(index=False):
+        print("Total Rows: ", len(df_job_processed))
+        #print(df_job_processed.columns)
+        for row in df_job_processed.itertuples(index=False):
             job_name = getattr(row, JOBNAME_COLUMN)
             condition = getattr(row, CONDITION_COLUMN)
             box_name = getattr(row, BOXNAME_COLUMN)
@@ -272,7 +272,7 @@ def searchBeforeJobTree(df_jil):
 
 def main():
     
-    df_jil = getDataExcel('get Excel path with main job file')
+    df_job = getDataExcel('get Excel path with main job file')
     # root_list_option = input("Do you want to use the root or list? (r/l): ")
     # if root_list_option == 'r':
     #     df_root = getDataExcel("Enter the path of the excel file with the root jobs")
@@ -281,7 +281,7 @@ def main():
     # if root_list_option == 'r':
     #     list_dict = getSpecificColumn(df_root, SELECTED_COLUMN, FILTER_COLUMN, list_job_name)
     # else:
-    #     list_dict = getSpecificColumn(df_jil, SELECTED_COLUMN, None, list_job_name)
+    #     list_dict = getSpecificColumn(df_job, SELECTED_COLUMN, None, list_job_name)
     # print("---------------------------------")
     # #for key, value in list_dict.items():
     # #    print(key, len(value))
@@ -289,18 +289,18 @@ def main():
     # print("Processing Previous job dependencies . . .")
     # #print(list_dict)
     # merged_list = [name for sublist in list_dict.values() for name in sublist]
-    # df_jil_merge = df_jil[df_jil[JOBNAME_COLUMN].isin(merged_list)]
-    df_jil_merge = df_jil.copy()
-    job_dependency_tree, condition_pair = searchBeforeJobTree(df_jil_merge)
+    # df_job_merge = df_job[df_job[JOBNAME_COLUMN].isin(merged_list)]
+    df_job_merge = df_job.copy()
+    job_dependency_tree, condition_pair = searchBeforeJobTree(df_job_merge)
     createJson('condition_pair_all.json', condition_pair)
     createJson('stored_conditions_tree_all.json', job_dependency_tree)
         
     # job_dependency_tree, condition_pair = searchBeforeJobTree()
     # createJson('condition_pair.json', condition_pair)
     # createJson('stored_conditions_tree.json', job_dependency_tree)
-    #job_dependency = searchBeforeJob(df_jil)
+    #job_dependency = searchBeforeJob(df_job)
     #createJson('stored_conditions.json', job_dependency)
-    #createExcel(OUTPUT_EXCEL_FILE, ("Before", df_jil_before))
+    #createExcel(OUTPUT_EXCEL_FILE, ("Before", df_job_before))
     
     
     

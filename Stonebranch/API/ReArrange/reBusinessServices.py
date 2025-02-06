@@ -59,16 +59,16 @@ def trimSuffix(task_name):
     return task_name
 
 
-def compareBusinessServices(df_jil, task_dict):
+def compareBusinessServices(df_job, task_dict):
     task_log = []
-    new_df_jil = df_jil.copy()
-    new_df_jil[APPNAME_COLUMN] = None
+    new_df_job = df_job.copy()
+    new_df_job[APPNAME_COLUMN] = None
     exist_task_dict = task_dict.copy()
     row_count = 0
     change_count = 0
     err_count = 0
     max_count = len(task_dict)
-    for row in df_jil.itertuples(index=False):
+    for row in df_job.itertuples(index=False):
         row_count += 1
         job_name = getattr(row, JOBNAME_COLUMN)
         app_name = getattr(row, APPNAME_COLUMN)
@@ -85,9 +85,9 @@ def compareBusinessServices(df_jil, task_dict):
                     'newBusinessService': business_service,
                     'remark': 'Business Service not match',
                 })
-                new_df_jil.loc[new_df_jil[JOBNAME_COLUMN] == job_name, APPNAME_COLUMN] = business_service
+                new_df_job.loc[new_df_job[JOBNAME_COLUMN] == job_name, APPNAME_COLUMN] = business_service
             else:
-                new_df_jil.loc[new_df_jil[JOBNAME_COLUMN] == job_name, APPNAME_COLUMN] = app_name
+                new_df_job.loc[new_df_job[JOBNAME_COLUMN] == job_name, APPNAME_COLUMN] = app_name
         else:
             err_count += 1
             print(f"{row_count}/{max_count} | (E{err_count}) {job_name} is not found in UAC")
@@ -105,7 +105,7 @@ def compareBusinessServices(df_jil, task_dict):
         })
     df_exist_jobname = pd.DataFrame(exist_jobname)
     
-    return df_exist_jobname, task_log, new_df_jil
+    return df_exist_jobname, task_log, new_df_job
 
 def main():
     auth = loadJson('auth.json')
@@ -116,14 +116,14 @@ def main():
     #domain = domain_url['1.86']
     updateURI(domain)
     
-    df_jil = getDataExcel()
+    df_job = getDataExcel()
     list_task_by_BU = getTaskListbyBusinessServices()
     createJson('task_by_BU.json', list_task_by_BU)
     print("Task list by Business Services created successfully")
-    df_jobname, task_log, new_df_jil = compareBusinessServices(df_jil, list_task_by_BU)
+    df_jobname, task_log, new_df_job = compareBusinessServices(df_job, list_task_by_BU)
     df_task_log = pd.DataFrame(task_log)
     #createJson('not_found_in UAC.json',jobname_list)
-    createExcel('RearrangeBusinessServices.xlsx',('REARRANGE_JIL', new_df_jil), ('log', df_task_log), ('not_found_in_excel', df_jobname))
+    createExcel('RearrangeBusinessServices.xlsx',('REARRANGE_JIL', new_df_job), ('log', df_task_log), ('not_found_in_excel', df_jobname))
     #print("Task log created successfully")
     
     

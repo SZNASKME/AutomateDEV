@@ -25,7 +25,7 @@ def getNamefromCondition(condition):
     return name_list
 
 
-def recursiveSearchRootTime(df_jil, df_time, job_name, condition):
+def recursiveSearchRootTime(df_job, df_time, job_name, condition):
     
     return None
 
@@ -52,13 +52,13 @@ def compareSameRootTime(job_root_time, sub_condition_root_time, exclude_list = [
 
 
 
-def compareStartRun(df_jil, df_time):
+def compareStartRun(df_job, df_time):
     job_root_time_compare_list = []
     job_root_time_condition_multi_root_time_list = []
-    number_of_rows = len(df_jil)
+    number_of_rows = len(df_job)
     count = 0
-    df_dict = df_jil.set_index(COLUMN_JOBNAME).to_dict(orient='index')
-    for row in df_jil.itertuples(index=False):
+    df_dict = df_job.set_index(COLUMN_JOBNAME).to_dict(orient='index')
+    for row in df_job.itertuples(index=False):
         count += 1
         
         job_root_time_dict = {}
@@ -93,9 +93,9 @@ def compareStartRun(df_jil, df_time):
     return df_job_root_time
 
 def main():
-    df_jil = getDataExcel('Enter the path of the JIL file')
+    df_job = getDataExcel('Enter the path of the JIL file')
     df_time = getDataExcel('Enter the path of the Time file')
-    df_job_root_time = compareStartRun(df_jil, df_time)
+    df_job_root_time = compareStartRun(df_job, df_time)
     createExcel('job_root_time_compare.xlsx', ('job_root_time_compare', df_job_root_time))
 
 if __name__ == '__main__':

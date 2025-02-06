@@ -126,9 +126,9 @@ def findOperands(filtered_string, operator_index, direction = 'left'):
     return sub_string_list
         
 
-def compareCondition(df_jil, format_condition, in_list_condition):
+def compareCondition(df_job, format_condition, in_list_condition):
     found_format_condition = []
-    for index, row in df_jil.iterrows():
+    for index, row in df_job.iterrows():
         if row[JOBNAME_COLUMN] in in_list_condition:
             continue
         condition = row[CONDITION_COLUMN]
@@ -205,10 +205,10 @@ def getUniqueFormatCondition(df):
     
 
 def main():
-    df_jil = getDataExcel()
+    df_job = getDataExcel()
     df_in_list_condition = getDataExcel("Enter the path of the excel file with the conditions to be checked")
     in_list_condition = getSpecificColumn(df_in_list_condition, 'Taskname')
-    df_format_condition = compareCondition(df_jil, FORMAT_CONDITION, in_list_condition)
+    df_format_condition = compareCondition(df_job, FORMAT_CONDITION, in_list_condition)
     df_unique_format_condition = getUniqueFormatCondition(df_format_condition)
     df_similar_condition, df_unsimilar_condition = compareSimilarOperands(df_unique_format_condition, FORMAT_CONDITION)
     createExcel("DAILY_OR_MONTHLY_condition.xlsx", ('Similar Pair', df_similar_condition), ('Unsimilar Pair', df_unsimilar_condition))

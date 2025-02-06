@@ -74,15 +74,15 @@ def iterativeSearchPreviousDepenCondition(df_dict, task_name, cache):
     return result
 
 
-def searchBeforeJob(df_jil):
-    df_jil_processed = df_jil.copy()
-    df_dict = df_jil_processed.set_index(JOBNAME_COLUMN).to_dict(orient='index')
+def searchBeforeJob(df_job):
+    df_job_processed = df_job.copy()
+    df_dict = df_job_processed.set_index(JOBNAME_COLUMN).to_dict(orient='index')
     
     job_before_list = []
     
     #stored_conditions_dict = {}
     #max_depth = 0
-    for row in df_jil_processed.itertuples(index=False):
+    for row in df_job_processed.itertuples(index=False):
         job_name = getattr(row, JOBNAME_COLUMN)
         #app_name = getattr(row, 'AppName')
         cache = {}
@@ -100,7 +100,7 @@ def searchBeforeJob(df_jil):
         job_before_list.append(row)
     
     columns = ['JobName', 'Previous conditions', 'Furthest conditions', 'All Before Conditions']
-    #df_jil_before = pd.DataFrame(job_before_list)
+    #df_job_before = pd.DataFrame(job_before_list)
     
     # for job_name, sorted_conditions in stored_conditions_dict.items():
     #     # Create a list of all condition names
@@ -121,11 +121,11 @@ def searchBeforeJob(df_jil):
 
     # Create the column names dynamically based on max depth
     # columns = ['Job Name', 'All Before'] + [f'Before Condition {i}' for i in range(1, max_depth + 1)]
-    df_jil_before = pd.DataFrame(job_before_list, columns=columns)
+    df_job_before = pd.DataFrame(job_before_list, columns=columns)
 
 
 
-    return df_jil_before
+    return df_job_before
 
 
 ############ After Job ####################
@@ -159,13 +159,13 @@ def iterativeSearchAfterDepenCondition(job_conditions_dict, job_child_dict, task
     return result
 
 
-def searchAfterJob(df_jil):
-    df_jil_processed = df_jil.copy()
-    df_dict = df_jil_processed.set_index(JOBNAME_COLUMN).to_dict(orient='index')
+def searchAfterJob(df_job):
+    df_job_processed = df_job.copy()
+    df_dict = df_job_processed.set_index(JOBNAME_COLUMN).to_dict(orient='index')
     job_conditions_dict = {}
     job_child_dict = {}
     job_after_list = []
-    for row in df_jil_processed.itertuples(index=False):
+    for row in df_job_processed.itertuples(index=False):
         job_name = getattr(row, JOBNAME_COLUMN)
         condition = getattr(row, CONDITION_COLUMN)
         box_name = getattr(row, BOXNAME_COLUMN)
@@ -181,7 +181,7 @@ def searchAfterJob(df_jil):
             job_child_dict[box_name].append(job_name)
             
                 
-    for row in df_jil_processed.itertuples(index=False):
+    for row in df_job_processed.itertuples(index=False):
         job_name = getattr(row, JOBNAME_COLUMN)
         #app_name = getattr(row, 'AppName')
         cache = {}
@@ -197,8 +197,8 @@ def searchAfterJob(df_jil):
 
             
     columns = ['JobName', 'Next conditions', 'Furthest conditions', 'All After Conditions']
-    df_jil_after = pd.DataFrame(job_after_list, columns=columns)
-    return df_jil_after
+    df_job_after = pd.DataFrame(job_after_list, columns=columns)
+    return df_job_after
 
 
 
@@ -206,13 +206,13 @@ def searchAfterJob(df_jil):
 
 def main():
     
-    df_jil = getDataExcel()
+    df_job = getDataExcel()
     print("Processing Previous job dependencies . . .")
-    df_jil_before = searchBeforeJob(df_jil)
+    df_job_before = searchBeforeJob(df_job)
     print("Processing After job dependencies . . .")
-    df_jil_after = searchAfterJob(df_jil)
+    df_job_after = searchAfterJob(df_job)
     #createJson('stored_conditions.json', stored_conditions_dict)
-    createExcel(OUTPUT_EXCEL_FILE, ("Before", df_jil_before), ("After", df_jil_after))
+    createExcel(OUTPUT_EXCEL_FILE, ("Before", df_job_before), ("After", df_job_after))
     
     
     

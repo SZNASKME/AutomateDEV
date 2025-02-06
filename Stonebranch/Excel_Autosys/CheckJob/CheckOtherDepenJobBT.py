@@ -72,12 +72,12 @@ def iterativeSearchDepenCondition(df_dict, task_name, cache):
     return list(result)
 
 
-def checkJobConditionNoneList(df_jil, list_condition):
+def checkJobConditionNoneList(df_job, list_condition):
     found_list = []
-    df_dict = df_jil.set_index(JOBNAME_COLUMN).to_dict(orient='index')
+    df_dict = df_job.set_index(JOBNAME_COLUMN).to_dict(orient='index')
     
     
-    for row in df_jil.itertuples(index=False):
+    for row in df_job.itertuples(index=False):
         job_name = getattr(row, JOBNAME_COLUMN)
         if job_name in list_condition:
             continue
@@ -99,24 +99,24 @@ def checkJobConditionNoneList(df_jil, list_condition):
     
     return found_list
 
-def checkJobOtherDepenJob(df_jil):
+def checkJobOtherDepenJob(df_job):
     found_list_by_value = []
-    for index, value in enumerate(df_jil[COLUMN_GETLIST].unique().tolist()):
+    for index, value in enumerate(df_job[COLUMN_GETLIST].unique().tolist()):
         if pd.isna(value):
             continue
         print(f"{index}: {value}")
-        list_filtered_value = getListDatabyColumnValue(df_jil, COLUMN_GETLIST, value)
-        found_list = checkJobConditionNoneList(df_jil, list_filtered_value)
+        list_filtered_value = getListDatabyColumnValue(df_job, COLUMN_GETLIST, value)
+        found_list = checkJobConditionNoneList(df_job, list_filtered_value)
         df_condition_matched = pd.DataFrame(found_list)
         found_list_by_value.append((f"{index} {value[:28]}", df_condition_matched))
     return found_list_by_value
 
 
 def main():
-    df_jil = getDataExcel()
-    #value = inputColumnValue(df_jil, COLUMN_GETLIST)
+    df_job = getDataExcel()
+    #value = inputColumnValue(df_job, COLUMN_GETLIST)
     
-    found_list_by_value = checkJobOtherDepenJob(df_jil)
+    found_list_by_value = checkJobOtherDepenJob(df_job)
     createExcel('depen_other_app_bt.xlsx', *found_list_by_value)
     
     

@@ -32,9 +32,9 @@ def getNamefromCondition(condition):
     return name_list
 
 
-def getJobFoundConditionList(df_jil, job):
+def getJobFoundConditionList(df_job, job):
     found_condition_list = []
-    for row in df_jil.itertuples(index=False):
+    for row in df_job.itertuples(index=False):
         job_name = getattr(row, JOBNAME_COLUMN)
         condition = getattr(row, CONDITION_COLUMN)
         if pd.isna(condition):
@@ -48,11 +48,11 @@ def getJobFoundConditionList(df_jil, job):
 
 
 
-def checkPreviousTime(df_jil, df_roottime, job_list):
+def checkPreviousTime(df_job, df_roottime, job_list):
     pre_list = []
     err_list = []
     for job in job_list:
-        if df_jil[df_jil[JOBNAME_COLUMN] == job].empty:
+        if df_job[df_job[JOBNAME_COLUMN] == job].empty:
             print(f"Job {job} not found in JIL")
             err_list.append({
                 'jobName': job,
@@ -69,7 +69,7 @@ def checkPreviousTime(df_jil, df_roottime, job_list):
             })
             continue
 
-        job_found_condition_list = getJobFoundConditionList(df_jil, job)
+        job_found_condition_list = getJobFoundConditionList(df_job, job)
         #print(job_found_condition_list)
         if job_found_condition_list:
             for job_cond_found in job_found_condition_list:
@@ -103,12 +103,12 @@ def checkPreviousTime(df_jil, df_roottime, job_list):
 
 def main():
     
-    df_jil = getDataExcel("JIL")
+    df_job = getDataExcel("JIL")
     df_roottime = getDataExcel("RootTime")
     df_list = getDataExcel("List")
     job_list = df_list[JOBNAME_COLUMN].tolist()
     print(len(job_list))
-    df_pre_list, df_err_list = checkPreviousTime(df_jil, df_roottime, job_list)
+    df_pre_list, df_err_list = checkPreviousTime(df_job, df_roottime, job_list)
     
     createExcel('prelist.xlsx', ('Previous Time',df_pre_list), ('Error List',df_err_list))
     

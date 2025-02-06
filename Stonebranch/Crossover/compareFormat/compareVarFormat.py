@@ -298,33 +298,33 @@ def cleanNoneDF(df):
     df = df.replace('nan', '')
     return df
 
-def compareFormat(df_jil, list_dict, df_task_report, df_file_monitor_report):
+def compareFormat(df_job, list_dict, df_task_report, df_file_monitor_report):
     all_list = [job_name for job_name_list in list_dict.values() for job_name in job_name_list]
     
-    df_jil = cleanNoneDF(df_jil)
+    df_job = cleanNoneDF(df_job)
     df_task_report = cleanNoneDF(df_task_report)
     df_file_monitor_report = cleanNoneDF(df_file_monitor_report)
     
     print("Comparing formats")
-    #print(df_jil.columns)
-    df_jil_in_list = df_jil[df_jil[JOBNAME_COLUMN].isin(all_list)]
+    #print(df_job.columns)
+    df_job_in_list = df_job[df_job[JOBNAME_COLUMN].isin(all_list)]
     #print(len(all_list))
     #print(df_task_report.columns)
     df_task_report_in_list = df_task_report[df_task_report[UAC_TASK_COLUMN].isin(all_list)]
     #print(df_file_monitor_report.columns)
     df_file_monitor_report_in_list = df_file_monitor_report[df_file_monitor_report[UAC_TASK_COLUMN].isin(all_list)]
     
-    print("JIL in list: ", len(df_jil_in_list))
+    print("JIL in list: ", len(df_job_in_list))
     print("Command Task in list: ", len(df_task_report_in_list))
     print("File monitor in list: ", len(df_file_monitor_report_in_list))
     
-    #print("JIL not in list: ", len(df_jil) - len(df_jil_in_list))
+    #print("JIL not in list: ", len(df_job) - len(df_job_in_list))
     #print("Task not in list: ", len(df_task_report) - len(df_task_report_in_list))
     #print("File monitor not in list: ", len(df_file_monitor_report) - len(df_file_monitor_report_in_list))
     task_in_list = []
     file_monitor_in_list = []
     
-    for index, row in df_jil_in_list.iterrows():
+    for index, row in df_job_in_list.iterrows():
         job_name = row[JOBNAME_COLUMN]
         
         task_row_data = df_task_report_in_list[df_task_report_in_list[UAC_TASK_COLUMN] == job_name]
@@ -375,7 +375,7 @@ def main():
     updateURI(domain)
     
     
-    df_jil = getDataExcel('get Excel path with main job file')
+    df_job = getDataExcel('get Excel path with main job file')
     root_list_option = input("Do you want to use the root or list? (r/l): ")
     if root_list_option == 'r':
         df_root = getDataExcel("Enter the path of the excel file with the root jobs")
@@ -384,7 +384,7 @@ def main():
     if root_list_option == 'r':
         list_dict = getSpecificColumn(df_root, SELECTED_COLUMN, FILTER_COLUMN, list_job_name)
     else:
-        list_dict = getSpecificColumn(df_jil, SELECTED_COLUMN, None, list_job_name)
+        list_dict = getSpecificColumn(df_job, SELECTED_COLUMN, None, list_job_name)
     print("---------------------------------")
     for key, value in list_dict.items():
         print(key, len(value))
@@ -392,7 +392,7 @@ def main():
     df_task_report = getReport(TASK_REPORT_NAME)
     df_file_monitor_report = getReport(FILE_MONITOR_REPORT_NAME)
     
-    df_command, df_file_monitor = compareFormat(df_jil, list_dict, df_task_report, df_file_monitor_report)
+    df_command, df_file_monitor = compareFormat(df_job, list_dict, df_task_report, df_file_monitor_report)
     createExcel(OUTPUT_EXCEL_NAME, ('Command', df_command), ('File Monitor', df_file_monitor))
     
     

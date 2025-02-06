@@ -19,26 +19,26 @@ box_list = [
 ]
 
 
-def recursiveSearchChildrenInBox(df_jil, box_name):
+def recursiveSearchChildrenInBox(df_job, box_name):
     
     children_dict = {}
-    if box_name not in df_jil['jobName'].values:
+    if box_name not in df_job['jobName'].values:
         return None
-    df_jil_filtered = df_jil[df_jil['box_name'] == box_name]
-    for row in df_jil_filtered.itertuples(index=False):
+    df_job_filtered = df_job[df_job['box_name'] == box_name]
+    for row in df_job_filtered.itertuples(index=False):
         job_name = getattr(row, 'jobName')
 
-        if job_name in df_jil['box_name'].values:
-            children_dict[job_name] = recursiveSearchChildrenInBox(df_jil, job_name)
+        if job_name in df_job['box_name'].values:
+            children_dict[job_name] = recursiveSearchChildrenInBox(df_job, job_name)
         else:
             children_dict[job_name] = None
 
     return children_dict
 
-def searchAllChildrenInBox(df_jil, box_list):
+def searchAllChildrenInBox(df_job, box_list):
     all_children_dict = {}
     for box_name in box_list:
-        children_dict = recursiveSearchChildrenInBox(df_jil, box_name)
+        children_dict = recursiveSearchChildrenInBox(df_job, box_name)
         if children_dict is not None:
             all_children_dict[box_name] = children_dict
         else:
@@ -86,9 +86,9 @@ def listNestedDictToDataFrame(nested_dict):
 
 
 def main():
-    df_jil = getDataExcel()
+    df_job = getDataExcel()
     
-    all_children_dict = searchAllChildrenInBox(df_jil, box_list)
+    all_children_dict = searchAllChildrenInBox(df_job, box_list)
     createJson('all_children.json', all_children_dict)
     #print(json.dumps(all_children_dict, indent=4))
     df_all_children_dict = listNestedDictToDataFrame(all_children_dict)

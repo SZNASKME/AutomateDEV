@@ -132,14 +132,14 @@ def main():
     jil_path = folder_path + "\\"+ JIL_FILENAME
     jil_in_array = readJILFile(jil_path)
     if jil_except_path != 'n':
-        df_jil_except = getExcelProcess(jil_except_path)
-        jil_except_list = df_jil_except[JOBNAME_COLUNM].tolist()
+        df_job_except = getExcelProcess(jil_except_path)
+        jil_except_list = df_job_except[JOBNAME_COLUNM].tolist()
         jil_in_array_except = [job for job in jil_in_array if job[JOBNAME_COLUNM] not in jil_except_list]
     
     
-    df_jil_ori = pd.DataFrame(jil_in_array, columns = jil_fieldnames)
+    df_job_ori = pd.DataFrame(jil_in_array, columns = jil_fieldnames)
     if jil_except_path != 'n':
-        df_jil_except = pd.DataFrame(jil_in_array_except, columns = jil_fieldnames)
+        df_job_except = pd.DataFrame(jil_in_array_except, columns = jil_fieldnames)
         
     if files and STDCAL_EXCELNAME in files:
         stdcel_parsed_data = stdcelParseData(files[STDCAL_FILENAME])
@@ -156,11 +156,11 @@ def main():
     
     createFolder(folder_name)
     # Original JIL file
-    createExcel(jil_ori_output_file, (JIL_SHEETNAME, df_jil_ori))
+    createExcel(jil_ori_output_file, (JIL_SHEETNAME, df_job_ori))
     customExcel(current_path + "\\" + jil_ori_output_file)
     if jil_except_path != 'n':
         # JIL except JOB file
-        createExcel(jil_except_output_file, (JIL_SHEETNAME, df_jil_except))
+        createExcel(jil_except_output_file, (JIL_SHEETNAME, df_job_except))
         customExcel(current_path + "\\" + jil_except_output_file)
     # Standard Calendar file
     if files and STDCAL_EXCELNAME in files:

@@ -27,6 +27,6 @@ def main():
     domain = domain_url['1.161']
     updateURI(domain)
     
-    df_jil_new = getDataExcel('Get New Task from Excel')
+    df_job_new = getDataExcel('Get New Task from Excel')
 
     

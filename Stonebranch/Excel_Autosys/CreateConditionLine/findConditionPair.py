@@ -24,12 +24,12 @@ def getNamefromCondition(condition):
 
 
 
-def findConditionPair(df_jil):
+def findConditionPair(df_job):
     condition_pair_list = []
-    df_dict = df_jil.set_index('jobName').to_dict(orient='index')
-    number_of_rows = len(df_jil)
+    df_dict = df_job.set_index('jobName').to_dict(orient='index')
+    number_of_rows = len(df_job)
     count = 0
-    for row in df_jil.itertuples(index=False):
+    for row in df_job.itertuples(index=False):
         count += 1
         condition = row.condition
         if pd.isna(condition):
@@ -73,9 +73,9 @@ def findRootConditionLine(condition_pair_list):
 
 
 def main():
-    df_jil = getDataExcel()
+    df_job = getDataExcel()
     
-    condition_pair_list = findConditionPair(df_jil)
+    condition_pair_list = findConditionPair(df_job)
     print(len(condition_pair_list))
     createJson('conditionPair.json', condition_pair_list)
     

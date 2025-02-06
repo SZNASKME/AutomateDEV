@@ -29,22 +29,22 @@ def getJobMap(dfs):
 
 
 
-def mapJobFromName(df_jil, map_dict):
+def mapJobFromName(df_job, map_dict):
     mapped_dfs = {}
     for name, df in map_dict.items():
-        mapped_dfs[name] = df_jil[df_jil[JOBNAME_COLUMN].isin(df)]
+        mapped_dfs[name] = df_job[df_job[JOBNAME_COLUMN].isin(df)]
         #print(mapped_dfs[name])
     return mapped_dfs
     
 
 
 def main():
-    df_jil = getDataExcel("Enter the path of the main excel file")
+    df_job = getDataExcel("Enter the path of the main excel file")
     dfs = getDataExcelAllSheet("Enter the path of the excel file with multiple sheets")
     #print(dfs)
     map_dict = getJobMap(dfs)
     #print(map_dict)
-    mapped_dfs = mapJobFromName(df_jil, map_dict)
+    mapped_dfs = mapJobFromName(df_job, map_dict)
     df_all = pd.concat(mapped_dfs.values(), ignore_index=True)
     df_list = [(name, df) for name, df in mapped_dfs.items()]
     df_list.append(('All', df_all))

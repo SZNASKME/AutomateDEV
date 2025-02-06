@@ -77,9 +77,9 @@ def getConditionList(condition):
     return condition_list
 
 
-def listConditionJob(df_jil):
+def listConditionJob(df_job):
     list_condition_dict = {}
-    for index, row in df_jil.iterrows():
+    for index, row in df_job.iterrows():
         condition = row[CONDITION_COLUMN]
         job_name = row[JOBNAME_COLUMN]
         list_condition_dict[job_name] = {}
@@ -162,8 +162,8 @@ def main():
     domain = domain_url['1.161']
     updateURI(domain)
     
-    df_jil = getDataExcel('Get New Task from Excel')
-    list_condition_dict = listConditionJob(df_jil)
+    df_job = getDataExcel('Get New Task from Excel')
+    list_condition_dict = listConditionJob(df_job)
     print(json.dumps(list_condition_dict, indent=4))
     
     

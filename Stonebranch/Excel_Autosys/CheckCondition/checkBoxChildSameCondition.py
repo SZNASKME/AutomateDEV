@@ -23,13 +23,13 @@ JOB_COLUMN_OUTPUT = 'jobName'
 
 # Check if the box job has the same condition as the child job
 
-def compareCondition(df_jil):
+def compareCondition(df_job):
     error_list = []
     
-    df_box = df_jil[df_jil[JOBTYPE_COLUMN] == WORKFLOW_CATEGORY]
+    df_box = df_job[df_job[JOBTYPE_COLUMN] == WORKFLOW_CATEGORY]
     df_box_filtered = df_box[[JOBNAME_COLUMN, CONDITION_COLUMN]]
             
-    df_cmd = df_jil[df_jil[JOBTYPE_COLUMN] == COMMAND_CATEGORY]
+    df_cmd = df_job[df_job[JOBTYPE_COLUMN] == COMMAND_CATEGORY]
     df_cmd_filtered = df_cmd[[JOBNAME_COLUMN, CONDITION_COLUMN,BOXNAME_COLUMN]]
     
     for index, row in df_box_filtered.iterrows():
@@ -52,9 +52,9 @@ def compareCondition(df_jil):
 def main():
     
     
-    df_jil = getDataExcel()
-    print(df_jil)
-    df_same_condition = compareCondition(df_jil)
+    df_job = getDataExcel()
+    print(df_job)
+    df_same_condition = compareCondition(df_job)
     createExcel('box_job_same_condition.xlsx', ('box_job_same_condition', df_same_condition))
 
 
