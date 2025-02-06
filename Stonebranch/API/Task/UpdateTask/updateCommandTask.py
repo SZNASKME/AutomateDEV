@@ -10,7 +10,9 @@ from utils.readFile import loadJson
 from utils.createFile import createJson
 
 
-API_TASK_TYPE = [99]
+API_TASK_TYPE = [6,99]
+TASK_TYPE_LIST = ["taskFileMonitor", "taskWorkflow", "taskUniversal"]
+
 
 BUSINESS_SERVICE_LIST = [
     "AskMe - New Floor Plan"
@@ -84,28 +86,37 @@ def updateCommandTask(task_list):
         task_data = response_task.json()
         #if task_data['type'] == "taskUnix" or task_data['type'] == "taskWindows":
         #    command = task_data['command']
-        if task_data['type'] == "taskUniversal":
-            command = task_data['largeTextField1']['value']
+        if task_data['type'] in TASK_TYPE_LIST:
+            if task_data['type'] == "taskFileMonitor":
+                text_to_replace = task_data['fileName']
+            elif task_data['type'] == "taskUniversal":
+                text_to_replace = task_data['largeTextField1']['value']
+            else:
+                text_to_replace = None
         else:
             continue
         
-        #if task_data['agentCluster'] == 'dsdbprd_vr':
-        #    update_task = True
-        #else:
-        #    update_task = False
-        #if command and update_task:
-        if command:
-            #char = r'${FILPTH}'
-            char = "\""
-            new_char = "\\\""
-            #new_char = r'${DWH_DS_FILPTH}'
-            if char in command:
+        if task_data['agentCluster'] == 'dsdbprd_vr':
+            update_task = True
+        else:
+            update_task = False
+        if text_to_replace and update_task:
+        #if command:
+            char = r'${FILPTH}'
+            #char = "\""
+            #new_char = "\\\""
+            new_char = r'${DWH_DS_FILPTH}'
+            if char in text_to_replace:
                 #print(exclude_char_range)
-                replaced_command = replaceCommand(command, new_char, char, exclude_char_range)
-                replaced_command = replaceCommand(replaced_command, char, new_char, exclude_char_range)
-                #print(replaced_command)
-                task_data['largeTextField1']['value'] = replaced_command
-                #print(json.dumps(task_data, indent=4))
+                replaced_text = replaceCommand(text_to_replace, new_char, char, exclude_char_range)
+                replaced_text = replaceCommand(replaced_text, char, new_char, exclude_char_range)
+               
+                #task_data['largeTextField1']['value'] = replaced_text
+                if task_data['type'] == "taskFileMonitor":
+                    task_data['fileName'] = replaced_text
+                elif task_data['type'] == "taskUniversal":
+                    task_data['largeTextField1']['value'] = replaced_text
+                
                 response_update = updateTaskAPI(task_data)
                 if response_update.status_code == 200:
                     update_log.append({
@@ -131,7 +142,7 @@ def main():
     userpass = auth['ASKME_STB']
     updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
     domain_url = loadJson('Domain.json')
-    domain = domain_url['1.226']
+    domain = domain_url['1.86']
     updateURI(domain)
     
     task_list = getTaskList()

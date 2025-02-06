@@ -10,7 +10,8 @@ from utils.readFile import loadJson
 from utils.createFile import createJson
 
 
-API_TASK_TYPE = [1]
+API_TASK_TYPE = [6,99]
+TASK_TYPE_LIST = ["taskFileMonitor", "taskWorkflow", "taskUniversal"]
 
 BUSINESS_SERVICE_LIST = [
     "AskMe - New Floor Plan"
@@ -51,7 +52,7 @@ def updateActionTask(task_list):
         task_data = response_task.json()
         #if task_data['type'] == "taskUnix" or task_data['type'] == "taskWindows":
         #    command = task_data['command']
-        if task_data['type'] == "taskWorkflow":
+        if task_data['type'] in TASK_TYPE_LIST:
             action = task_data['actions']['emailNotifications']
         else:
             continue
@@ -82,7 +83,7 @@ def main():
     userpass = auth['ASKME_STB']
     updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
     domain_url = loadJson('Domain.json')
-    domain = domain_url['1.86']
+    domain = domain_url['1.226']
     updateURI(domain)
     
     task_list = getTaskList()
