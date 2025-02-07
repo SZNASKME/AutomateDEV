@@ -48,7 +48,7 @@ FALSE_COMPARE = 'No'
 FORMAT_DATE_COLUMN = 'Format Date'
 VARIABLE_PATH_COLUMN = 'Variable Path'
 
-OUTPUT_EXCEL_NAME = 'TaskReport.xlsx'
+OUTPUT_EXCEL_NAME = 'Compare_DateFormat_VariablePath.xlsx'
 
 
 SELECTED_COLUMN = 'jobName'
@@ -193,8 +193,8 @@ def getFileMonitorFormatDate(row_jil, row_file_monitor_report):
     jil_matches = extractOutermostPatterns(row_jil[WATCH_FILE_COLUMN], '$(date', ')', 6)
     task_matches = extractOutermostPatterns(row_file_monitor_report[UAC_FILE_MONITOR_COLUMN], '${_date', '}', 7)
     
-    format_date['JIL'] = ','.join(jil_matches)
-    format_date['STB'] = ','.join(task_matches)
+    format_date['JIL'] = ', '.join(jil_matches)
+    format_date['STB'] = ', '.join(task_matches)
     
     return format_date
 
@@ -311,8 +311,10 @@ def compareFormat(df_job, list_dict, df_task_report, df_file_monitor_report):
     #print(len(all_list))
     #print(df_task_report.columns)
     df_task_report_in_list = df_task_report[df_task_report[UAC_TASK_COLUMN].isin(all_list)]
+    df_task_report_not_in_list = df_task_report[~df_task_report[UAC_TASK_COLUMN].isin(all_list)]
     #print(df_file_monitor_report.columns)
     df_file_monitor_report_in_list = df_file_monitor_report[df_file_monitor_report[UAC_TASK_COLUMN].isin(all_list)]
+    df_file_monitor_report_not_in_list = df_file_monitor_report[~df_file_monitor_report[UAC_TASK_COLUMN].isin(all_list)]
     
     print("JIL in list: ", len(df_job_in_list))
     print("Command Task in list: ", len(df_task_report_in_list))
@@ -359,7 +361,7 @@ def compareFormat(df_job, list_dict, df_task_report, df_file_monitor_report):
     
     df_command = pd.DataFrame(task_in_list)
     df_file_monitor = pd.DataFrame(file_monitor_in_list)
-    return df_command, df_file_monitor
+    return df_command, df_file_monitor, df_task_report_not_in_list, df_file_monitor_report_not_in_list
     
             
         
@@ -376,25 +378,33 @@ def main():
     
     
     df_job = getDataExcel('get Excel path with main job file')
-    root_list_option = input("Do you want to use the root or list? (r/l): ")
-    if root_list_option == 'r':
-        df_root = getDataExcel("Enter the path of the excel file with the root jobs")
-    df_list_job = getDataExcel("Enter the path of the excel file with the list of jobs")
-    list_job_name = df_list_job[JOBNAME_COLUMN].tolist()
-    if root_list_option == 'r':
-        list_dict = getSpecificColumn(df_root, SELECTED_COLUMN, FILTER_COLUMN, list_job_name)
+    root_list_option = input("Do you want to use the root or list or all? (r/l/a): ")
+    get_not_in_list_option = input("Do you want to get the jobs not in the list sheets? (y/n): ")
+    if root_list_option == 'a':
+        all_list_job = df_job[JOBNAME_COLUMN].tolist()
+        list_dict = {"ALL": all_list_job}
     else:
-        list_dict = getSpecificColumn(df_job, SELECTED_COLUMN, None, list_job_name)
+        if root_list_option == 'r':
+            df_root = getDataExcel("Enter the path of the excel file with the root jobs")
+        df_list_job = getDataExcel("Enter the path of the excel file with the list of jobs")
+        list_job_name = df_list_job[JOBNAME_COLUMN].tolist()
+        if root_list_option == 'r':
+            list_dict = getSpecificColumn(df_root, SELECTED_COLUMN, FILTER_COLUMN, list_job_name)
+        else:
+            list_dict = getSpecificColumn(df_job, SELECTED_COLUMN, None, list_job_name)
     print("---------------------------------")
     for key, value in list_dict.items():
         print(key, len(value))
     print("---------------------------------")
+    
     df_task_report = getReport(TASK_REPORT_NAME)
     df_file_monitor_report = getReport(FILE_MONITOR_REPORT_NAME)
     
-    df_command, df_file_monitor = compareFormat(df_job, list_dict, df_task_report, df_file_monitor_report)
-    createExcel(OUTPUT_EXCEL_NAME, ('Command', df_command), ('File Monitor', df_file_monitor))
-    
+    df_command, df_file_monitor, df_task_report_not_in_list, df_file_monitor_report_not_in_list = compareFormat(df_job, list_dict, df_task_report, df_file_monitor_report)
+    if get_not_in_list_option == 'y':
+        createExcel(OUTPUT_EXCEL_NAME, ('Command', df_command), ('File Monitor', df_file_monitor), ('Command Not in Job Excel', df_task_report_not_in_list), ('File Monitor Not in Job Excel', df_file_monitor_report_not_in_list))
+    else:
+        createExcel(OUTPUT_EXCEL_NAME, ('Command', df_command), ('File Monitor', df_file_monitor))
     
     
     
