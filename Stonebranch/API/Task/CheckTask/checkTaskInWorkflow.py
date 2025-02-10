@@ -3,7 +3,7 @@ import os
 import json
 import pandas as pd
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from utils.readFile import loadJson
 from utils.createFile import createJson, createExcel
@@ -65,12 +65,12 @@ def findTaskRootVertex(parent_list, task_name):
 
 def main():
     auth = loadJson('Auth.json')
-    #userpass = auth['TTB']
-    userpass = auth['ASKME_STB']
+    userpass = auth['TTB']
+    #userpass = auth['ASKME_STB']
     updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
     domain_url = loadJson('Domain.json')
-    #domain = domain_url['TTB_UAT']
-    domain = domain_url['1.86']
+    domain = domain_url['TTB_UAT']
+    #domain = domain_url['1.86']
     updateURI(domain)
     parent_list = getParentList()
     print(len(parent_list))
@@ -79,7 +79,7 @@ def main():
     print(len(root_vertex_list))
     createJson('rootVertex.json', root_vertex_list)
     root_vertex_df = pd.DataFrame(root_vertex_list)
-    createExcel(f'86_rootVertex_{TASK_NAME}.xlsx', ('Root Vertex', root_vertex_df))
+    createExcel(f'UAT_rootVertex_{TASK_NAME}.xlsx', ('Root Vertex', root_vertex_df))
 
 if __name__ == '__main__':
     main()

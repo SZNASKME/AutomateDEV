@@ -4,13 +4,27 @@ import json
 import pandas as pd
 
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from utils.stbAPI import getListTriggerAdvancedAPI, getTaskAPI, updateURI, updateAuth, getListQualifyingTriggerAPI, getListTaskAPI, viewParentTaskAPI
 from utils.readFile import loadJson
 from utils.createFile import createJson
 
 API_TRIGGER_TYPE = [1,2,3,4,5,6,8,9,10,11,12]
+
+BUSINESS_SERVICES_LIST = [
+    'A0076 - Data Warehouse ETL',
+    'A0128 - Marketing Data Mart',
+    'A0140 - NCB Data Submission',
+    'A0329 - ODS',
+    'A0356 - Big Data Foundation Platform',
+    #'A0356 - Big Data Foundation Platform (None-PRD)',
+    'A0033 - BOT DMS (Data Management System)',
+    'A0031 - Data Mart',
+    'A0360 - Oracle Financial Services Analytical App',
+    #'A00000 - AskMe - Delete Tasks'
+]
+
 
 task_adv_configs_temp = {
     'taskname': None,
@@ -19,14 +33,14 @@ task_adv_configs_temp = {
 workflow_configs_temp = {
     'name': '*',
     'type': 1,
-    'businessServices': 'A0076 - Data Warehouse ETL',
+    'businessServices': None,
 }
 
 trigger_adv_configs_temp = {
     'triggername': '*',
     #'type': 2,
     #'enabled': True,
-    'businessServices': 'A0076 - Data Warehouse ETL',
+    'businessServices': None,
 }
 
 SUFFIX = '-TM'
@@ -42,25 +56,33 @@ SUFFIX = '-TM'
 def getListTrigger():
     
     trigger_list = []
-    
+
     for type in API_TRIGGER_TYPE:
-        trigger_adv_configs = trigger_adv_configs_temp.copy()
-        trigger_adv_configs['type'] = type
-        response = getListTriggerAdvancedAPI(trigger_adv_configs)
-        if response.status_code == 200:
-            trigger_list.extend(response.json())
+        for business_service in BUSINESS_SERVICES_LIST:
+            trigger_adv_configs = trigger_adv_configs_temp.copy()
+            trigger_adv_configs['type'] = type
+            trigger_adv_configs['businessServices'] = business_service
+            response = getListTriggerAdvancedAPI(trigger_adv_configs)
+            if response.status_code == 200:
+                trigger_list.extend(response.json())
             
     return trigger_list
     
 
 def getListWorkflow():
-    response = getListTaskAPI(workflow_configs_temp)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return None
+    
+    workflow_list = []
+    
+    for business_service in BUSINESS_SERVICES_LIST:
+        workflow_configs = workflow_configs_temp.copy()
+        workflow_configs['businessServices'] = business_service
+        response = getListTaskAPI(workflow_configs)
+        if response.status_code == 200:
+            workflow_list.extend(response.json())
+    
+    return workflow_list
 
-def getListSpecificField(workflow_list, field = 'name'):
+def getListSpecificField(workflow_list, field='name'):
     workflow_name_list = []
     for workflow in workflow_list:
         workflow_name_list.append(workflow[field])
