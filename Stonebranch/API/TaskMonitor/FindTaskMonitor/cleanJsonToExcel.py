@@ -4,12 +4,12 @@ import json
 import pandas as pd
 
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from utils.createFile import createExcel
 from utils.readFile import loadJson
 
-JSON_PATH = './Stonebranch/API/FindTaskMonitor/UAT_result_restructure.json'
+JSON_PATH = './Stonebranch/API/TaskMonitor/FindTaskMonitor/UAT_result_restructure.json'
 
 def findAllTaskMonitorList(json_data):
     unique_task_monitor_list = []

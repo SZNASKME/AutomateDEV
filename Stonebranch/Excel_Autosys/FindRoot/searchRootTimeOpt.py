@@ -7,6 +7,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from utils.readExcel import getDataExcel
 from utils.createFile import createJson, createExcel
 
+sys.setrecursionlimit(10000)
+
+
 def replaceNan(value):
     if pd.isna(value):
         return ''
@@ -19,6 +22,7 @@ def recursiveSearchStartBox(df_dict, task_name, cache):
     
     # Find row in pre-indexed dataframe dictionary
     row_data = df_dict.get(task_name)
+    
     if row_data:
         box_name = row_data['box_name']
         if pd.notna(box_name):
@@ -88,8 +92,9 @@ def main():
                                    columns=['jobName', 'jobType', 'jobBox', 'rootBox', 'rootBoxType', 'rootBoxStartTime', 
                                             'rootBoxCondition','rootBoxRunCalendar', 'rootBoxExcludeCalendar', 
                                             'jobStartTime', 'jobCondition', 'jobRunCalendar', 'jobExcludeCalendar'])
-    createExcel('RootTime_.xlsx', ('Start Root Time', df_insert_start))
+    createExcel('RootTime_INV3000.xlsx', ('Start Root Time', df_insert_start))
     
+    print("Process completed successfully.")
     
 if __name__ == "__main__":
     main()

@@ -13,7 +13,8 @@ from collections import OrderedDict
 
 
 workflow_list = [
-    'DWH_RDT_GATHER_STATS_M_B_BACKUP'
+    'DWH_P_MF_INV3000_D_B',
+    'DWH_P_MF_INV3000_M_B'
 ]
 
 
@@ -193,7 +194,7 @@ CHILD_LEVEL = "Task Level"
 NEXT_NODE = "Next Node"
 PREVIOUS_NODE = "Previous Node"
 
-EXCEL_OUTPUT_NAME = "ChildrenExcel\\All Children In TEST.xlsx"
+EXCEL_OUTPUT_NAME = "ChildrenExcel\\All Children In INV_3000.xlsx"
 
 
 task_configs_temp = {

@@ -15,7 +15,7 @@ def loadJson(filename='config.json', parent_dir_level=3, *dirs):
     try:
         with open(json_path, 'r') as file:
             config_data = json.load(file)
-        print(f"{filename} loaded successfully")
+        print(f"JSON file loaded successfully")
         return config_data
     except Exception as e:
         print(f"Error loading {json_path}: {e}")
@@ -32,7 +32,7 @@ def loadText(filename='config.txt', parent_dir_level=3, *dirs):
     try:
         with open(text_path, 'r') as file:
             text_data = file.read()
-        print(f"{text_path} loaded successfully")
+        print(f"Text file loaded successfully")
         return text_data
     except Exception as e:
         print(f"Error loading {text_path}: {e}")
@@ -50,7 +50,7 @@ def readCSV(filename='config.csv', parent_dir_level=3, *dirs):
     
     try:
         df = pd.read_csv(csv_path)
-        print(f"{csv_path} loaded successfully")
+        print(f"CSV file loaded successfully")
         return df
     except Exception as e:
         print(f"Error loading {csv_path}: {e}")
@@ -65,8 +65,11 @@ def readFolderTextFiles(folder_path, *file_names):
             file_path = folder / file_name
             with open(file_path, 'r') as file:
                 files[file_name] = file.readlines()
-            print(f"{file_path} loaded successfully")
+            print(f"Text file loaded successfully")
         return files
+    except FileNotFoundError:
+        print(f"Error: One or more files not found in {folder_path}")
+        return None
     except Exception as e:
-        print(f"Error loading files from {folder_path}: {e}")
+        print(f"Error loading text files: {e}")
         return None

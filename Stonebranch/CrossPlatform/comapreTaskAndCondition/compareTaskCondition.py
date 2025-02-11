@@ -20,6 +20,7 @@ WORKFLOW_REPORT_NAME = 'AskMe - Workflow Report'
 APPNAME_COLUMN = 'AppName'
 JOBNAME_COLUMN = 'jobName'
 BOXNAME_COLUMN = 'box_name'
+CONDITION_COLUMN = 'condition'
 
 
 # Report Columns
@@ -44,17 +45,21 @@ BUSINESS_SERVICES_LIST = [
 ]
 
 
+# Processed
 
+PATTERN = r'\b[sfd]\([^\)]+\)'
 
 SELECTED_COLUMN = 'jobName'
 FILTER_COLUMN = 'rootBox'
 
 EXCEL_NAME = 'TaskAndConditionComparison.xlsx'
 
-ZERO_TASK_LOG = 'Zero Task Log'
-TASK_LOG = 'Task Log'
-CONDITION_LOG = 'Condition Log'
+ZERO_TASK_SHEETNAME = 'Zero Task Log'
+TASK_SHEETNAME = 'Task Log'
+CONDITION_SHEETNAME = 'Condition Log'
 
+INTERNAL_CONDITION = 'Internal'
+EXTERNAL_CONDITION = 'External'
 
 
 report_configs_temp = {
@@ -66,9 +71,13 @@ workflow_configs_temp = {
 }
 
 
+######################################################################################################################
 
-def getSpecificColumn(df, column_name, filter_column_name = None, filter_value_list = None):
+def getSpecificColumn(df, column_name, filter_column_name=None, filter_value_list=None):
     column_list_dict = {}
+    if filter_value_list is None:
+        return column_list_dict
+
     for filter_value in filter_value_list:
         df_filtered = df.copy()
         if filter_column_name is not None:
@@ -108,107 +117,45 @@ def renameTaskMonitor(task_name:str):
         new_task_name = task_name[:-len(TASK_MONITOR_SUFFIX)]
     return new_task_name
 
+######################################################################################################################
 
-# def compareTaskInWorkflow(df_job, workflow_name, workflow_data):
-#     #excel_job_log = []
-#     #uac_task_log = []
-#     task_log = []
-#     df_job_in_box = df_job[df_job[BOXNAME_COLUMN] == workflow_name]
-#     df_workflow_job = df_job[df_job[JOBNAME_COLUMN] == workflow_name]
-#     if df_workflow_job.empty:
-#         print(f"Workflow {workflow_name} not found in job list")
-#         task_log.append({
-#             'workflow': workflow_name,
-#             'taskname': None,
-#             'category': 'workflow not found',
-#             'message': 'Workflow not found in job list'
-#         })
-#     if df_job_in_box.empty:
-#         print(f"No tasks found in workflow {workflow_name}")
-#         task_log.append({
-#             'workflow': workflow_name,
-#             'taskname': None,
-#             'category': 'no children tasks ',
-#             'message': 'No tasks found in workflow'
-#         })
-#     #print(f"Workflow: {workflow_name}")
-#     #print(f"Total tasks in job list: {len(df_job_in_box)}")
-#     job_in_box_list = df_job_in_box[JOBNAME_COLUMN].tolist()
-#     job_in_box_set = set(job_in_box_list)
+def getAllInnermostSubstrings(string, start_char, end_char):
+    pattern = re.escape(start_char) + r'([^' + re.escape(start_char) + re.escape(end_char) + r']+)' + re.escape(end_char)
     
-#     workflow_vertex = workflow_data['workflowVertices']
-#     workflow_vertex_name = [vertex['task']['value'] for vertex in workflow_vertex]
-#     #print(f"Total tasks in workflow: {len(workflow_vertex_name)}")
-#     workflow_vertex_name_without_task_monitor = [vertex_name for vertex_name in workflow_vertex_name if not vertex_name.endswith(TASK_MONITOR_SUFFIX)]
-#     workflow_vertex_name_set = set(workflow_vertex_name_without_task_monitor)
+    # Find all substrings that match the pattern
+    matches = re.findall(pattern, string)
     
-#     task_union_set = job_in_box_set.union(workflow_vertex_name_set)
-#     # Check if all the tasks in the workflow are in the job list
-#     if task_union_set == job_in_box_set == workflow_vertex_name_set:
-#         #print("All tasks in the workflow are in the job list")
-#         task_log.append({
-#             'workflowname': workflow_name,
-#             'taskname': None,
-#             'category': 'all match',
-#             'source': 'UAC/Excel',
-#             'remark': 'All tasks in the job list'
-#         })
-#         for task_name in task_union_set:
-#             task_log.append({
-#                 'workflowname': workflow_name,
-#                 'taskname': task_name,
-#                 'category': 'match',
-#                 'source': 'UAC/Excel',
-#                 'remark': 'Task is in both job list and workflow'
-#             })
-#     else:
-#         #print("Have some tasks not in the job list")
-#         tasks_not_in_job = workflow_vertex_name_set - job_in_box_set
-#         jobs_not_in_workflow = job_in_box_set - workflow_vertex_name_set
-#         # UAC Task Log
-#         if tasks_not_in_job:
-#             task_log.append({
-#                 'workflowname': workflow_name,
-#                 'taskname': None,
-#                 'category': 'task not found in job list',
-#                 'source': 'UAC',
-#                 'remark': 'Have some UAC tasks not in job list'
-#             })
-#         elif jobs_not_in_workflow:
-#             task_log.append({
-#                 'workflowname': workflow_name,
-#                 'taskname': None,
-#                 'category': 'job not found in workflow',
-#                 'source': 'Excel',
-#                 'remark': 'Have some tasks not in workflow'
-#             })
-#         for task_name in task_union_set:
-#             if task_name in tasks_not_in_job:
-#                 task_log.append({
-#                     'workflowname': workflow_name,
-#                     'taskname': task_name,
-#                     'category': 'task not found',
-#                     'source': 'UAC',
-#                     'remark': 'Task is in UAC but not in job list'
-#                 })
-#             elif task_name in jobs_not_in_workflow:
-#                 task_log.append({
-#                     'workflowname': workflow_name,
-#                     'taskname': task_name,
-#                     'category': 'job not found',
-#                     'source': 'Excel',
-#                     'remark': 'Task is in job list but not in workflow'
-#                 })
-#             else:
-#                 task_log.append({
-#                     'workflowname': workflow_name,
-#                     'taskname': task_name,
-#                     'category': 'match',
-#                     'source': 'UAC/Excel',
-#                     'remark': 'Task is in both job list and workflow'
-#                 })
-            
-#     return task_log
+    return matches
+
+def getNamefromCondition(condition):
+    name_list = getAllInnermostSubstrings(condition, '(', ')')
+    return name_list
+
+
+def getAllInnermostSubstringsWithStatus(string, pattern):
+    # Find all substrings that match the pattern
+    matches = re.findall(pattern, string)
+    
+    return matches
+
+def getConditionList(condition):
+    condition_list = getAllInnermostSubstringsWithStatus(condition, PATTERN)
+    return condition_list
+
+
+def getStatusCondition(condition_string):
+    key_condition = condition_string.split('(')[0]
+    if key_condition == 's':
+        return 'Success'
+    elif key_condition == 'f':
+        return 'Failure'
+    elif key_condition == 'd':
+        return 'Success/Failure'
+    else:
+        return 'Out of Scope'
+
+######################################################################################################################
+
 
 def compareTaskInWorkflow(df_job, workflow_name, workflow_data):
     task_log = []
@@ -280,12 +227,87 @@ def compareTaskInWorkflow(df_job, workflow_name, workflow_data):
     return task_log
      
 
+def generateEmptyConditionLog(workflow_name, remark):
+    return {
+        'workflow': workflow_name,
+        'source task': 'No Data',
+        'target task': 'No Data',
+        'Excel condition': 'No Data',
+        'UAC condition': 'No Data',
+        'Excel Internal/External': 'No Data',
+        'UAC Internal/External': 'No Data',
+        'Excel status': 'No Data',
+        'UAC status': 'No Data',
+        'source': 'No Data',
+        'remark': remark
+    }
+
+def compareTaskConditions(condition_log, workflow_name, task_name, job_conditions, workflow_conditions):
+    job_condition_dict = {jc[0]: jc for jc in job_conditions}
+    workflow_condition_dict = {wc[0]: wc for wc in workflow_conditions}
+    
+    for target in job_condition_dict.keys() | workflow_condition_dict.keys():
+        job_cond = job_condition_dict.get(target, ('', 'not found', 'not found'))
+        wf_cond = workflow_condition_dict.get(target, ('', 'not found', 'not found'))
+        
+        condition_log.append({
+            'workflow': workflow_name,
+            'source task': task_name,
+            'target task': target,
+            'Excel condition': job_cond[1],
+            'UAC condition': wf_cond[1],
+            'Excel Internal/External': job_cond[2],
+            'UAC Internal/External': wf_cond[2],
+            'Excel status': 'found' if job_cond[1] != 'not found' else 'not found',
+            'UAC status': 'found' if wf_cond[1] != 'not found' else 'not found',
+            'source': 'UAC/Excel' if job_cond[1] != 'not found' and wf_cond[1] != 'not found' else 'Excel' if wf_cond[1] == 'not found' else 'UAC',
+            'remark': 'Condition found in both UAC and Excel' if job_cond[1] != 'not found' and wf_cond[1] != 'not found' else 'Condition not found in UAC' if wf_cond[1] == 'not found' else 'Condition not found in Excel'
+        })
+
 def comapreConditionInWorkflow(df_job, workflow_name, workflow_data):
     condition_log = []
     
+    df_job_in_box = df_job[df_job[BOXNAME_COLUMN] == workflow_name]
+    df_workflow_job = df_job[df_job[JOBNAME_COLUMN] == workflow_name]
+    if df_workflow_job.empty:
+        condition_log.append(generateEmptyConditionLog(workflow_name, 'Workflow not found in excel list'))
+        return condition_log
+    if df_job_in_box.empty:
+        condition_log.append(generateEmptyConditionLog(workflow_name, 'Not found job in workflow'))
+        return condition_log
+    
+    #box_condition_list = getConditionList(df_workflow_job[CONDITION_COLUMN].iloc[0])
+    job_in_box_list = df_job_in_box[JOBNAME_COLUMN].tolist()
+    job_condition_list_dict = {}
+    for _, row in df_job_in_box.iterrows():
+            job_name = row[JOBNAME_COLUMN]
+            conditions = getConditionList(row[CONDITION_COLUMN])
+            
+            if conditions:
+                job_condition_list_dict[job_name] = [
+                    (getNamefromCondition(cond)[0], getStatusCondition(cond), 
+                    INTERNAL_CONDITION if getNamefromCondition(cond)[0] in job_in_box_list else EXTERNAL_CONDITION)
+                    for cond in conditions
+                ]
+    
+    workflow_edge = workflow_data['workflowEdges']
+    workflow_task_condition_dict = {}
+    for edge in workflow_edge:
+        source_task = renameTaskMonitor(edge['sourceId']['taskName']) if edge['sourceId']['taskName'].endswith(TASK_MONITOR_SUFFIX) else edge['sourceId']['taskName']
+        target_task = renameTaskMonitor(edge['targetId']['taskName'])
+        condition = edge['condition']['value']
+        condition_type = INTERNAL_CONDITION if not edge['sourceId']['taskName'].endswith(TASK_MONITOR_SUFFIX) else EXTERNAL_CONDITION
+        workflow_task_condition_dict.setdefault(source_task, []).append((target_task, condition, condition_type))
+
+
+    all_tasks = job_condition_list_dict.keys() | workflow_task_condition_dict.keys()
+    
+    for task in all_tasks:
+        compareTaskConditions(condition_log, workflow_name, task, job_condition_list_dict.get(task, []), workflow_task_condition_dict.get(task, []))
+    
     return condition_log
 
-
+######################################################################################################################
 
 def compareTaskAndCondition(df_job, df_workflow_report, list_dict):
     
@@ -375,8 +397,7 @@ def main():
     task_logs_df = pd.DataFrame(task_logs)
     condition_logs_df = pd.DataFrame(condition_logs)
     
-    createExcel(EXCEL_NAME, (ZERO_TASK_LOG,zero_task_logs_df), (TASK_LOG, task_logs_df), (CONDITION_LOG, condition_logs_df))
-    
+    createExcel(EXCEL_NAME, (ZERO_TASK_SHEETNAME, zero_task_logs_df), (TASK_SHEETNAME, task_logs_df), (CONDITION_SHEETNAME, condition_logs_df))
     
     
     
