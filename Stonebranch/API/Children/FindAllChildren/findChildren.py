@@ -12,10 +12,37 @@ from utils.createFile import createExcel, createJson
 from collections import OrderedDict
 
 
+# LON Class & RDT
 workflow_list = [
-    'DWH_P_MF_INV3000_D_B',
-    'DWH_P_MF_INV3000_M_B'
+    'DI_DWH_LCS_S.CHK_DATA_B',
+    'DI_DWH_LON_CLASS_B',
+    'DWH_LCS_W.CHK_DATA_B',
+    'DWH_LON_CLASS_WEEKLY_B',
+    'DWH_RDT_ACS_PREP_M_B',
+    'DWH_RDT_BU_MATRIX_Q_B',
+    'DWH_RDT_DAILY_B',
+    'DWH_RDT_G1_MTHLY_B',
+    'DWH_RDT_G2_MTHLY_B',
+    'DWH_RDT_INBOUND_D_B',
+    'DWH_RDT_INBOUND_M_B',
+    'DWH_RDT_ONETIME_M_B'
 ]
+    
+
+# OFSA
+# workflow_list = [
+#     'OFS_RPT_PREP_D1_M_B',
+#     'OFS_RPT_PREP_D8_M_B',
+#     'OFS_RPT_PREP_D9_M_B',
+#     'OFS_RPT_PREP_D10_M_B',
+#     'OFS_RPT_PREP_D13_M_B',
+#     'OFS_SQLQUERY_REQ_B',
+#     'OFS_SCD_GL_DIM_REQ_M_B',
+#     'OFS_LOAD_TB_DATA_REQ_M_B',
+#     'OFS_HKP_MTHLY_B',
+#     'OFS_HKP_YEARLY_B',
+#     'OFS_ADHOC_LDAP_B',
+# ]
 
 
 # Non HP & HP Loan Class
@@ -193,8 +220,9 @@ CHILD_TYPE = "Task Type"
 CHILD_LEVEL = "Task Level"
 NEXT_NODE = "Next Node"
 PREVIOUS_NODE = "Previous Node"
+BUSNESS_SERVICE = "Business Service"
 
-EXCEL_OUTPUT_NAME = "ChildrenExcel\\All Children In INV_3000.xlsx"
+EXCEL_OUTPUT_NAME = "ChildrenExcel\\All Children In LON Class & RDT.xlsx"
 
 
 task_configs_temp = {
@@ -204,13 +232,14 @@ task_configs_temp = {
 #########################################     find children    ################################################
 
 def findChildren(task_name, next_node = [], previous_node = [], level = 0):
-    children = {CHILD_TYPE: None, CHILD_LEVEL: level, CHILDREN_FIELD: OrderedDict(), NEXT_NODE: None, PREVIOUS_NODE: None}
+    children = {CHILD_TYPE: None, BUSNESS_SERVICE: None, CHILD_LEVEL: level, CHILDREN_FIELD: OrderedDict(), NEXT_NODE: None, PREVIOUS_NODE: None}
     task_configs = task_configs_temp.copy()
     task_configs['taskname'] = task_name
     response = getTaskAPI(task_configs)
     if response.status_code == 200:
         task_data = response.json()
         children[CHILD_TYPE] = task_data['type']
+        children[BUSNESS_SERVICE] = ", ".join(task_data["opswiseGroups"])
         if task_data['type'] == "taskWorkflow":
             for child in task_data['workflowVertices']:
                 child_name = child['task']['value']
@@ -302,6 +331,7 @@ def flattenChildrenHierarchy(children_json, parent_path=None):
     if children_json["Task Level"] == 0:
         rows.append({
             "Path": parent_path,
+            "Business Service": children_json[BUSNESS_SERVICE],
             "Taskname": None,
             "Task Level": children_json[CHILD_LEVEL],
             "Task Type": children_json[CHILD_TYPE],
@@ -310,6 +340,7 @@ def flattenChildrenHierarchy(children_json, parent_path=None):
         })
     for child_name, child_data in children_json["Children"].items():
         current_path = parent_path + [child_name]
+        child_business_service = child_data[BUSNESS_SERVICE]
         child_level = child_data[CHILD_LEVEL]
         child_type = child_data["Task Type"]
         next_node = ", ".join(child_data["Next Node"]) if child_data["Next Node"] else None
@@ -317,7 +348,7 @@ def flattenChildrenHierarchy(children_json, parent_path=None):
         rows.append({
             "Path": current_path,
             "Taskname": child_name,
-            #"Parent": parent_path[-1] if parent_path else None,
+            BUSNESS_SERVICE: child_business_service,
             CHILD_LEVEL: child_level,
             CHILD_TYPE: child_type,
             PREVIOUS_NODE: previous_node,
@@ -337,15 +368,15 @@ def listChildrenHierarchyToDataFrameAllInOne(children_dict):
         if flattened_rows:
             max_depth = max(max_depth, max(len(row["Path"]) for row in flattened_rows))
         
-    columns = ["Taskname", "Task Type", "Task Level", "Main Workflow"] + [f"Sub Level {i+1}" for i in range(max_depth)] + ["Previous Task", "Next Task"]
+    columns = ["Business Service","Taskname", "Task Type", "Task Level", "Main Workflow"] + [f"Sub Level {i+1}" for i in range(max_depth)] + ["Previous Task", "Next Task"]
     
     for workflow_name, workflow_rows in workflow_children_dict.items():
         for row in workflow_rows:
             padded_path = row["Path"] + [""] * (max_depth - len(row["Path"]))
             if row[CHILD_LEVEL] == 0:
-                df_children_list.append([workflow_name, row[CHILD_TYPE], row[CHILD_LEVEL], workflow_name] + padded_path + [row[PREVIOUS_NODE], row[NEXT_NODE]])
+                df_children_list.append([row[BUSNESS_SERVICE], workflow_name, row[CHILD_TYPE], row[CHILD_LEVEL], workflow_name] + padded_path + [row[PREVIOUS_NODE], row[NEXT_NODE]])
             else:
-                df_children_list.append([row["Taskname"], row[CHILD_TYPE], row[CHILD_LEVEL], workflow_name] + padded_path + [row[PREVIOUS_NODE], row[NEXT_NODE]])
+                df_children_list.append([row[BUSNESS_SERVICE], row["Taskname"], row[CHILD_TYPE], row[CHILD_LEVEL], workflow_name] + padded_path + [row[PREVIOUS_NODE], row[NEXT_NODE]])
             #print(json.dumps(data, indent=10))
     df_children_list = pd.DataFrame(df_children_list, columns=columns)
 
@@ -377,12 +408,12 @@ def listChildrenHierarchyToDataFrameAllInOne(children_dict):
 
 def main():
     auth = loadJson('auth.json')
-    userpass = auth['ASKME_STB']
-    #userpass = auth['TTB']
+    #userpass = auth['ASKME_STB']
+    userpass = auth['TTB']
     updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
     domain_url = loadJson('Domain.json')
-    #domain = domain_url['TTB_UAT']
-    domain = domain_url['1.86']
+    domain = domain_url['TTB_UAT']
+    #domain = domain_url['1.86']
     updateURI(domain)
     
     print("Finding all children of the workflow")

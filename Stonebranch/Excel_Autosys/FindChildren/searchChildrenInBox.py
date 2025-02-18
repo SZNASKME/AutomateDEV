@@ -8,14 +8,22 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from utils.readExcel import getDataExcel
 from utils.createFile import createExcel, createJson
 
+OUTPUT_EXCEL_NAME = 'Children in Lonclass & RDT.xlsx'
+OUTPUT_SHEETNAME = 'All Children in Box'
 
 box_list = [
-    'MDM_PROCESS_DAILY_B',
-    'MDM_PROCESS_POST_DAILY_B',
-    'MDM_PROCESS_MTHLY_B',
-    'MDM_PROCESS_POST_MTHLY_B',
-    'NCBDS_MTH_B',
-    'NCBDS_MTH_5Y_B'
+    'DI_DWH_LCS_S.CHK_DATA_B',
+    'DI_DWH_LON_CLASS_B',
+    'DWH_LCS_W.CHK_DATA_B',
+    'DWH_LON_CLASS_WEEKLY_B',
+    'DWH_RDT_ACS_PREP_M_B',
+    'DWH_RDT_BU_MATRIX_Q_B',
+    'DWH_RDT_DAILY_B',
+    'DWH_RDT_G1_MTHLY_B',
+    'DWH_RDT_G2_MTHLY_B',
+    'DWH_RDT_INBOUND_D_B',
+    'DWH_RDT_INBOUND_M_B',
+    'DWH_RDT_ONETIME_M_B'
 ]
 
 
@@ -67,22 +75,24 @@ def flattenHierarchy(nested_dict, parent_path = None, depth = 0):
     return rows
 
 def listNestedDictToDataFrame(nested_dict):
-    df_all_box_children_dict = {}
+    df_children_list = []
     for box_name, children in nested_dict.items():
         if children is None:
             print(f"Box {box_name} has no children")
             continue
         list_all_children = flattenHierarchy(children)
         max_depth = max(len(row["Path"]) for row in list_all_children)
-        columns = ["Child"] + [f"Level {i+1}" for i in range(max_depth)]
-        data = []
+        columns = ["jobName", "Job Level", "Main Box"] + [f"Level {i+1}" for i in range(max_depth)]
+        input_data = []
+        input_data.append([box_name, 0, box_name] + [""] * (max_depth - 1))
         for row in list_all_children:
             padded_row = row["Path"] + [""] * (max_depth - len(row["Path"]))
-            data.append([row["Child"]] + padded_row)
-        df_list_children = pd.DataFrame(data, columns=columns)
-        df_all_box_children_dict[box_name] = df_list_children
+            input_data.append([row["Child"], len(row["Path"]), box_name] + padded_row)
+        df_list_children = pd.DataFrame(input_data, columns=columns)
+        df_children_list.append(df_list_children)
     
-    return df_all_box_children_dict
+    df_all_children = pd.concat(df_children_list, ignore_index=True)
+    return df_all_children
 
 
 def main():
@@ -91,10 +101,11 @@ def main():
     all_children_dict = searchAllChildrenInBox(df_job, box_list)
     createJson('all_children.json', all_children_dict)
     #print(json.dumps(all_children_dict, indent=4))
-    df_all_children_dict = listNestedDictToDataFrame(all_children_dict)
+    df_all_children = listNestedDictToDataFrame(all_children_dict)
     #print(json.dumps(list_all_children, indent=4))
-    list_to_excel = [(box_name, df_children) for box_name, df_children in df_all_children_dict.items()]
-    createExcel('All Children In Box.xlsx', *list_to_excel)
+    
+    #list_to_excel = [(box_name, df_children) for box_name, df_children in df_all_children.items()]
+    createExcel(OUTPUT_EXCEL_NAME,(OUTPUT_SHEETNAME, df_all_children))
     
     
 if __name__ == '__main__':

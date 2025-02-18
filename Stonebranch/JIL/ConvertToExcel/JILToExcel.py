@@ -141,10 +141,10 @@ def main():
     if jil_except_path != 'n':
         df_job_except = pd.DataFrame(jil_in_array_except, columns = jil_fieldnames)
         
-    if files and STDCAL_EXCELNAME in files:
+    if files and STDCAL_FILENAME in files:
         stdcel_parsed_data = stdcelParseData(files[STDCAL_FILENAME])
         df_stdcal = pd.DataFrame(stdcel_parsed_data)
-    if files and EXTCAL_EXCELNAME in files:
+    if files and EXTCAL_FILENAME in files:
         extcel_parsed_data = extcelParseData(files[EXTCAL_FILENAME])
         df_extcal = pd.DataFrame(extcel_parsed_data)
     
@@ -163,10 +163,10 @@ def main():
         createExcel(jil_except_output_file, (JIL_SHEETNAME, df_job_except))
         customExcel(current_path + "\\" + jil_except_output_file)
     # Standard Calendar file
-    if files and STDCAL_EXCELNAME in files:
+    if files and STDCAL_FILENAME in files:
         createExcel(stdcal_output_file, (STDCAL_SHEETNAME, df_stdcal))
-    # Extclude Calendar file
-    if files and EXTCAL_EXCELNAME in files:
+    # Exclude Calendar file
+    if files and EXTCAL_FILENAME in files:
         createExcel(extcal_output_file, (EXTCAL_SHEETNAME, df_extcal))
     
     

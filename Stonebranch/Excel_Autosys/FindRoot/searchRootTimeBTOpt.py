@@ -10,6 +10,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from utils.readExcel import getDataExcel
 from utils.createFile import createJson, createExcel
 
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill
+from openpyxl.formatting.rule import FormulaRule
+
 
 def getAllInnermostSubstrings(string, start_char, end_char):
     pattern = re.escape(start_char) + r'([^' + re.escape(start_char) + re.escape(end_char) + r']+)' + re.escape(end_char)
@@ -109,6 +113,32 @@ def main():
     createJson("RootTimeBT.json", result_dict)
     createExcel("RootTimeBreakThroughtOpt.xlsx", *df_result_list)
     
+    wb = load_workbook("RootTimeBreakThroughtOpt.xlsx")
+    
+    fill = PatternFill(start_color="99F9A9", end_color="99F9A9", fill_type = "solid")
+    
+    sheet_names = wb.sheetnames
+    
+    n_roottime_dict = {}
+    for sheet_name in sheet_names:
+        n_roottime_dict[sheet_name] = int(sheet_name.split(" ")[0])
+    
+    #print(n_roottime_dict)
+    
+    # Apply conditional formatting to each sheet
+    for sheet_name, n_roottime in n_roottime_dict.items():
+        if sheet_name in wb.sheetnames:
+            ws = wb[sheet_name]
+            formula = f"=MOD(ROW()-ROW($A$2), {2 * n_roottime}) < {n_roottime}"
+            
+            rule = FormulaRule(formula=[formula], fill=fill)
+            ws.conditional_formatting.add(f"A2:G{ws.max_row}", rule)  # Adjust range as needed
+
+    # Save the workbook
+    wb.save("RootTimeBreakThroughtOpt.xlsx")
+    print("Conditional formatting applied successfully!")
+                
+            
     
     
     
