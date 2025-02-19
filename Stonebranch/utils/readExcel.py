@@ -140,3 +140,19 @@ def getDataExcelAllSheet(prompt="Enter PATH of the file and sheetname [pathfile/
         
 #     print('Excel data read successfully')
 #     return dfs_sheet
+
+
+def readExcelRecord(df):
+    record_count = len(df)
+    print(f"Number of records: {record_count}")
+    return record_count
+
+
+def readAllExcelSheetRecord(dfs):
+    record_summary = {}
+    for sheet_name, df in dfs.items():
+        record_count = readExcelRecord(df)
+        record_summary[sheet_name] = record_count
+        print(f"Sheet: {sheet_name} | Number of records: {record_count}")
+    print("Summary of records per sheet:", record_summary)
+    return dfs, record_summary

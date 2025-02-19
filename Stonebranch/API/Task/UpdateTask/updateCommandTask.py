@@ -15,7 +15,7 @@ TASK_TYPE_LIST = ["taskFileMonitor", "taskWorkflow", "taskUniversal"]
 
 
 BUSINESS_SERVICE_LIST = [
-    "AskMe - New Floor Plan"
+    "FEB17_2025"
 ]
 
 task_list_configs_temp = {
@@ -96,16 +96,16 @@ def updateCommandTask(task_list):
         else:
             continue
         
-        if task_data['agentCluster'] == 'dsdbprd_vr':
-            update_task = True
-        else:
-            update_task = False
-        if text_to_replace and update_task:
-        #if command:
-            char = r'${FILPTH}'
-            #char = "\""
-            #new_char = "\\\""
-            new_char = r'${DWH_DS_FILPTH}'
+        #if task_data['agentCluster'] == 'dsdbprd_vr':
+        #    update_task = True
+        #else:
+        #    update_task = False
+        #if text_to_replace and update_task:
+        if text_to_replace:
+            #char = r'${FILPTH}'
+            char = "\""
+            new_char = "\\\""
+            #new_char = r'${DWH_DS_FILPTH}'
             if char in text_to_replace:
                 #print(exclude_char_range)
                 replaced_text = replaceCommand(text_to_replace, new_char, char, exclude_char_range)
@@ -142,7 +142,7 @@ def main():
     userpass = auth['ASKME_STB']
     updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
     domain_url = loadJson('Domain.json')
-    domain = domain_url['1.86']
+    domain = domain_url['1.226']
     updateURI(domain)
     
     task_list = getTaskList()

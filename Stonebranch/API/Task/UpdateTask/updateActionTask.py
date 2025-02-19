@@ -10,11 +10,11 @@ from utils.readFile import loadJson
 from utils.createFile import createJson
 
 
-API_TASK_TYPE = [6,99]
+API_TASK_TYPE = [1, 6, 99]
 TASK_TYPE_LIST = ["taskFileMonitor", "taskWorkflow", "taskUniversal"]
 
 BUSINESS_SERVICE_LIST = [
-    "AskMe - New Floor Plan"
+    "FEB17_2025"
 ]
 
 task_list_configs_temp = {
