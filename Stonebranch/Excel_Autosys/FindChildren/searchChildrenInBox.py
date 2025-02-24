@@ -15,7 +15,7 @@ box_list = [
     'DI_DWH_LCS_S.CHK_DATA_B',
     'DI_DWH_LON_CLASS_B',
     'DWH_LCS_W.CHK_DATA_B',
-    'DWH_LON_CLASS_WEEKLY_B',
+    #'DWH_LON_CLASS_WEEKLY_B',
     'DWH_RDT_ACS_PREP_M_B',
     'DWH_RDT_BU_MATRIX_Q_B',
     'DWH_RDT_DAILY_B',
@@ -96,7 +96,7 @@ def listNestedDictToDataFrame(nested_dict):
 
 
 def main():
-    df_job = getDataExcel()
+    df_job = getDataExcel("input main job file")
     
     all_children_dict = searchAllChildrenInBox(df_job, box_list)
     createJson('all_children.json', all_children_dict)

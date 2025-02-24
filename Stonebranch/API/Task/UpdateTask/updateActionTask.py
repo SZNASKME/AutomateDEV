@@ -93,7 +93,7 @@ def main():
     else:
         update_log = updateActionTask(task_list)
         print(json.dumps(update_log, indent=4))
-        createJson('CommandTaskLog.json', update_log)
+        createJson('UpdateActionTaskLog.json', update_log)
 
 
         

@@ -15,7 +15,10 @@ JOBNAME_COLUMN = 'jobName'
 CONDITION_COLUMN = 'condition'
 BOXNAME_COLUMN = 'box_name'
 
-CUT_COLUMN_LIST = [APPNAME_COLUMN, UAC_APPNAME_COLUMN, JOBNAME_COLUMN, BOXNAME_COLUMN]
+ROOT_BOX_COLUMN = 'rootBox'
+ROOT_BOX_FOUND_CONDITION_COLUMN = 'rootBox_Found_Condition'
+
+CUT_COLUMN_LIST = [APPNAME_COLUMN, UAC_APPNAME_COLUMN, JOBNAME_COLUMN, BOXNAME_COLUMN, ROOT_BOX_COLUMN]
 
 FOUND_CONDITION_COLUMN_OUTPUT = 'Found_Condition'
 
@@ -41,7 +44,8 @@ def getNamefromCondition(condition):
     name_list = getAllInnermostSubstrings(condition, '(', ')')
     return name_list
 
-def checkJobInListConditionDependToOther(df_job, in_list_condition_dict): # check job in list depend to other
+# Depend to Other (After)
+def checkJobInListConditionDependToOther(df_job, df_root, in_list_condition_dict): # check job in list depend to other
     all_list_condition_except = [job_name for job_name_list in in_list_condition_dict.values() for job_name in job_name_list] 
     found_list = []
     for index, row in df_job.iterrows():
@@ -60,19 +64,29 @@ def checkJobInListConditionDependToOther(df_job, in_list_condition_dict): # chec
         if len(found_condition_list) == 0:
             continue
         row_data = row.copy()
+        row_data[ROOT_BOX_COLUMN] = df_root[df_root[JOBNAME_COLUMN] == row[JOBNAME_COLUMN]][ROOT_BOX_COLUMN].values[0]
         row_data[FOUND_CONDITION_COLUMN_OUTPUT] = ", ".join(found_condition_list)
+        root_box_found_condition_list = []
+        for sub_condition in found_condition_list:
+            root_box_found_condition = df_root[df_root[JOBNAME_COLUMN] == sub_condition][ROOT_BOX_COLUMN].values
+            if root_box_found_condition.size > 0:
+                if root_box_found_condition[0] not in root_box_found_condition_list:
+                    root_box_found_condition_list.append(root_box_found_condition[0])
+        row_data[ROOT_BOX_FOUND_CONDITION_COLUMN] = ", ".join(root_box_found_condition_list)
         
         found_list.append(row_data)
     column_jil = df_job.columns.tolist()
     column_jil = [x for x in column_jil if x not in CUT_COLUMN_LIST]
-    columns = CUT_COLUMN_LIST + [FOUND_CONDITION_COLUMN_OUTPUT] + column_jil
+    columns = CUT_COLUMN_LIST + [FOUND_CONDITION_COLUMN_OUTPUT, ROOT_BOX_FOUND_CONDITION_COLUMN] + column_jil
     df_job_in_list_depend_to_other = pd.DataFrame(found_list, columns=columns)
+    
     df_job_in_list_depend_to_other.rename(columns={JOBNAME_COLUMN: JOBNAME_COLUMN + ' (run after list)', FOUND_CONDITION_COLUMN_OUTPUT: FOUND_CONDITION_COLUMN_OUTPUT + ' (in list)'}, inplace=True)
+    
     return df_job_in_list_depend_to_other
 
 
-
-def checkOtherConditionDependToJobInList(df_job, in_list_condition_dict): # check the other depend to the job in list
+# Other depend to (Before)
+def checkOtherConditionDependToJobInList(df_job, df_root, in_list_condition_dict): # check the other depend to the job in list
     all_list_condition = [job_name for job_name_list in in_list_condition_dict.values() for job_name in job_name_list] 
     found_list = []
     for index, row in df_job.iterrows():
@@ -91,16 +105,27 @@ def checkOtherConditionDependToJobInList(df_job, in_list_condition_dict): # chec
         if len(found_condition_list) == 0:
             continue
         row_data = row.copy()
+        row_data[ROOT_BOX_COLUMN] = df_root[df_root[JOBNAME_COLUMN] == row[JOBNAME_COLUMN]][ROOT_BOX_COLUMN].values[0]
         row_data[FOUND_CONDITION_COLUMN_OUTPUT] = ", ".join(found_condition_list)
-        
+        root_box_found_condition_list = []
+        for sub_condition in found_condition_list:
+            root_box_found_condition = df_root[df_root[JOBNAME_COLUMN] == sub_condition][ROOT_BOX_COLUMN].values
+            if root_box_found_condition.size > 0:
+                if root_box_found_condition[0] not in root_box_found_condition_list:
+                    root_box_found_condition_list.append(root_box_found_condition[0])
+        row_data[ROOT_BOX_FOUND_CONDITION_COLUMN] = ", ".join(root_box_found_condition_list)
         found_list.append(row_data)
         
     column_jil = df_job.columns.tolist()
     column_jil = [x for x in column_jil if x not in CUT_COLUMN_LIST]
-    columns = CUT_COLUMN_LIST + [FOUND_CONDITION_COLUMN_OUTPUT] + column_jil
+    columns = CUT_COLUMN_LIST + [FOUND_CONDITION_COLUMN_OUTPUT, ROOT_BOX_FOUND_CONDITION_COLUMN] + column_jil
     df_other_depend_to_job_in_list = pd.DataFrame(found_list, columns=columns)
     df_other_depend_to_job_in_list.rename(columns={JOBNAME_COLUMN: JOBNAME_COLUMN + ' (in list)', FOUND_CONDITION_COLUMN_OUTPUT: FOUND_CONDITION_COLUMN_OUTPUT + ' (run before list)'}, inplace=True)
     return df_other_depend_to_job_in_list
+
+
+
+
 
 def getSpecificColumn(df, column_name, filter_column_name = None, filter_value_list = None):
     column_list_dict = {}
@@ -149,9 +174,9 @@ def main():
     
     df_job = getDataExcel("Enter the path of the main excel file")
     root_list_option = input("Do you want to use the root or list? (r/l): ")
-    if root_list_option == 'r':
-        df_root = getDataExcel("Enter the path of the excel file with the root jobs")
+    df_root = getDataExcel("Enter the path of the excel file with the root jobs")
     df_list_job = getDataExcel("Enter the path of the excel file with the list of jobs")
+    
     list_job_name = df_list_job[JOBNAME_COLUMN].tolist()
     if root_list_option == 'r':
         job_in_list_condition_dict = getSpecificColumn(df_root, SELECTED_COLUMN, FILTER_COLUMN, list_job_name)
@@ -161,10 +186,10 @@ def main():
     for key, value in job_in_list_condition_dict.items():
         print(key, len(value))
     print("---------------------------------")
-    print("processing job in list depend to other . . .")
-    df_job_condition = checkJobInListConditionDependToOther(df_job, job_in_list_condition_dict)
     print("processing other depend to job in list . . .")
-    df_other_condition = checkOtherConditionDependToJobInList(df_job, job_in_list_condition_dict)
+    df_other_condition = checkOtherConditionDependToJobInList(df_job, df_root, job_in_list_condition_dict)
+    print("processing job in list depend to other . . .")
+    df_job_condition = checkJobInListConditionDependToOther(df_job, df_root, job_in_list_condition_dict)
     print("processing job in list . . .")
     df_job_in_list = matchJobInList(df_job, job_in_list_condition_dict)
     print("---------------------------------")

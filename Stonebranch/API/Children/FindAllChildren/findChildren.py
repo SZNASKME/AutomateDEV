@@ -17,7 +17,7 @@ workflow_list = [
     'DI_DWH_LCS_S.CHK_DATA_B',
     'DI_DWH_LON_CLASS_B',
     'DWH_LCS_W.CHK_DATA_B',
-    'DWH_LON_CLASS_WEEKLY_B',
+    #'DWH_LON_CLASS_WEEKLY_B',
     'DWH_RDT_ACS_PREP_M_B',
     'DWH_RDT_BU_MATRIX_Q_B',
     'DWH_RDT_DAILY_B',
@@ -222,7 +222,7 @@ NEXT_NODE = "Next Node"
 PREVIOUS_NODE = "Previous Node"
 BUSNESS_SERVICE = "Business Service"
 
-EXCEL_OUTPUT_NAME = "ChildrenExcel\\All Children In LON Class & RDT.xlsx"
+EXCEL_OUTPUT_NAME = "ChildrenExcel\\All Children In XXXX.xlsx"
 
 
 task_configs_temp = {
@@ -231,7 +231,11 @@ task_configs_temp = {
 
 #########################################     find children    ################################################
 
-def findChildren(task_name, next_node = [], previous_node = [], level = 0):
+def findChildren(task_name, next_node=None, previous_node=None, level=0):
+    if next_node is None:
+        next_node = []
+    if previous_node is None:
+        previous_node = []
     children = {CHILD_TYPE: None, BUSNESS_SERVICE: None, CHILD_LEVEL: level, CHILDREN_FIELD: OrderedDict(), NEXT_NODE: None, PREVIOUS_NODE: None}
     task_configs = task_configs_temp.copy()
     task_configs['taskname'] = task_name
