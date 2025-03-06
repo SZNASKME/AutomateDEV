@@ -131,8 +131,9 @@ def getListTaskAdvancedAPI(task_adv_configs, show_response = True, format_str ='
 #############################           Trigger           #######################################
 
 def getTriggerAPI(trigger_configs, show_response = True, format_str ='json'):
+    uri = createURI(TRIGGER_URI, trigger_configs)
     header = formatHeader('Accept', format_str)
-    response = requests.get(url = TRIGGER_URI, json = trigger_configs, auth = auth, headers = header)
+    response = requests.get(url = uri, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")

@@ -45,7 +45,7 @@ def getNamefromCondition(condition):
     return name_list
 
 # Depend to Other (After)
-def checkJobInListConditionDependToOther(df_job, df_root, in_list_condition_dict): # check job in list depend to other
+def findAfterJob(df_job, df_root, in_list_condition_dict): # check job in list depend to other
     all_list_condition_except = [job_name for job_name_list in in_list_condition_dict.values() for job_name in job_name_list] 
     found_list = []
     for index, row in df_job.iterrows():
@@ -78,15 +78,13 @@ def checkJobInListConditionDependToOther(df_job, df_root, in_list_condition_dict
     column_jil = df_job.columns.tolist()
     column_jil = [x for x in column_jil if x not in CUT_COLUMN_LIST]
     columns = CUT_COLUMN_LIST + [FOUND_CONDITION_COLUMN_OUTPUT, ROOT_BOX_FOUND_CONDITION_COLUMN] + column_jil
-    df_job_in_list_depend_to_other = pd.DataFrame(found_list, columns=columns)
-    
-    df_job_in_list_depend_to_other.rename(columns={JOBNAME_COLUMN: JOBNAME_COLUMN + ' (run after list)', FOUND_CONDITION_COLUMN_OUTPUT: FOUND_CONDITION_COLUMN_OUTPUT + ' (in list)'}, inplace=True)
-    
-    return df_job_in_list_depend_to_other
+    df_job_in_list_after = pd.DataFrame(found_list, columns=columns)
+    df_job_in_list_after.rename(columns={JOBNAME_COLUMN: JOBNAME_COLUMN + ' (run after list)', FOUND_CONDITION_COLUMN_OUTPUT: FOUND_CONDITION_COLUMN_OUTPUT + ' (in list)'}, inplace=True)
+    return df_job_in_list_after
 
 
 # Other depend to (Before)
-def checkOtherConditionDependToJobInList(df_job, df_root, in_list_condition_dict): # check the other depend to the job in list
+def findBeforeJob(df_job, df_root, in_list_condition_dict): # check the other depend to the job in list
     all_list_condition = [job_name for job_name_list in in_list_condition_dict.values() for job_name in job_name_list] 
     found_list = []
     for index, row in df_job.iterrows():
@@ -119,9 +117,9 @@ def checkOtherConditionDependToJobInList(df_job, df_root, in_list_condition_dict
     column_jil = df_job.columns.tolist()
     column_jil = [x for x in column_jil if x not in CUT_COLUMN_LIST]
     columns = CUT_COLUMN_LIST + [FOUND_CONDITION_COLUMN_OUTPUT, ROOT_BOX_FOUND_CONDITION_COLUMN] + column_jil
-    df_other_depend_to_job_in_list = pd.DataFrame(found_list, columns=columns)
-    df_other_depend_to_job_in_list.rename(columns={JOBNAME_COLUMN: JOBNAME_COLUMN + ' (in list)', FOUND_CONDITION_COLUMN_OUTPUT: FOUND_CONDITION_COLUMN_OUTPUT + ' (run before list)'}, inplace=True)
-    return df_other_depend_to_job_in_list
+    df_job_in_list_before = pd.DataFrame(found_list, columns=columns)
+    df_job_in_list_before.rename(columns={JOBNAME_COLUMN: JOBNAME_COLUMN + ' (in list)', FOUND_CONDITION_COLUMN_OUTPUT: FOUND_CONDITION_COLUMN_OUTPUT + ' (run before list)'}, inplace=True)
+    return df_job_in_list_before
 
 
 
@@ -169,6 +167,14 @@ def matchJobInList(df, in_list_condition_dict):
     df_job_in_list = pd.DataFrame(found_list)
     return df_job_in_list
 
+
+def move_column_after(df, column_to_move, target_column):
+    col = df.pop(column_to_move)  # Remove the column
+    target_index = df.columns.get_loc(target_column)  # Get the index of the target column
+    df.insert(target_index + 1, column_to_move, col)  # Insert after the target column
+    return df
+
+
 def main():
     
     
@@ -187,13 +193,16 @@ def main():
         print(key, len(value))
     print("---------------------------------")
     print("processing other depend to job in list . . .")
-    df_other_condition = checkOtherConditionDependToJobInList(df_job, df_root, job_in_list_condition_dict)
+    df_other_condition = findBeforeJob(df_job, df_root, job_in_list_condition_dict)
     print("processing job in list depend to other . . .")
-    df_job_condition = checkJobInListConditionDependToOther(df_job, df_root, job_in_list_condition_dict)
+    df_job_condition = findAfterJob(df_job, df_root, job_in_list_condition_dict)
     print("processing job in list . . .")
     df_job_in_list = matchJobInList(df_job, job_in_list_condition_dict)
+    df_job_in_list_insert_root = df_job_in_list.copy()
+    df_job_in_list_insert_root[ROOT_BOX_COLUMN] = df_root[df_root[JOBNAME_COLUMN].isin(df_job_in_list[JOBNAME_COLUMN])][ROOT_BOX_COLUMN].values
+    df_job_in_list_insert_root = move_column_after(df_job_in_list_insert_root, ROOT_BOX_COLUMN, BOXNAME_COLUMN)
     print("---------------------------------")
-    createExcel(EXCEL_FILENAME, (OTHER_DEPEND_TO, df_other_condition), (JIL_CUT, df_job_in_list), (DEPEND_TO_OTHER, df_job_condition))
+    createExcel(EXCEL_FILENAME, (OTHER_DEPEND_TO, df_other_condition), (JIL_CUT, df_job_in_list_insert_root), (DEPEND_TO_OTHER, df_job_condition))
     
 if __name__ == '__main__':
     main()

@@ -16,16 +16,17 @@ TASK_TYPE_LIST = ["taskFileMonitor", "taskUniversal"]
 
 
 BUSINESS_SERVICES_LIST = [
-    'A0076 - Data Warehouse ETL',
-    'A0128 - Marketing Data Mart',
-    'A0140 - NCB Data Submission',
-    'A0329 - ODS',
-    'A0356 - Big Data Foundation Platform',
-    #'A0356 - Big Data Foundation Platform (None-PRD)',
-    'A0033 - BOT DMS (Data Management System)',
-    'A0031 - Data Mart',
-    'A0360 - Oracle Financial Services Analytical App',
-    #'A00000 - AskMe - Delete Tasks',
+    # 'A0076 - Data Warehouse ETL',
+    # 'A0128 - Marketing Data Mart',
+    # 'A0140 - NCB Data Submission',
+    # 'A0329 - ODS',
+    # 'A0356 - Big Data Foundation Platform',
+    # 'A0356 - Big Data Foundation Platform (None-PRD)',
+    # 'A0033 - BOT DMS (Data Management System)',
+    # 'A0031 - Data Mart',
+    # 'A0360 - Oracle Financial Services Analytical App',
+    # 'A00000 - AskMe - Delete Tasks',
+    'FEB24_2025'
 ]
 
 task_list_configs_temp = {
@@ -38,8 +39,9 @@ task_configs_temp = {
     'taskname': None,
 }
 
-JSON_OUTPUT_FILE = 'CommandTaskLog_DWH_EXA_FILPTH.json'
-EXCEL_OUTPUT_FILE = 'CommandTaskLog_DWH_EXA_FILPTH.xlsx'
+JSON_OUTPUT_FILE = 'CommandTaskLog_NEW.json'
+EXCEL_OUTPUT_FILE = 'CommandTaskLog_NEW.xlsx'
+EXCEL_OUTPUT_SHEET = 'TaskLog'
 
 operation_pairs = [
     {
@@ -49,8 +51,32 @@ operation_pairs = [
             'agentCluster': 'dwhprod_vr'
         },
         'exclude_pairs': []
-            
     },
+    {
+        'char': r'${DWH_DWHPROD_FILPTH}',
+        'new_char': r'${DWH_EXA_FILPTH}',
+        'active_condition': {
+            'agentCluster': 'dwhprod_vr'
+        },
+        'exclude_pairs': []
+    },
+    {
+        'char': r'${DWH_DWHPROD_FXFILPTH}',
+        'new_char': r'${DWH_EXA_FXFILPTH}',
+        'active_condition': {
+            'agentCluster': 'dwhprod_vr'
+        },
+        'exclude_pairs': []
+        
+    },
+    {
+        'char': r'${FXFILPTH}',
+        'new_char': r'${DWH_EXA_FXFILPTH}',
+        'active_condition': {
+            'agentCluster': 'dwhprod_vr'
+        },
+    },
+    
     {
         'char': r'${FILPTH}',
         'new_char': r'${DWH_DS_FILPTH}',
@@ -58,6 +84,38 @@ operation_pairs = [
             'agentCluster': 'dsdbprd_vr'
         },
         'exclude_pairs': []
+    },
+    {
+        'char': r'${DWH_DSDB_FILPTH}',
+        'new_char': r'${DWH_DS_FILPTH}',
+        'active_condition': {
+            'agentCluster': 'dsdbprd_vr'
+        },
+        'exclude_pairs': []
+    },
+    {
+        'char': r'$FILPTH',
+        'new_char': r'${DWH_DS_FILPTH}',
+        'active_condition': {
+            'agentCluster': 'dsdbprd_vr'
+        },
+        'exclude_pairs': []
+    },
+    
+    {
+        'char': '\"',
+        'new_char': '\\\"',
+        'active_condition': {},
+        'exclude_pairs': [
+            {
+               "start": '$(',
+               "end": ')'
+            },
+            {
+               "start": '${',
+               "end": '}'
+            }
+        ]
     }
 ]
 exclude_pairs_range = [
@@ -132,41 +190,52 @@ def updateCommandTask(task_list):
                 text_to_replace = None
         else:
             continue
+        replaced_text = text_to_replace
+        have_task_update = False
+        
         
         for operation in operation_pairs:
             char = operation['char']
             new_char = operation['new_char']
             active_condition = operation['active_condition']
             exclude_pairs = operation['exclude_pairs']
+            update_text = False
             
-            update_task = all(task_data.get(key) == value for key, value in active_condition.items())
+            if not active_condition:
+                update_text= True
+            else:
+                update_text = all(task_data.get(key) == value for key, value in active_condition.items())
             
-            if text_to_replace and update_task:
+            if text_to_replace and update_text:
                 if char in text_to_replace:
-                    replaced_text = replaceCommand(text_to_replace, new_char, char, exclude_pairs)
+                    replaced_text = replaceCommand(replaced_text, new_char, char, exclude_pairs)
                     replaced_text = replaceCommand(replaced_text, char, new_char, exclude_pairs)
+                    have_task_update = True
                     
-                    if task_data['type'] == "taskFileMonitor":
-                        task_data['fileName'] = replaced_text
-                    elif task_data['type'] == "taskUniversal":
-                        task_data['largeTextField1']['value'] = replaced_text
-                    
-                    response_update = updateTaskAPI(task_data)
-                    if response_update.status_code == 200:
-                        update_log.append({
-                            "taskname": task['name'],
-                            "message": "Command updated"
-                        })
-                    else:
-                        update_log.append({
-                            "taskname": task['name'],
-                            "error": f"{response_update.status_code} - {response_update.text}"
-                        })
-                else:
-                    update_log.append({
-                        "taskname": task['name'],
-                        "message": "No target char in command"
-                    })
+        if not have_task_update:
+            update_log.append({
+                "taskname": task['name'],
+                "message": "No any target char in command"
+            })
+            continue
+        
+        if task_data['type'] == "taskFileMonitor":
+            task_data['fileName'] = replaced_text
+        elif task_data['type'] == "taskUniversal":
+            task_data['largeTextField1']['value'] = replaced_text
+        
+        response_update = updateTaskAPI(task_data)
+        if response_update.status_code == 200:
+            update_log.append({
+                "taskname": task['name'],
+                "message": "Command updated"
+            })
+        else:
+            update_log.append({
+                "taskname": task['name'],
+                "error": f"{response_update.status_code} - {response_update.text}"
+            })
+    
                 
     return update_log
 
@@ -176,7 +245,7 @@ def main():
     userpass = auth['ASKME_STB']
     updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
     domain_url = loadJson('Domain.json')
-    domain = domain_url['1.174']
+    domain = domain_url['1.226']
     updateURI(domain)
     
     task_list = getTaskList()
@@ -188,7 +257,7 @@ def main():
         print(json.dumps(update_log, indent=4))
         createJson(JSON_OUTPUT_FILE, update_log)
         df_log = pd.DataFrame(update_log)
-        createExcel(EXCEL_OUTPUT_FILE, df_log)
+        createExcel(EXCEL_OUTPUT_FILE, (EXCEL_OUTPUT_SHEET, df_log))
 
 
         

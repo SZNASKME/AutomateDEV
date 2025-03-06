@@ -8,22 +8,54 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from utils.readExcel import getDataExcel
 from utils.createFile import createExcel, createJson
 
-OUTPUT_EXCEL_NAME = 'Children in Lonclass & RDT.xlsx'
+OUTPUT_EXCEL_NAME = 'Children in All DWH_DAILY.xlsx'
 OUTPUT_SHEETNAME = 'All Children in Box'
 
 box_list = [
-    'DI_DWH_LCS_S.CHK_DATA_B',
-    'DI_DWH_LON_CLASS_B',
-    'DWH_LCS_W.CHK_DATA_B',
-    #'DWH_LON_CLASS_WEEKLY_B',
-    'DWH_RDT_ACS_PREP_M_B',
-    'DWH_RDT_BU_MATRIX_Q_B',
-    'DWH_RDT_DAILY_B',
-    'DWH_RDT_G1_MTHLY_B',
-    'DWH_RDT_G2_MTHLY_B',
-    'DWH_RDT_INBOUND_D_B',
-    'DWH_RDT_INBOUND_M_B',
-    'DWH_RDT_ONETIME_M_B'
+    "DWH_P_CTUNI_GN_B",
+    "DWH_P_IM_D_B",
+    "DWH_P_SK_SKPY_CMCRSC_01_D_C.TRIG_C",
+    "DWH_P_CTUNI_FD_B",
+    "DWH_P_GN_D_B",
+    "DWH_P_RM_D_B.FINISH_MAIL_C",
+    "DWH_P_ALS_D_B",
+    "DWH_P_HCM_LST_D_B",
+    "DWH_P_OFSA_COR_INTRNL_ORG_XXX_D_B",
+    "DWH_P_RM_D_B",
+    "DWH_P_RM_D_B.START_MAIL_C",
+    "DWH_ACCT_CROSS_REF_APP_D_B",
+    "DWH_P_CC_D_B",
+    "DWH_P_ST_D_B",
+    "DWH_DAILY_B",
+    "ODS_DAILY_B",
+    "DWH_P_MF_D_B",
+    "DWH_MIB_IMPORT_MTHLY_B",
+    "DWH_DEP_D.STMT_ODS_B",
+    "DWH_TDR_RELIEF_DAILY_B",
+    "DWH_EMAIL_STATUS_LOG_B",
+    "DWH_HPBD_DAILY_B.CHECK_DT_C",
+    "DWH_SCS_DISPUTE_TRANSACTION_D_TRIGGER_B",
+    "DWH_P_RM_RMCONSENT_D_B",
+    "DWH_AUTO_LOAN_DAILY_B",
+    "DWH_P_ESTAMP_DUTY_D_B",
+    "DWH_CMS_API_D_B",
+    "DWH_PROMPTPAY_INFO_D_B",
+    "DWH_SCV.D.UPD_AR_LN_C.TRIG_C",
+    "DWH_P_HCM_D_B",
+    "DWH_P_MIB_D_B",
+    "DWH_CUS.D.UPD_RMCUS_MAP.NEW_C.TRIG_C",
+    "DWH_CHQ_CHEQUE_IN_RETURN_D_B",
+    "DWH_MIB_IMPORT_DAILY_B",
+    "DWH_SCS_INTEREST_AND_CHARGES_D_TRIGGER_B",
+    "DWH_ALS_PAST_DUE_DAILY_B",
+    "DWH_P_EC_ENTERPRISE_CUSTOMER_D_B",
+    "DWH_P_CTUNI_D_B",
+    "DWH_P_IM_MTTXN_D_B",
+    "DWH_P_CTUNI_MIB_B",
+    "DWH_P_SCS_MODEL_D_B",
+    "DWH_P_ST_MTTXN_D_B",
+    "DWH_P_ALSPAMC_D_B",
+    "DWH_P_ALSBILL_D_B",
 ]
 
 
@@ -81,15 +113,15 @@ def listNestedDictToDataFrame(nested_dict):
             print(f"Box {box_name} has no children")
             continue
         list_all_children = flattenHierarchy(children)
-        max_depth = max(len(row["Path"]) for row in list_all_children)
+        max_depth = max(len(row["Path"]) for row in list_all_children) if list_all_children else 0
         columns = ["jobName", "Job Level", "Main Box"] + [f"Level {i+1}" for i in range(max_depth)]
         input_data = []
         input_data.append([box_name, 0, box_name] + [""] * (max_depth - 1))
         for row in list_all_children:
             padded_row = row["Path"] + [""] * (max_depth - len(row["Path"]))
             input_data.append([row["Child"], len(row["Path"]), box_name] + padded_row)
-        df_list_children = pd.DataFrame(input_data, columns=columns)
-        df_children_list.append(df_list_children)
+        df_children = pd.DataFrame(input_data, columns=columns)
+        df_children_list.append(df_children)
     
     df_all_children = pd.concat(df_children_list, ignore_index=True)
     return df_all_children
