@@ -26,7 +26,7 @@ BUSINESS_SERVICES_LIST = [
     # 'A0031 - Data Mart',
     # 'A0360 - Oracle Financial Services Analytical App',
     # 'A00000 - AskMe - Delete Tasks',
-    'FEB24_2025'
+    'MAR10_2025'
 ]
 
 task_list_configs_temp = {
@@ -119,14 +119,14 @@ operation_pairs = [
     }
 ]
 exclude_pairs_range = [
-        #{
+        # {
         #    "start": '$(',
         #    "end": ')'
-        #},
-        #{
+        # },
+        # {
         #    "start": '${',
         #    "end": '}'
-        #}
+        # }
 ]
 
 

@@ -5,7 +5,7 @@ import json
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-from utils.stbAPI import updateAuth, updateURI, getTaskAPI
+from utils.stbAPI import updateAuth, updateAPIAuth, updateURI, getTaskAPI
 from utils.readFile import loadJson
 from utils.createFile import createExcel, createJson
 
@@ -13,7 +13,34 @@ from collections import OrderedDict
 
 # ONREQUEST_B
 workflow_list = [
-    'DWH_ONREQUEST_B'
+    'DWH_AFTER_DAILY_B',
+    'DWH_MIS_ALL_DAY_B',
+    'DWH_MIS_D01_B',
+    'DWH_MIS_D02_B',
+    'DWH_MIS_D03_B',
+    'DWH_MIS_D04_B',
+    'DWH_MIS_D05_B',
+    'DWH_MIS_D06_B',
+    'DWH_MIS_D07_B',
+    'DWH_MIS_D08_B',
+    'DWH_MIS_D09_B',
+    'DWH_MIS_D10_B',
+    'DWH_MIS_D11_B',
+    'DWH_MIS_D12_B',
+    'DWH_MIS_D13_B',
+    'DWH_MIS_D14_B',
+    'DWH_MIS_D15_B',
+    'DWH_MIS_D16_B',
+    'DWH_MIS_D17_B',
+    'DWH_MIS_D18_B',
+    'DWH_MIS_D20_B',
+    'DWH_MIS_D22_B',
+    'DWH_MIS_D24_B',
+    'DWH_MIS_D25_B',
+    'DWH_MIS_D26_B',
+    'DWH_MIS_D28_B',
+    'DWH_MONTH_END_B'
+
 ]
 
 # ONICE_ONHOLD_B
@@ -584,7 +611,7 @@ NEXT_NODE = "Next Node"
 PREVIOUS_NODE = "Previous Node"
 BUSNESS_SERVICE = "Business Service"
 
-EXCEL_OUTPUT_NAME = "ChildrenExcel\\All Children In DWH_ONREQUEST (All).xlsx"
+EXCEL_OUTPUT_NAME = "ChildrenExcel\\All Children In All Day & After Daily (PROD).xlsx"
 
 
 task_configs_temp = {
@@ -709,8 +736,8 @@ def flattenChildrenHierarchy(children_json, parent_path=None):
         child_business_service = child_data[BUSNESS_SERVICE]
         child_level = child_data[CHILD_LEVEL]
         child_type = child_data["Task Type"]
-        next_node = ", ".join(child_data["Next Node"]) if child_data["Next Node"] else None
-        previous_node = ", ".join(child_data["Previous Node"]) if child_data["Previous Node"] else None
+        next_node = " // ".join(child_data["Next Node"]) if child_data["Next Node"] else None
+        previous_node = " // ".join(child_data["Previous Node"]) if child_data["Previous Node"] else None
         rows.append({
             "Path": current_path,
             "Taskname": child_name,
@@ -775,10 +802,12 @@ def listChildrenHierarchyToDataFrameAllInOne(children_dict):
 def main():
     auth = loadJson('auth.json')
     #userpass = auth['ASKME_STB']
-    userpass = auth['TTB']
-    updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
+    userpass = auth['TTB_PROD']
+    #updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
+    updateAPIAuth(userpass["API_KEY"])
     domain_url = loadJson('Domain.json')
-    domain = domain_url['TTB_UAT']
+    domain = domain_url['TTB_PROD']
+    #domain = domain_url['TTB_UAT']
     #domain = domain_url['1.86']
     updateURI(domain)
     
