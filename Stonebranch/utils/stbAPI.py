@@ -71,6 +71,14 @@ def updateAPIAuth(api_key):
     global api_auth
     api_auth = api_key
 
+def clearAuth():
+    global auth
+    auth = None
+    global api_auth
+    api_auth = None
+
+
+
 def formatHeader(key, format_str):
     headers = {}
     #if API_KEY is not None:

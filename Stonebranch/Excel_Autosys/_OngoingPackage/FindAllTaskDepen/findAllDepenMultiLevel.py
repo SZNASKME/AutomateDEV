@@ -553,13 +553,13 @@ def main():
     df_all_after_depen_job, after_job_dict = recursiveFindAfterJob(df_job, df_root, job_list)
     print("processing find all before of after job . . .")
     after_job_list = df_all_after_depen_job[JOBNAME_COLUMN + ' (run after list)'].tolist()
-    df_all_before_of_after_depen_job, before_of_after_job_dict = recursiveFindBeforeJobOptimize(df_job, df_root, after_job_list, cond_dict=reversed_cond_dict, root_mode=True)
+    df_job_except_job_list = df_job[~df_job[JOBNAME_COLUMN].isin(job_list)]
+    df_all_before_of_after_depen_job, before_of_after_job_dict = recursiveFindBeforeJobOptimize(df_job_except_job_list, df_root, after_job_list, cond_dict=reversed_cond_dict, root_mode=True)
     print("processing job in list . . .")  # Uncommenting this line to display the processing status
     df_job_in_list = matchJobInList(df_job, df_root, job_in_list_condition_dict)
     df_all_before_job = matchJobDict(df_job, df_root, before_job_dict)
     df_all_after_job = matchJobDict(df_job, df_root, after_job_dict)
     #df_all_before_of_after_job = matchJobDict(df_job, df_root, before_of_after_job_dict)
-    
     print("---------------------------------")  # Uncommenting this line to display a separator for output
     sheet_set = (
         (BEFORE_DEPEN, df_all_before_depen_job),

@@ -2,17 +2,18 @@ import sys
 import os
 import pandas as pd
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from io import StringIO
 from utils.createFile import createExcel
 from utils.readFile import loadJson
-from utils.stbAPI import updateAuth, updateURI, runReportAPI
+from utils.stbAPI import updateAuth, updateURI, runReportAPI, updateAPIAuth
 
-EXCEL_NAME = 'TaskReport.xlsx'
+EXCEL_NAME = 'AllWorkflowTaskReport.xlsx'
 
 report_configs_temp = {
-    'reporttitle': 'AskMe - Tasks Report',
+    #'reporttitle': 'UAC - Task List Credential By Task',
+    'reporttitle': 'UAC - Workflow List Of Tasks By Workflow',
 }
 
 
@@ -36,10 +37,13 @@ def getReport():
     
 def main():
     auth = loadJson('Auth.json')
-    userpass = auth['TTB']
-    updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
+    #userpass = auth['TTB']
+    userpass = auth['TTB_PROD']
+    updateAPIAuth(userpass['API_KEY'])
+    #updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
     domain_url = loadJson('Domain.json')
-    domain = domain_url['TTB_UAT']
+    #domain = domain_url['TTB_UAT']
+    domain = domain_url['TTB_PROD']
     updateURI(domain)
     getReport()
     

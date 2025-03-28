@@ -8,55 +8,38 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from utils.readExcel import getDataExcel
 from utils.createFile import createExcel, createJson
 
-OUTPUT_EXCEL_NAME = 'Children in All DWH_DAILY.xlsx'
+OUTPUT_EXCEL_NAME = 'Children in FLPN.xlsx'
 OUTPUT_SHEETNAME = 'All Children in Box'
 
+JOBNAME_COLUMN = 'jobName'
+BOXNAME_COLUMN = 'box_name'
+JOBTYPE_COLUMN = 'jobType'
+
 box_list = [
-    "DWH_P_CTUNI_GN_B",
-    "DWH_P_IM_D_B",
-    "DWH_P_SK_SKPY_CMCRSC_01_D_C.TRIG_C",
-    "DWH_P_CTUNI_FD_B",
-    "DWH_P_GN_D_B",
-    "DWH_P_RM_D_B.FINISH_MAIL_C",
-    "DWH_P_ALS_D_B",
-    "DWH_P_HCM_LST_D_B",
-    "DWH_P_OFSA_COR_INTRNL_ORG_XXX_D_B",
-    "DWH_P_RM_D_B",
-    "DWH_P_RM_D_B.START_MAIL_C",
-    "DWH_ACCT_CROSS_REF_APP_D_B",
-    "DWH_P_CC_D_B",
-    "DWH_P_ST_D_B",
-    "DWH_DAILY_B",
-    "ODS_DAILY_B",
-    "DWH_P_MF_D_B",
-    "DWH_MIB_IMPORT_MTHLY_B",
-    "DWH_DEP_D.STMT_ODS_B",
-    "DWH_TDR_RELIEF_DAILY_B",
-    "DWH_EMAIL_STATUS_LOG_B",
-    "DWH_HPBD_DAILY_B.CHECK_DT_C",
-    "DWH_SCS_DISPUTE_TRANSACTION_D_TRIGGER_B",
-    "DWH_P_RM_RMCONSENT_D_B",
-    "DWH_AUTO_LOAN_DAILY_B",
-    "DWH_P_ESTAMP_DUTY_D_B",
-    "DWH_CMS_API_D_B",
-    "DWH_PROMPTPAY_INFO_D_B",
-    "DWH_SCV.D.UPD_AR_LN_C.TRIG_C",
-    "DWH_P_HCM_D_B",
-    "DWH_P_MIB_D_B",
-    "DWH_CUS.D.UPD_RMCUS_MAP.NEW_C.TRIG_C",
-    "DWH_CHQ_CHEQUE_IN_RETURN_D_B",
-    "DWH_MIB_IMPORT_DAILY_B",
-    "DWH_SCS_INTEREST_AND_CHARGES_D_TRIGGER_B",
-    "DWH_ALS_PAST_DUE_DAILY_B",
-    "DWH_P_EC_ENTERPRISE_CUSTOMER_D_B",
-    "DWH_P_CTUNI_D_B",
-    "DWH_P_IM_MTTXN_D_B",
-    "DWH_P_CTUNI_MIB_B",
-    "DWH_P_SCS_MODEL_D_B",
-    "DWH_P_ST_MTTXN_D_B",
-    "DWH_P_ALSPAMC_D_B",
-    "DWH_P_ALSBILL_D_B",
+
 ]
+
+# def recursiveSearchChildrenInBoxToSet(df_job, box_name, children_set=None, box_children_dict=None):
+#     if children_set is None:
+#         children_set = set()
+#     if box_children_dict is None:
+#         box_children_dict = {}
+
+#     if box_name not in df_job[JOBNAME_COLUMN].values:
+#         return None
+
+#     if box_name not in box_children_dict:
+#         df_job_filtered = df_job[df_job[BOXNAME_COLUMN] == box_name]
+#         box_children_dict[box_name] = df_job_filtered[JOBNAME_COLUMN].tolist()
+#         children_set.add(box_name)
+
+#     for job_name in box_children_dict[box_name]:
+#         if job_name in df_job[BOXNAME_COLUMN].values:
+#             children_set = recursiveSearchChildrenInBoxToSet(df_job, job_name, children_set, box_children_dict)
+#         else:
+#             children_set.add(job_name)
+
+#     return children_set
 
 
 def recursiveSearchChildrenInBox(df_job, box_name):
@@ -85,6 +68,29 @@ def searchAllChildrenInBox(df_job, box_list):
             print(f"Box {box_name} not found in JIL")
         
     return all_children_dict
+
+# def getAllChildrenJob(df_job, all_process_job):
+#     all_child_job = set()
+#     df_job_processed = df_job.copy()
+#     # for row in df_job_processed.itertuples(index=False):
+#     #     job_name = getattr(row, JOBNAME_COLUMN)
+#     #     box_name = getattr(row, BOXNAME_COLUMN)
+        
+#     #     if job_name in all_process_job or box_name in all_process_job:
+#     #         all_child_job.add(job_name)
+    
+#     for row in df_job_processed.itertuples(index=False):
+#         job_name = getattr(row, JOBNAME_COLUMN)
+#         job_type = getattr(row, JOBTYPE_COLUMN)
+#         if job_name in all_process_job:
+#             if job_type == 'BOX':
+#                 children_set = recursiveSearchChildrenInBoxToSet(df_job, job_name)
+#                 if children_set is not None:
+#                     all_child_job.update(children_set)
+#             else:
+#                     all_child_job.add(job_name)
+    
+#     return list(all_child_job)
 
 def flattenHierarchy(nested_dict, parent_path = None, depth = 0):
     if parent_path is None:
@@ -129,7 +135,8 @@ def listNestedDictToDataFrame(nested_dict):
 
 def main():
     df_job = getDataExcel("input main job file")
-    
+    df_list = getDataExcel("input list of jobs")
+    box_list = df_list[JOBNAME_COLUMN].tolist()
     all_children_dict = searchAllChildrenInBox(df_job, box_list)
     createJson('all_children.json', all_children_dict)
     #print(json.dumps(all_children_dict, indent=4))

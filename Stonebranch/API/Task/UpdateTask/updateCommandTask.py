@@ -26,7 +26,7 @@ BUSINESS_SERVICES_LIST = [
     # 'A0031 - Data Mart',
     # 'A0360 - Oracle Financial Services Analytical App',
     # 'A00000 - AskMe - Delete Tasks',
-    'MAR10_2025'
+    'MAR24_2025'
 ]
 
 task_list_configs_temp = {
@@ -75,6 +75,7 @@ operation_pairs = [
         'active_condition': {
             'agentCluster': 'dwhprod_vr'
         },
+        'exclude_pairs': []
     },
     
     {
