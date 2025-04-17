@@ -9,11 +9,11 @@ from utils.createFile import createExcel
 from utils.readFile import loadJson
 from utils.stbAPI import updateAuth, updateURI, runReportAPI, updateAPIAuth
 
-EXCEL_NAME = 'AllWorkflowTaskReport.xlsx'
+EXCEL_NAME = 'LateFinish.xlsx'
 
 report_configs_temp = {
     #'reporttitle': 'UAC - Task List Credential By Task',
-    'reporttitle': 'UAC - Workflow List Of Tasks By Workflow',
+    'reporttitle': 'AskMe - List Specific Task',
 }
 
 
@@ -37,13 +37,13 @@ def getReport():
     
 def main():
     auth = loadJson('Auth.json')
-    #userpass = auth['TTB']
-    userpass = auth['TTB_PROD']
-    updateAPIAuth(userpass['API_KEY'])
-    #updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
+    userpass = auth['TTB']
+    #userpass = auth['TTB_PROD']
+    #updateAPIAuth(userpass['API_KEY'])
+    updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
     domain_url = loadJson('Domain.json')
-    #domain = domain_url['TTB_UAT']
-    domain = domain_url['TTB_PROD']
+    domain = domain_url['TTB_UAT']
+    #domain = domain_url['TTB_PROD']
     updateURI(domain)
     getReport()
     

@@ -26,7 +26,7 @@ BUSINESS_SERVICES_LIST = [
     # 'A0031 - Data Mart',
     # 'A0360 - Oracle Financial Services Analytical App',
     # 'A00000 - AskMe - Delete Tasks',
-    'MAR24_2025'
+    'APR03_2025'
 ]
 
 task_list_configs_temp = {
@@ -119,6 +119,8 @@ operation_pairs = [
         ]
     }
 ]
+
+
 exclude_pairs_range = [
         # {
         #    "start": '$(',
@@ -246,7 +248,7 @@ def main():
     userpass = auth['ASKME_STB']
     updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
     domain_url = loadJson('Domain.json')
-    domain = domain_url['1.226']
+    domain = domain_url['1.86']
     updateURI(domain)
     
     task_list = getTaskList()

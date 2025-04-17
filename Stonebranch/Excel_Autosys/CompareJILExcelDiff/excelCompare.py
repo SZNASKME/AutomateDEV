@@ -8,7 +8,7 @@ from utils.readExcel import getDataExcel
 from utils.createFile import createExcel
 
 OUTPUT_FILE = 'Difference.xlsx'
-COMPARE_COLUMN = 'Name'
+COMPARE_COLUMN = 'jobName'
 
 
 def compareData(dfm, dfc, compare_column = None):

@@ -8,10 +8,16 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 from utils.stbAPI import updateAuth, updateURI, getListTaskAPI, getTaskAPI, updateTaskAPI
 from utils.readFile import loadJson
 from utils.createFile import createJson
+from utils.readExcel import getDataExcel
+
 
 
 API_TASK_TYPE = [1, 6, 99]
 TASK_TYPE_LIST = ["taskFileMonitor", "taskWorkflow", "taskUniversal"]
+
+TASKNAME = 'Taskname'
+
+
 
 BUSINESS_SERVICE_LIST = [
     "FEB17_2025"
@@ -53,16 +59,20 @@ def updateActionTask(task_list):
         #if task_data['type'] == "taskUnix" or task_data['type'] == "taskWindows":
         #    command = task_data['command']
         if task_data['type'] in TASK_TYPE_LIST:
-            action = task_data['actions']['emailNotifications']
+            #action = task_data['actions']['emailNotifications']
+            abort_action = task_data['action']['abortActions']
+            system_oper_action = task_data['action']['systemOperations']
         else:
             continue
-        if action:
-            task_data['actions']['emailNotifications'] = []
+        if abort_action or system_oper_action:
+            #task_data['actions']['emailNotifications'] = []
+            task_data['action']['abortActions'] = []
+            task_data['action']['systemOperations'] = []
             response_update = updateTaskAPI(task_data)
             if response_update.status_code == 200:
                 update_log.append({
                     "taskname": task['name'],
-                    "message": "Email Noti updated"
+                    "message": "Action Noti updated"
                 })
             elif response_update.status_code != 200:
                 update_log.append({
@@ -72,7 +82,7 @@ def updateActionTask(task_list):
         else:
             update_log.append({
                 "taskname": task['name'],
-                "message": "No Email Noti found"
+                "message": "No Action Noti found"
             })
             
     return update_log
@@ -86,7 +96,11 @@ def main():
     domain = domain_url['1.226']
     updateURI(domain)
     
-    task_list = getTaskList()
+    #task_list = getTaskList()
+    df_task = getDataExcel()
+    task_list = df_task[TASKNAME].tolist()
+    
+    
     print(len(task_list))
     if not task_list:
         print("No task found.")

@@ -8,7 +8,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from utils.readExcel import getDataExcel
 from utils.createFile import createExcel, createJson
 
-OUTPUT_EXCEL_NAME = 'Children in FLPN.xlsx'
+OUTPUT_EXCEL_NAME = 'Children in XXXXX.xlsx'
 OUTPUT_SHEETNAME = 'All Children in Box'
 
 JOBNAME_COLUMN = 'jobName'

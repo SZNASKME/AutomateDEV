@@ -622,6 +622,7 @@ BUSNESS_SERVICE = "Business Service"
 EXTRA_1 = "Execution Restriction"
 EXTRA_2 = "Late Finish"
 EXTRA_3 = "Late Finish Duration"
+EXTRA_4 = "Actions"
 
 
 MAIN_WORKFLOW = "Main Workflow"
@@ -655,6 +656,7 @@ def findChildren(task_name, next_node=None, previous_node=None, level=0, workflo
                     EXTRA_1: None,
                     EXTRA_2: None,
                     EXTRA_3: None,
+                    EXTRA_4: None,
                     CHILDREN_FIELD: OrderedDict(), 
                     NEXT_NODE: None, 
                     PREVIOUS_NODE: None}
@@ -665,6 +667,7 @@ def findChildren(task_name, next_node=None, previous_node=None, level=0, workflo
         children[EXTRA_1] = task_data['executionRestriction']
         children[EXTRA_2] = task_data['lfEnabled']
         children[EXTRA_3] = task_data['lfDuration']
+        children[EXTRA_4] = task_data['actions'] if task_data['actions'] else None
         
         children[BUSNESS_SERVICE] = ", ".join(task_data["opswiseGroups"])
         if task_data['type'] == "taskWorkflow":
@@ -766,6 +769,7 @@ def flattenChildrenHierarchy(children_json, parent_path=None):
             "Execution Restriction": children_json[EXTRA_1],
             "Late Finish": children_json[EXTRA_2],
             "Late Finish Duration": children_json[EXTRA_3],
+            "Actions": children_json[EXTRA_4],
             "Previous Node": None,
             "Next Node": None
         })
@@ -780,6 +784,7 @@ def flattenChildrenHierarchy(children_json, parent_path=None):
         execution_restriction = child_data[EXTRA_1]
         late_finish = child_data[EXTRA_2]
         late_finish_duration = child_data[EXTRA_3]
+        actions = child_data[EXTRA_4]
         rows.append({
             "Path": current_path,
             "Taskname": child_name,
@@ -790,6 +795,7 @@ def flattenChildrenHierarchy(children_json, parent_path=None):
             EXTRA_1: execution_restriction,
             EXTRA_2: late_finish,
             EXTRA_3: late_finish_duration,
+            EXTRA_4: actions,
             PREVIOUS_NODE: previous_node,
             NEXT_NODE: next_node
         })
@@ -807,15 +813,15 @@ def listChildrenHierarchyToDataFrameAllInOne(children_dict):
         if flattened_rows:
             max_depth = max(max_depth, max(len(row["Path"]) for row in flattened_rows))
         
-    columns = ["Business Service", "Taskname", "Task Type", "Task Level", "Execution Restriction", "Late Finish", "Late Finish Duration", "Workflow", "Main Workflow"] + [f"Sub Level {i+1}" for i in range(max_depth)] + ["Previous Task", "Next Task"]
+    columns = ["Business Service", "Taskname", "Task Type", "Task Level", "Execution Restriction", "Late Finish", "Late Finish Duration", "Actions", "Workflow", "Main Workflow"] + [f"Sub Level {i+1}" for i in range(max_depth)] + ["Previous Task", "Next Task"]
     
     for workflow_name, workflow_rows in workflow_children_dict.items():
         for row in workflow_rows:
             padded_path = row["Path"] + [""] * (max_depth - len(row["Path"]))
             if row[CHILD_LEVEL] == 0:
-                df_children_list.append([row[BUSNESS_SERVICE], workflow_name, row[CHILD_TYPE], row[CHILD_LEVEL], row[EXTRA_1], row[EXTRA_2], row[EXTRA_3], row[WORKFLOW_NAME], workflow_name] + padded_path + [row[PREVIOUS_NODE], row[NEXT_NODE]])
+                df_children_list.append([row[BUSNESS_SERVICE], workflow_name, row[CHILD_TYPE], row[CHILD_LEVEL], row[EXTRA_1], row[EXTRA_2], row[EXTRA_3], row[EXTRA_4], row[WORKFLOW_NAME], workflow_name] + padded_path + [row[PREVIOUS_NODE], row[NEXT_NODE]])
             else:
-                df_children_list.append([row[BUSNESS_SERVICE], row["Taskname"], row[CHILD_TYPE], row[CHILD_LEVEL], row[EXTRA_1], row[EXTRA_2], row[EXTRA_3], row[WORKFLOW_NAME], workflow_name] + padded_path + [row[PREVIOUS_NODE], row[NEXT_NODE]])
+                df_children_list.append([row[BUSNESS_SERVICE], row["Taskname"], row[CHILD_TYPE], row[CHILD_LEVEL], row[EXTRA_1], row[EXTRA_2], row[EXTRA_3], row[EXTRA_4], row[WORKFLOW_NAME], workflow_name] + padded_path + [row[PREVIOUS_NODE], row[NEXT_NODE]])
             #print(json.dumps(data, indent=10))
     df_children_list = pd.DataFrame(df_children_list, columns=columns)
 
@@ -847,15 +853,15 @@ def listChildrenHierarchyToDataFrameAllInOne(children_dict):
 
 def main():
     auth = loadJson('auth.json')
-    #userpass = auth['ASKME_STB']
+    userpass = auth['ASKME_STB']
     #userpass = auth['TTB_PROD']
-    userpass = auth['TTB']
+    #userpass = auth['TTB']
     updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
     #updateAPIAuth(userpass["API_KEY"])
     domain_url = loadJson('Domain.json')
     #domain = domain_url['TTB_PROD']
-    domain = domain_url['TTB_UAT']
-    #domain = domain_url['1.86']
+    #domain = domain_url['TTB_UAT']
+    domain = domain_url['1.173']
     updateURI(domain)
     
     df_job_list = getDataExcel("Get Excel Job List")
