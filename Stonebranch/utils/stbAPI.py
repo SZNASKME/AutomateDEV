@@ -16,6 +16,8 @@ LIST_TRIGGER_URI = f"{DOMAIN}/trigger/list"
 LIST_TRIGGER_ADV_URI = f"{DOMAIN}/trigger/listadv"
 LIST_QUALIFYING_TRIGGER_URI = f"{DOMAIN}/trigger/qualifyingtimes"
 
+BUNDLE_URI = f"{DOMAIN}/bundle"
+BUNDLE_REPORT_URI = f"{DOMAIN}/bundle/report"
 PROMOTE_BUNDLE_URI = f"{DOMAIN}/bundle/promote"
 
 TASK_IN_WORKFLOW_URI = f"{DOMAIN}/workflow/vertices"
@@ -28,6 +30,8 @@ LIST_PARENT_TASK_URI = f"{DOMAIN}/task/parent/list"
 RUN_REPORT_URI = f"{DOMAIN}/report/run"
 
 BUSINESS_SERVICE_URI = f"{DOMAIN}/businessservice"
+
+AUDIT_LIST_URI = f"{DOMAIN}/audit/list"
 
 auth = HTTPBasicAuth('?','?')
 api_auth = None
@@ -46,8 +50,8 @@ def createURI(uri, configs):
 
 def updateURI(changed_domain):
     global TASK_URI, LIST_TASK_URI, LIST_TASK_ADV_URI, TRIGGER_URI, LIST_TRIGGER_URI
-    global LIST_TRIGGER_ADV_URI, LIST_QUALIFYING_TRIGGER_URI, PROMOTE_BUNDLE_URI, TASK_IN_WORKFLOW_URI
-    global DEPEN_IN_WORKFLOW_URI, VARIABLE_URI, LIST_PARENT_TASK_URI, RUN_REPORT_URI, BUSINESS_SERVICE_URI
+    global LIST_TRIGGER_ADV_URI, LIST_QUALIFYING_TRIGGER_URI, BUNDLE_URI, BUNDLE_REPORT_URI, PROMOTE_BUNDLE_URI, TASK_IN_WORKFLOW_URI
+    global DEPEN_IN_WORKFLOW_URI, VARIABLE_URI, LIST_PARENT_TASK_URI, RUN_REPORT_URI, BUSINESS_SERVICE_URI, AUDIT_LIST_URI
     TASK_URI = f"{changed_domain}/task"
     LIST_TASK_URI = f"{changed_domain}/task/list"
     LIST_TASK_ADV_URI = f"{changed_domain}/task/listadv"
@@ -55,6 +59,8 @@ def updateURI(changed_domain):
     LIST_TRIGGER_URI = f"{changed_domain}/trigger/list"
     LIST_TRIGGER_ADV_URI = f"{changed_domain}/trigger/listadv"
     LIST_QUALIFYING_TRIGGER_URI = f"{changed_domain}/trigger/qualifyingtimes"
+    BUNDLE_URI = f"{changed_domain}/bundle"
+    BUNDLE_REPORT_URI = f"{changed_domain}/bundle/report"
     PROMOTE_BUNDLE_URI = f"{changed_domain}/bundle/promote"
     TASK_IN_WORKFLOW_URI = f"{changed_domain}/workflow/vertices"
     DEPEN_IN_WORKFLOW_URI = f"{changed_domain}/workflow/edges"
@@ -62,6 +68,7 @@ def updateURI(changed_domain):
     LIST_PARENT_TASK_URI = f"{changed_domain}/task/parent/list"
     RUN_REPORT_URI = f"{changed_domain}/report/run"
     BUSINESS_SERVICE_URI = f"{changed_domain}/businessservice"
+    AUDIT_LIST_URI = f"{changed_domain}/audit/list"
 
 def updateAuth(username, password):
     global auth
@@ -91,6 +98,10 @@ def formatHeader(key, format_str):
         headers[key] = 'text/plain'
     elif format_str == "csv":
         headers[key] = 'text/csv'
+    elif format_str == "pdf":
+        headers[key] = 'application/pdf'
+    elif format_str == "image":
+        headers[key] = 'image/png'
     return headers
 
 
@@ -261,7 +272,7 @@ def getListTriggerAPI(trigger_configs, show_response = True, format_str ='json')
     if api_auth is not None:
         config = {ACCESS_TOKEN: api_auth}
         uri = createURI(LIST_TRIGGER_URI, config)
-    header = formatHeader('Content-Type', format_str)
+    header = formatHeader('Accept', format_str)
     if api_auth is not None:
         response = requests.post(url = uri, json = trigger_configs, headers = header)
     else:
@@ -287,6 +298,34 @@ def getListTriggerAdvancedAPI(trigger_configs, show_response = True, format_str 
 
 ###########################           Bundle/Promote           #####################################
 
+
+def getBundleAPI(bundle_configs, show_response = True, format_str ='json'):
+    if api_auth is not None:
+        bundle_configs[ACCESS_TOKEN] = api_auth
+    uri = createURI(BUNDLE_URI, bundle_configs)
+    header = formatHeader('Accept', format_str)
+    if api_auth is not None:
+        response = requests.get(url = uri, headers = header)
+    else:
+        response = requests.get(url = uri, auth = auth, headers = header)
+    if show_response:
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
+    return response
+
+def getBundleReportAPI(bundle_configs, show_response = True, format_str ='json'):
+    if api_auth is not None:
+        bundle_configs[ACCESS_TOKEN] = api_auth
+    uri = createURI(BUNDLE_REPORT_URI, bundle_configs)
+    header = formatHeader('Accept', format_str)
+    if api_auth is not None:
+        response = requests.get(url = uri, headers = header)
+    else:
+        response = requests.get(url = uri, auth = auth, headers = header)
+    if show_response:
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
+    return response
 
 def promoteBundleAPI(bundle_configs, show_response = True, format_str ='json'):
     if api_auth is not None:
@@ -498,6 +537,24 @@ def createBusinessServiceAPI(business_service_configs, show_response = True, for
         response = requests.post(url = uri, json = business_service_configs, headers = header)
     else:
         response = requests.post(url = BUSINESS_SERVICE_URI, json = business_service_configs, auth = auth, headers = header)
+    if show_response:
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
+    return response
+
+
+
+
+###############################             Audit              ##########################################
+
+def getAuditListAPI(audit_configs, show_response = True, format_str ='json'):
+    if api_auth is not None:
+        audit_configs[ACCESS_TOKEN] = api_auth
+    header = formatHeader('Content-Type', format_str)
+    if api_auth is not None:
+        response = requests.post(url = AUDIT_LIST_URI, json = audit_configs, headers = header)
+    else:
+        response = requests.post(url = AUDIT_LIST_URI, json = audit_configs, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")

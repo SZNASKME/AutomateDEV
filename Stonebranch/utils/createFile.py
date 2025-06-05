@@ -62,3 +62,14 @@ def createFolder(foldername):
         print(f"{foldername} folder created successfully")
     except Exception as e:
         print(f"Error creating {foldername} folder: {e}")
+        
+
+# Create PNG image file
+def createImagePng(filename, image, show_response = True):
+    try:
+        with open(filename, 'wb') as file:
+            file.write(image)
+        if show_response:
+            print(f"{filename} created successfully")
+    except Exception as e:
+        print(f"Error creating {filename}: {e}")

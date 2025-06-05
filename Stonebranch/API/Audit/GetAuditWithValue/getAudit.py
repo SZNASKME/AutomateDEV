@@ -7,27 +7,30 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 from io import StringIO
 from utils.createFile import createExcel
 from utils.readFile import loadJson
-from utils.stbAPI import updateAuth, updateURI, runReportAPI, updateAPIAuth
+from utils.stbAPI import updateAuth, updateURI, updateAPIAuth, getAuditListAPI
 
-EXCEL_NAME = 'InProgressTask.xlsx'
+EXCEL_NAME = 'Audit Case.xlsx'
 
-report_configs_temp = {
-    #'reporttitle': 'UAC - Task List Credential By Task',
-    'reporttitle': 'Today - DWH Workflow In-Progress',
+audit_configs_temp = {
+    
 }
 
 
 
 
-def getReport():
+def getAudit():
     
-    response_csv = runReportAPI(report_configs=report_configs_temp, format_str='csv')
-    if response_csv.status_code == 200:
+    audit_configs = audit_configs_temp.copy()
+    audit_configs['auditType'] = 9
+    
+    
+    response = getAuditListAPI(audit_configs)
+    if response.status_code == 200:
         print("Report generated successfully")
-        #print(response_csv.text)
-        csv_data = StringIO(response_csv.text)
-        df = pd.read_csv(csv_data)
-        createExcel(EXCEL_NAME, ('Task', df))
+        data = response.json()
+        
+        
+        return data
     else:
         print("Error generating report")
         return None
@@ -45,8 +48,13 @@ def main():
     #domain = domain_url['TTB_UAT']
     domain = domain_url['TTB_PROD']
     updateURI(domain)
-    getReport()
+    audit_list = getAudit()
     
+    #filtered_df = df[df['Audit Type'] == 'User Login']
+    print(audit_list)
+    
+    
+    #createExcel(EXCEL_NAME, ('Audit Login', ))
     
 
 if __name__ == '__main__':

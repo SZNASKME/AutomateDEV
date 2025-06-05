@@ -13,7 +13,7 @@ from utils.createFile import createExcel
 from utils.readFile import loadJson
 from utils.stbAPI import *
 
-VERTEX_REPORT_TITLE = 'AskMe - Workflow Vertices'
+VERTEX_REPORT_TITLE = 'AskMe - Workflow Vertices'#'UAC - Workflow List Of Tasks By Workflow'
 DEPEN_REPORT_TITLE = 'AskMe - Workflow Dependencies'
 WORKFLOW_REPORT_TITLE = 'AskMe - Workflow Report'
 
@@ -296,10 +296,14 @@ def findAllTaskOutOfList(df_workflow_vertex, df_workflow_depen, df_workflow, tas
 def main():
     
     auth = loadJson('auth.json')
-    userpass = auth['TTB']
-    updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
+    #userpass = auth['TTB']
+    #updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
+    userpass = auth['TTB_PROD']
+    updateAPIAuth(userpass['API_KEY'])
+
     domain_url = loadJson('Domain.json')
-    domain = domain_url['TTB_UAT']
+    #domain = domain_url['TTB_UAT']
+    domain = domain_url['TTB_PROD']
     updateURI(domain)
     
     

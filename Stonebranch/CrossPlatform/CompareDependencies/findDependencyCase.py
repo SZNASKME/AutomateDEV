@@ -3,19 +3,21 @@ import os
 import pandas as pd
 import re
 import json
+import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 
 from io import StringIO
 from utils.readExcel import getDataExcel
-from utils.createFile import createExcel
+from utils.createFile import createExcel, createJson
 from utils.readFile import loadJson
 from utils.stbAPI import *
 
 VERTEX_REPORT_TITLE = 'AskMe - Workflow Vertices'
 DEPEN_REPORT_TITLE = 'AskMe - Workflow Dependencies'
 WORKFLOW_REPORT_TITLE = 'AskMe - Workflow Report'
+TASK_MONITOR_TRIGGER_REPORT_TITLE = 'AskMe - Task Monitor Triggers'
 
 TASK_REPORT_TITLE = 'AskMe - Task Report'
 
@@ -36,7 +38,13 @@ BOX_NAME_COLUMN = 'box_name'
 
 TASK_COLUMN = 'Taskname'
 TASK_REPORT_COLUMN = 'Name'
+
+TASK_MONITOR_COLUMN = 'TaskMonitor'
+TASKS_COLUMN = 'Tasks'
+
+
 TASK_MONITOR_SUFFIX = '-TM'
+TASK_MONITOR_OF_TRIGGER_SUFFIX = '-ND-TM'
 
 exclude_condition_containing = [
     'Start_'
@@ -71,32 +79,11 @@ def getReport(title_name):
 
 #################################################################################
 
-# def prepareWorkflowVertexDict(df_workflow_vertex, workflow_list):
-#     workflow_vertex_dict = {}
-#     for workflow in workflow_list:
-#         workflow_vertex_rows = df_workflow_vertex[df_workflow_vertex['Workflow'] == workflow]
-#         if not workflow_vertex_rows.empty:
-#             for _, row in workflow_vertex_rows.iterrows():
-#                 vertex_id = row['Vertex Id']
-#                 task_name = row['Task']
-#                 if workflow not in workflow_vertex_dict:
-#                     workflow_vertex_dict[workflow] = {}
-#                 if vertex_id not in workflow_vertex_dict[workflow]:
-#                     workflow_vertex_dict[workflow][vertex_id] = task_name
-                
-#         else:
-#             workflow_vertex_dict[workflow] = {}
-            
-#     return workflow_vertex_dict
 
 def prepareWorkflowVertexDict(df_workflow_vertex, workflow_list):
-    # Initialize an empty dictionary to store the result
     workflow_vertex_dict = {}
-
-    # Filter the DataFrame to include only workflows in the workflow_list
     filtered_df = df_workflow_vertex[df_workflow_vertex['Workflow'].isin(workflow_list)]
 
-    # Iterate through the filtered DataFrame and populate the dictionary
     for _, row in filtered_df.iterrows():
         workflow = row['Workflow']
         vertex_id = row['Vertex Id']
@@ -106,7 +93,6 @@ def prepareWorkflowVertexDict(df_workflow_vertex, workflow_list):
             workflow_vertex_dict[workflow] = {}
         workflow_vertex_dict[workflow][vertex_id] = task_name
 
-    # Ensure all workflows in the workflow_list are included, even if empty
     for workflow in workflow_list:
         if workflow not in workflow_vertex_dict:
             workflow_vertex_dict[workflow] = {}
@@ -114,13 +100,9 @@ def prepareWorkflowVertexDict(df_workflow_vertex, workflow_list):
     return workflow_vertex_dict
 
 def prepareTaskVertexDict(df_workflow_vertex, workflow_list):
-    # Initialize an empty dictionary to store the result
     task_vertex_dict = {}
-
-    # Filter the DataFrame to include only workflows in the workflow_list
     filtered_df = df_workflow_vertex[df_workflow_vertex['Workflow'].isin(workflow_list)]
 
-    # Iterate through the filtered DataFrame and populate the dictionary
     for _, row in filtered_df.iterrows():
         workflow_name = row['Workflow']
         vertex_id = row['Vertex Id']
@@ -166,39 +148,9 @@ def createDependencyDict(df_workflow_depen, workflow_vertex_dict):
                     'Target Task': target_task,
                     'Condition': condition
                 })
-        
-        #####
-        # temp_depen_dict = depen_dict[workflow].copy()
-        # for depen in temp_depen_dict:
-        #     source_task = depen['Source Task']
-        #     target_vertex_id = depen['Target Vertex Id']
-        #     target_task = depen['Target Task']
-        #     condition = depen['Condition']
-        #     if any(break_condition in source_task for break_condition in break_through_condition):
-                
-        #         new_depen_list = findAllTargetDepen(source_task, temp_depen_dict)
-                
-        #         for new_depen in new_depen_list:
-        #             new_info_depen = {
-        #                 'Source Vertex Id': new_depen['Source Vertex Id'],
-        #                 'Source Task': new_depen['Source Task'],
-        #                 'Target Vertex Id': target_vertex_id,
-        #                 'Target Task': target_task,
-        #                 'Condition': condition
-        #             }
-        #             depen_dict[workflow].append(new_info_depen)
-                
-                
-        #         depen_dict[workflow].remove(depen)
-        #####
-            
-        
-        
+
 
     return depen_dict
-
-
-
 
 def prepareTaskDependencyDict(workflow_list, workflow_depen_dict):
     task_depen_dict = {}
@@ -215,29 +167,56 @@ def prepareTaskDependencyDict(workflow_list, workflow_depen_dict):
                     'Source Task': source_task,
                     'Condition': condition
                 })
-        else:
-            task_depen_dict[workflow_name] = []
+        #else:
+        #    task_depen_dict[workflow_name] = []
 
     return task_depen_dict
 
+
+def prepareTaskMonitorTriggerDependencyDict(df_task_monitor_trigger):
+    task_monitor_trigger_dict = {}
+    df_task_monitor_trigger = df_task_monitor_trigger.rename(columns={'Task Monitor': TASK_MONITOR_COLUMN, 'Task(s)': TASKS_COLUMN})
+    for row in df_task_monitor_trigger.itertuples():
+        
+        source_task = getattr(row, TASK_MONITOR_COLUMN)
+        #print(source_task)
+        source_task = source_task.replace(TASK_MONITOR_OF_TRIGGER_SUFFIX, '')
+        target_task_list = getattr(row, TASKS_COLUMN)
+        target_task_list = target_task_list.split(',') if isinstance(target_task_list, str) else []
+        #print(target_task_list)
+        target_task_list = [task.strip() for task in target_task_list if task.strip()]  # Remove empty strings
+        for target_task in target_task_list:
+            if target_task not in task_monitor_trigger_dict:
+                task_monitor_trigger_dict[target_task] = []
+            task_monitor_trigger_dict[target_task].append({
+                'Workflow': 'Task Monitor Trigger',
+                'Source Task': source_task,
+                'Condition': 'Success'
+            })
+            
+    return task_monitor_trigger_dict
+
+
+def combineDepenDict(task_depen_dict, task_monitor_trigger_depen_dict):
+    combined_task_depen_dict = task_depen_dict.copy()
+    
+    for target_task, depen_list in task_monitor_trigger_depen_dict.items():
+        if target_task not in combined_task_depen_dict:
+            combined_task_depen_dict[target_task] = []
+        combined_task_depen_dict[target_task].extend(depen_list)
+    
+    return combined_task_depen_dict
+
+
+
 ##############################################################################
 
-
-def findAllTargetDepen(task_name, depen_dict):
-    new_depen_list = []
-    for depen in depen_dict:
-        if depen['Target Task'] == task_name:
-            new_depen_list.append(depen)
-
-    return new_depen_list
 
 
 ##############################################################################
 
 def getAllInnermostSubstrings(string, start_char, end_char):
     pattern = re.escape(start_char) + r'([^' + re.escape(start_char) + re.escape(end_char) + r']+)' + re.escape(end_char)
-    
-    # Find all substrings that match the pattern
     matches = re.findall(pattern, string)
     
     return matches
@@ -248,9 +227,7 @@ def getNamefromCondition(condition):
 
 
 def getAllInnermostSubstringsWithStatus(string, pattern):
-    # Find all substrings that match the pattern
     matches = re.findall(pattern, string)
-    
     return matches
 
 def getConditionList(condition):
@@ -273,22 +250,22 @@ def compareConditionString(condition_string, task_condition_string):
     task_condition_list = getConditionList(task_condition_string)
     
     both_condition = []
-    job_condition_not_found = []
-    task_condition_not_found = []
+    only_found_in_job_condition = []
+    only_found_in_task_condition = []
     for job_condition in job_condition_list:
         if job_condition in task_condition_list:
             both_condition.append(job_condition)
         else:
-            job_condition_not_found.append(job_condition)
+            only_found_in_job_condition.append(job_condition)
     
     for task_condition in task_condition_list:
         if task_condition not in job_condition_list:
-            task_condition_not_found.append(task_condition)
+            only_found_in_task_condition.append(task_condition)
 
-    return both_condition, job_condition_not_found, task_condition_not_found
+    return both_condition, only_found_in_job_condition, only_found_in_task_condition
 
 
-def prepareCompareCondition(df_job, task_depen_dict, task_vertex_dict, df_processing_task, df_golived_task):
+def prepareCompareCondition(df_job, task_depen_dict, task_monitor_trigger_depen_dict, task_vertex_dict, df_processing_task, df_golived_task):
     all_condition_log = []
     non_simular_condition = []
     processing_task_set = set(df_processing_task[TASK_COLUMN].tolist())
@@ -310,7 +287,10 @@ def prepareCompareCondition(df_job, task_depen_dict, task_vertex_dict, df_proces
         advance_task_condition_list = []
         
         task_depen_list = task_depen_dict.get(job_name, [])
+        task_monitor_trigger_depen_list = task_monitor_trigger_depen_dict.get(job_name, [])
         #print(json.dumps(task_depen_list, indent=4))
+        #if job_condition and task_depen_list == []:
+        #    print(f'{job_name} | {job_condition} : {task_condition_list}')
         if task_depen_list:
             for condition_dict in task_depen_list:
                 #print(condition_dict)
@@ -322,13 +302,39 @@ def prepareCompareCondition(df_job, task_depen_dict, task_vertex_dict, df_proces
                 task_condition_list.append(new_structure_condition)
                 new_advance_structure_condition = f'{createStatusCondition(condition)}({source_task}) [{workflow_name}]'
                 advance_task_condition_list.append(new_advance_structure_condition)
-                
-        task_condition_set = list(set(task_condition_list))  # Remove duplicates
-        task_condition_string = ' & '.join(task_condition_set)  # Join the conditions
-        advance_task_condition_string = ' & '.join(advance_task_condition_list)  # Join the conditions
 
-        both_condition, job_condition_not_found, task_condition_not_found = compareConditionString(job_condition, task_condition_string)
-        compare_result = 'Different' if job_condition_not_found or task_condition_not_found else 'Similar'
+        task_monitor_trigger_condition_list = []
+        advance_task_monitor_trigger_condition_list = []
+        
+        if task_monitor_trigger_depen_list:
+            for condition_dict in task_monitor_trigger_depen_list:
+                workflow_name = condition_dict['Workflow']
+                source_task = condition_dict['Source Task']
+                condition = condition_dict['Condition']
+                
+                new_structure_condition = f'{createStatusCondition(condition)}({source_task})'
+                task_monitor_trigger_condition_list.append(new_structure_condition)
+                new_advance_structure_condition = f'{createStatusCondition(condition)}({source_task}) [{workflow_name}]'
+                advance_task_monitor_trigger_condition_list.append(new_advance_structure_condition)
+        
+        # Remove duplicates from the lists
+        task_condition_set = list(set(task_condition_list))
+        task_monitor_trigger_condition_set = list(set(task_monitor_trigger_condition_list))
+        
+        advance_task_condition_set = list(set(advance_task_condition_list))
+        advance_task_monitor_trigger_condition_set = list(set(advance_task_monitor_trigger_condition_list))
+        
+        # Config Condition String
+        task_condition_string = f"{' & '.join(task_condition_set)}{' | ' if task_condition_set and task_monitor_trigger_condition_set else ''}{' | '.join(task_monitor_trigger_condition_set)}"
+        #task_condition_string += 
+        #task_condition_string += ' | '.join(task_monitor_trigger_condition_set)
+        
+        advance_task_condition_string = f"{' & '.join(advance_task_condition_set)}{' | ' if advance_task_condition_set and advance_task_monitor_trigger_condition_set else ''}{' | '.join(advance_task_monitor_trigger_condition_set)}"
+        #advance_task_condition_string += ' | ' if advance_task_condition_set and advance_task_monitor_trigger_condition_set else ''
+        #advance_task_condition_string += ' | '.join(advance_task_monitor_trigger_condition_set)  # Join the conditions
+        
+        both_condition, only_found_in_job_condition, only_found_in_task_condition = compareConditionString(job_condition, task_condition_string)
+        compare_result = 'Different' if only_found_in_job_condition or only_found_in_task_condition else 'Similar'
         
         all_condition_log.append({
             'UAT Business Services': business_services_map.get(job_name, 'Not Found') if job_name in processing_task_set else 'Not Found',
@@ -339,10 +345,11 @@ def prepareCompareCondition(df_job, task_depen_dict, task_vertex_dict, df_proces
             'Compare Result': compare_result,
             'Job Condition': job_condition,
             'Task Condition': task_condition_string,
+            'Advance Task Condition': advance_task_condition_string,
             'Both Condition': ' // '.join(both_condition),
-            'Job Condition Not Found': ' // '.join(job_condition_not_found),
-            'Task Condition Not Found': ' // '.join(task_condition_not_found),
-            'Advance Task Condition': advance_task_condition_string
+            'Only Found in Job Condition': ' // '.join(only_found_in_job_condition),
+            'Only Found in Task Condition': ' // '.join(only_found_in_task_condition),
+            
         })
         
         
@@ -353,9 +360,13 @@ def prepareCompareCondition(df_job, task_depen_dict, task_vertex_dict, df_proces
                 TASK_COLUMN: job_name,
                 'Box Name': box_name,
                 'Workflow Name': ' '.join(list(set(f'[{workflow_name}]' for workflow_name in task_vertex_dict.get(job_name, [])))),
-                'Condition': job_condition,
+                'Job Condition': job_condition,
                 'Task Condition': task_condition_string,
-                'Advance Task Condition': advance_task_condition_string
+                'Advance Task Condition': advance_task_condition_string,
+                'Both Condition': ' // '.join(both_condition),
+                'Only Found in Job Condition': ' // '.join(only_found_in_job_condition),
+                'Only Found in Task Condition': ' // '.join(only_found_in_task_condition),
+                
             })
         count += 1
         if count % 1000 == 0:
@@ -368,35 +379,10 @@ def prepareCompareCondition(df_job, task_depen_dict, task_vertex_dict, df_proces
     return df_all_condition_log, df_non_simular_condition
                 
 
-# def mapGolivedTask(df_process, df_current_task, df_golived_task):
-    
-#     df_processing = df_process.copy()
-    
-#     current_task_list = df_current_task[TASK_COLUMN].tolist()
-#     golived_list = df_golived_task[TASK_COLUMN].tolist()
-    
-#     for index, row in df_processing.iterrows():
-#         task_name = row[TASK_COLUMN]
-#         if task_name in golived_list:
-#             df_processing.at[index, 'Check Golived'] = 'Golived'
-#         else:
-#             df_processing.at[index, 'Check Golived'] = 'Not Golive'
-#         if task_name in current_task_list:
-#             df_processing.at[index, 'Member of Business Services'] = df_current_task[df_current_task[TASK_COLUMN] == task_name]['Member of Business Services'].values[0]
-#         else:
-#             df_processing.at[index, 'Member of Business Services'] = 'Not Found'
-    
-#     df_processing = df_processing[['Member of Business Services', TASK_COLUMN, 'Box Name', 'Workflow Name', 'Check Golived', 'Compare Result', 'Job Condition', 'Task Condition', 'Both Condition', 'Job Condition Not Found', 'Task Condition Not Found', 'Advance Task Condition']]
-#     df_processing.rename(columns={'Member of Business Services': 'Business Services', TASK_COLUMN: TASK_REPORT_COLUMN}, inplace=True)
-    
-#     return df_processing
-        
-
-
 
 #############################################################################
 
-def findNonSimilarCondition(df_job, df_workflow, df_workflow_depen, df_workflow_vertex, df_processing_task, df_golived_task):
+def findNonSimilarCondition(df_job, df_workflow, df_workflow_depen, df_workflow_vertex, df_task_monitor_trigger, df_processing_task, df_golived_task):
 
     workflow_list = df_workflow['Name'].tolist()
 
@@ -411,9 +397,21 @@ def findNonSimilarCondition(df_job, df_workflow, df_workflow_depen, df_workflow_
     
     print('Preparing task dependency dict...')
     task_depen_dict = prepareTaskDependencyDict(workflow_list, workflow_depen_dict)
+    
+    print('Preparing task monitor trigger dict...')
+    task_monitor_trigger_depen_dict = prepareTaskMonitorTriggerDependencyDict(df_task_monitor_trigger)
+    #createJson('task_monitor_trigger_depen_dict.json', task_monitor_trigger_depen_dict)
+    
+    #print('Combining task dependency dict...')
+    #combined_task_depen_dict = combineDepenDict(task_depen_dict, task_monitor_trigger_depen_dict)
 
     print('Comparing conditions...')
-    all_condition_log, non_simular_condition = prepareCompareCondition(df_job, task_depen_dict, task_vertex_dict, df_processing_task, df_golived_task)
+    all_condition_log, non_simular_condition = prepareCompareCondition(df_job=df_job, 
+                                                                       task_depen_dict=task_depen_dict, 
+                                                                       task_monitor_trigger_depen_dict=task_monitor_trigger_depen_dict, 
+                                                                       task_vertex_dict=task_vertex_dict, 
+                                                                       df_processing_task=df_processing_task, 
+                                                                       df_golived_task=df_golived_task)
 
     
     df_all_condition_log = pd.DataFrame(all_condition_log)
@@ -422,7 +420,8 @@ def findNonSimilarCondition(df_job, df_workflow, df_workflow_depen, df_workflow_
     return df_all_condition_log, df_non_simular_condition
     
 
-
+def delayTimes(seconds):
+    time.sleep(seconds)
 
 
 #############################################################################
@@ -440,13 +439,23 @@ def main():
     df_job = getDataExcel()
     
     df_workflow_vertex = getReport(VERTEX_REPORT_TITLE)
+    delayTimes(10)
     df_workflow_depen = getReport(DEPEN_REPORT_TITLE)
+    delayTimes(10)
     df_workflow = getReport(WORKFLOW_REPORT_TITLE)
+    delayTimes(10)
     df_processing_task = getReport(TASK_REPORT_TITLE)
+    delayTimes(10)
+    df_task_monitor_trigger = getReport(TASK_MONITOR_TRIGGER_REPORT_TITLE)
     #df_workflow = df_processing_task[df_processing_task['Type'] == 'Workflow']
     if df_processing_task is None:
         print("Error generating task report UAT")
         return
+    
+    if df_task_monitor_trigger is None:
+        print("Error generating task monitor trigger report UAT")
+        return
+    
     df_processing_task = df_processing_task[['Name', 'Member of Business Services']]
     df_processing_task.rename(columns={'Name': TASK_COLUMN} , inplace=True)
     
@@ -465,7 +474,14 @@ def main():
     #df_golived_task_not_in_processing = df_golived_task_not_in_processing[[TASK_COLUMN, 'Member of Business Services']]
     
     
-    df_all_condition_log, df_non_simular_condition = findNonSimilarCondition(df_job, df_workflow, df_workflow_depen, df_workflow_vertex, df_processing_task, df_golived_task)
+    df_all_condition_log, df_non_simular_condition = findNonSimilarCondition(df_job=df_job, 
+                                                                             df_workflow=df_workflow, 
+                                                                             df_workflow_depen=df_workflow_depen, 
+                                                                             df_workflow_vertex=df_workflow_vertex, 
+                                                                             df_task_monitor_trigger=df_task_monitor_trigger, 
+                                                                             df_processing_task=df_processing_task, 
+                                                                             df_golived_task=df_golived_task
+                                                                             )
     
     createExcel(OUTPUT_EXCEL_NAME, (CONDITION_SHEETNAME, df_all_condition_log), (NON_SIMILAR_CONDITION_SHEETNAME, df_non_simular_condition), (GOLIVED_NOT_IN_PROCESS, df_golived_task_not_in_processing))
     

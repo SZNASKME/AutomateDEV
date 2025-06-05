@@ -25,6 +25,7 @@ __pycache__/
 *.cfg
 /Stonebranch/UniversalTemplate/CS_DataStage
 /Stonebranch/UniversalTemplate/Jira
+/Stonebranch/UniversalTemplate/GnuPG
 
 Azure
 Azure/
