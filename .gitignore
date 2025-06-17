@@ -23,11 +23,13 @@ __pycache__/
 
 .env
 *.cfg
+/Stonebranch/UniversalTemplate
 /Stonebranch/UniversalTemplate/CS_DataStage
 /Stonebranch/UniversalTemplate/Jira
 /Stonebranch/UniversalTemplate/GnuPG
 /Stonebranch/UniversalTemplate/JAC
 /Stonebranch/UniversalTemplate/CS_DataStageCLI
+/Stonebranch/UniversalTemplate/ApacheAirflow
 
 Azure
 Azure/
