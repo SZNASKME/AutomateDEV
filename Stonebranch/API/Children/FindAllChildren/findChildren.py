@@ -14,10 +14,10 @@ from collections import OrderedDict
 
 
 workflow_list = [
-    'DWH_P_FLPN_D_B',
-    'DWH_P_FLPN_M_B'
+    #'DWH_P_FLPN_D_B',
+    #'DWH_P_FLPN_M_B'
     # 'DWH_AFTER_DAILY_B',
-    # 'DWH_MIS_ALL_DAY_B',
+    'DWH_MIS_ALL_DAY_B',
     # 'DWH_MIS_D01_B',
     # 'DWH_MIS_D02_B',
     # 'DWH_MIS_D03_B',
@@ -853,15 +853,15 @@ def listChildrenHierarchyToDataFrameAllInOne(children_dict):
 
 def main():
     auth = loadJson('auth.json')
-    userpass = auth['ASKME_STB']
+    #userpass = auth['ASKME_STB']
     #userpass = auth['TTB_PROD']
-    #userpass = auth['TTB']
+    userpass = auth['TTB']
     updateAuth(userpass["USERNAME"], userpass["PASSWORD"])
     #updateAPIAuth(userpass["API_KEY"])
     domain_url = loadJson('Domain.json')
     #domain = domain_url['TTB_PROD']
-    #domain = domain_url['TTB_UAT']
-    domain = domain_url['1.173']
+    domain = domain_url['TTB_UAT']
+    #domain = domain_url['1.173']
     updateURI(domain)
     
     df_job_list = getDataExcel("Get Excel Job List")

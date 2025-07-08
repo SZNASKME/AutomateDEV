@@ -10,6 +10,8 @@ TASK_URI = f"{DOMAIN}/task"
 LIST_TASK_URI = f"{DOMAIN}/task/list"
 LIST_TASK_ADV_URI = f"{DOMAIN}/listadv"
 
+LIST_TASK_INSTANCE_URI = f"{DOMAIN}/taskinstance/listadv"
+LIST_TASK_INSTANCE_ADV_URI = f"{DOMAIN}/taskinstance/list"
 
 TRIGGER_URI = f"{DOMAIN}/trigger"
 LIST_TRIGGER_URI = f"{DOMAIN}/trigger/list"
@@ -190,6 +192,37 @@ def getListTaskAdvancedAPI(task_adv_configs, show_response = True, format_str ='
         response = requests.get(url = uri, headers = header)
     else:
         response = requests.get(url = uri, auth = auth, headers=header)
+    if show_response:
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
+    return response
+
+
+############################           List Task Instance           #####################################
+
+def getListTaskInstanceAPI(task_instance_configs, show_response = True, format_str ='json'):
+    if api_auth is not None:
+        task_instance_configs[ACCESS_TOKEN] = api_auth
+    
+    header = formatHeader('Accept', format_str)
+    if api_auth is not None:
+        response = requests.post(url = LIST_TASK_INSTANCE_URI, json = task_instance_configs, headers= header)
+    else:
+        response = requests.post(url = LIST_TASK_INSTANCE_URI, json = task_instance_configs, auth = auth, headers = header)
+    if show_response:
+        status = http.HTTPStatus(response.status_code)
+        print(f"{response.status_code} - {status.phrase}: {status.description}")
+    return response
+
+def getListTaskInstanceAdvancedAPI(task_instance_configs, show_response = True, format_str ='json'):
+    if api_auth is not None:
+        task_instance_configs[ACCESS_TOKEN] = api_auth
+    
+    header = formatHeader('Accept', format_str)
+    if api_auth is not None:
+        response = requests.post(url = LIST_TASK_INSTANCE_ADV_URI, json = task_instance_configs, headers= header)
+    else:
+        response = requests.post(url = LIST_TASK_INSTANCE_ADV_URI, json = task_instance_configs, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")
