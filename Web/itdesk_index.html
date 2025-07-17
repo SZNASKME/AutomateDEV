@@ -1,0 +1,174 @@
+<div class="req-dasboard-maincontainer req-dasboard-theme2-container req-dasboard-theme-container" id="upper-part-ssp">
+	<div class="ssp-banner-container">
+		<div class="tech-hoder">
+			<h1 class="tech-name">Ideal Healthcare Management Portal</h1>
+			<div class="ssp-search-inpt-holder">
+				<input class="ssp-search-inpt" placeholder="Search Announcements, Solutions, Request Templates or Requests" data-clickable="true" tabindex="0" input-action="search"/>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<span class="tech-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do ut labore et dolore magna aliqua.</span>
+		<div class="ssp-action-container">
+			<div class="req-act-card act-card" click-action="load-service-templates-popup">
+				<div class="act-cont-holder">
+					<div class="act-cont-header"><span class="act-ico"></span>Make a Request</div>
+					<span class="act-cont-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ex ea commodo consequat.</span>
+				</div>
+				<div class="act-img"></div>
+			</div>
+			<div class="sol-act-card act-card" click-action="view-solutions">
+				<div class="act-cont-holder">
+					<div class="act-cont-header"><span class="act-ico"></span>Find an Answer</div>
+					<span class="act-cont-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ex ea commodo consequat.</span>
+				</div>
+				<div class="act-img"></div>
+			</div>
+			<div class="prob-act-card act-card" click-action="load-incident-templates-popup">
+				<div class="act-cont-holder">
+					<div class="act-cont-header"><span class="act-ico"></span>Report a Fault</div>
+					<span class="act-cont-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ex ea commodo consequat.</span>
+				</div>
+				<div class="act-img"></div>
+			</div>
+			<div class="supp-act-card act-card">
+				<div class="act-cont-holder">
+					<div class="act-cont-header"><span class="act-ico"></span>Get Support</div>
+					<span class="act-cont-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ex ea commodo consequat.</span>
+				</div>
+				<div class="act-img"></div>
+			</div>
+		</div>
+	</div> 		
+</div>
+<style>
+.req-dasboard-maincontainer.req-dasboard-theme2-container {
+    background: url(/images/ssp-bg/ssp-med-bg.png) no-repeat center;
+    background-size: cover
+}
+.ssp-banner-container {
+    width: 1060px;
+    margin: 0 auto;
+    padding: 64px 0
+}
+.tech-name {
+    margin: 0 0 7px;
+    font-size: 32px;
+    color: rgb(255, 255, 255);
+    font-weight: 600;
+    line-height: 43px;
+    float: left
+}
+.tech-desc {
+    font-size: 13px;
+    color: rgb(158, 208, 237)
+}
+.ssp-search-inpt-holder {
+    float: right;
+    width: 360px;
+    height: 28px;
+    margin-top: 4px
+}
+.clear {
+	clear: both
+}
+.ssp-search-inpt {
+    background: transparent url(/images/svg/ssp-medtemp-search.svg) no-repeat left top;
+  	background-size: 14px 14px;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-bottom: 1px solid rgb(61, 114, 145);
+    padding: 0 0 10px 30px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.45);
+    font-family: inherit;
+    outline: none
+}
+.ssp-search-inpt::placeholder {
+    color: rgba(255, 255, 255, 0.45)
+}
+.ssp-search-inpt::-ms-input-placeholder {
+	color: rgba(255, 255, 255, 0.45)
+}
+.ssp-action-container {
+    margin-top: 77px;
+    font-size: 0
+}
+.req-act-card, .sol-act-card, .prob-act-card, .supp-act-card {
+    width: 505px;
+    height: 200px;
+    display: inline-block;
+    background: rgb(255, 255, 255);
+    box-shadow: 2px 4px 30px rgba(0, 0, 0, 0.8);
+    border-radius: 3px;
+    font-size: 0
+}
+.prob-act-card {
+    margin-right: 50px
+}
+.req-act-card {
+    margin: 0 50px 50px 0
+}
+.act-img {
+    width: 185px;
+    height: 100%;
+    border-radius: 0px 3px 3px 0;
+    display: inline-block
+}
+.req-act-card .act-img{
+	background: url(/images/ssp-bg/ssp-medtemp-img1.png) no-repeat center
+}
+.sol-act-card .act-img{
+	background: url(/images/ssp-bg/ssp-medtemp-img2.png) no-repeat center
+}
+.prob-act-card .act-img{
+ 	background: url(/images/ssp-bg/ssp-medtemp-img3.png) no-repeat center
+}
+.supp-act-card .act-img{
+	background: url(/images/ssp-bg/ssp-medtemp-img4.png) no-repeat center
+}
+.ssp-action-container .act-img{
+    background-size: cover
+}
+.act-cont-holder {
+    display: inline-block;
+    width: 320px;
+    padding: 29px 10px 36px 30px;
+    vertical-align: top
+}
+.act-cont-header {
+    font-size: 16px;
+    color: rgb(39, 42, 44);
+    font-weight: 600;
+    margin-bottom: 16px
+}
+.prob-act-card .act-ico {
+ 	vertical-align: middle
+}
+.act-ico {
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+   	vertical-align: bottom;
+    margin-right: 11px
+}
+.req-act-card .act-ico{
+	 background: url(/images/svg/ssp-maker-quest.svg) no-repeat center
+}
+.sol-act-card .act-ico{
+	background: url(/images/svg/ssp-find-ans.svg) no-repeat center
+}
+.prob-act-card .act-ico{
+ 	background: url(/images/svg/ssp-report-fault.svg) no-repeat center
+}
+.supp-act-card .act-ico{
+	background: url(/images/svg/ssp-get-sup.svg) no-repeat center
+}
+.act-cont-desc {
+    font-size: 12px;
+    color: rgb(64, 64, 64);
+    line-height: 20px;
+    padding-left: 31px;
+	display: block
+}
+</style>
