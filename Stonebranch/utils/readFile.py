@@ -1,4 +1,3 @@
-
 import json
 import pandas as pd
 from pathlib import Path
@@ -58,18 +57,51 @@ def readCSV(filename='config.csv', parent_dir_level=3, *dirs):
     
     
 def readFolderTextFiles(folder_path, *file_names):
-    try:
-        folder = Path(folder_path)
-        files = {}
-        for file_name in file_names:
-            file_path = folder / file_name
+    folder = Path(folder_path)
+    files = {}
+    not_found_files = []
+    
+    for file_name in file_names:
+        file_path = folder / file_name
+        try:
             with open(file_path, 'r') as file:
                 files[file_name] = file.readlines()
-            print(f"Text file loaded successfully")
+        except FileNotFoundError:
+            not_found_files.append(file_name)
+        except Exception as e:
+            print(f"Error loading {file_path}: {e}")
+            not_found_files.append(file_name)
+    
+    if files:
+        print(f"Text files loaded successfully ({len(files)} files loaded)")
+        if not_found_files:
+            print(f"Files not found: {not_found_files}")
         return files
-    except FileNotFoundError:
-        print(f"Error: One or more files not found in {folder_path}")
+    else:
+        print(f"Error: No files found in {folder_path}")
         return None
+    
+    
+# Consolidate similar functions
+def loadFile(filename, file_type='text', parent_dir_level=3, *dirs):
+    """Unified file loader for JSON, Text, and CSV"""
+    repo_root = Path(__file__).resolve()
+    for _ in range(parent_dir_level):
+        repo_root = repo_root.parent
+    if dirs:
+        for dir in dirs:
+            repo_root = repo_root.joinpath(dir)
+    file_path = repo_root / filename
+    
+    try:
+        if file_type == 'json':
+            with open(file_path, 'r') as file:
+                return json.load(file)
+        elif file_type == 'csv':
+            return pd.read_csv(file_path)
+        else:  # text
+            with open(file_path, 'r') as file:
+                return file.read()
     except Exception as e:
-        print(f"Error loading text files: {e}")
+        print(f"Error loading {file_path}: {e}")
         return None

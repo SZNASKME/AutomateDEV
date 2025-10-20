@@ -1,19 +1,35 @@
-import time
-from datetime import datetime, timedelta
-import calendar
-
-def getDaysPeriod():
-    today = datetime.now()
-    first_day_current_month = today.replace(day=1)
-    last_day_previous_month = first_day_current_month - timedelta(days=1)
-    try:
-        same_day_last_month = last_day_previous_month.replace(day=today.day)
-    except ValueError:
-        same_day_last_month = last_day_previous_month
-    return (today - same_day_last_month).days
+import json
 
 
 
-day_period = getDaysPeriod()
-print(f"Today: {datetime.now().strftime('%Y-%m-%d')}")
-print(f"Period of time in days: {day_period} days")
+json_data = {
+    "XXX": [
+        {
+            "No": 1,
+            "USERNAME": "awupport",
+            "PASSWORD": "we76"
+        },
+        {
+            "No": 2,
+            "USERNAME": "askmeswrt",
+            "PASSWORD": "qwe876"
+        },
+        {
+            "No": 3,
+            "USERNAME": "askdport",
+            "PASSWORD": "vfds76"
+        },
+        {
+            "No": 4,
+            "USERNAME": "asdort",
+            "PASSWORD": "vds"
+        }
+    ]
+
+}
+
+#no loop
+json_value = json_data.values()
+no_2_password = 
+print(no_2_password)
+
