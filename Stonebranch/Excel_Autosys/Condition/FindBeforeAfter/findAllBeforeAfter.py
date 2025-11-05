@@ -17,7 +17,7 @@ BOXNAME_COLUMN = 'box_name'
 
 
 
-OUTPUT_EXCEL_FILE = 'FindBeforeAfter.xlsx'
+OUTPUT_EXCEL_FILE = 'FindBeforeAfter_XXXXXX.xlsx'
 
 CONDITION_PATTERN = re.compile(r"[a-z]\([A-Za-z0-9_\.]+\)")
 PARENTHESES_PATTERN = re.compile(r"\(([^()]+)\)")

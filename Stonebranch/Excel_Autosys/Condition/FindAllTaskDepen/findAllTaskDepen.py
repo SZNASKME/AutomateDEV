@@ -10,8 +10,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 from utils.readExcel import getDataExcel
 from utils.createFile import createExcel, createJson
 
-APPNAME_COLUMN = 'AppName'
-UAC_APPNAME_COLUMN = 'UAC Bussiness Service'
+#APPNAME_COLUMN = 'AppName'
+#UAC_APPNAME_COLUMN = 'UAC Bussiness Service'
 JOBNAME_COLUMN = 'jobName'
 CONDITION_COLUMN = 'condition'
 BOXNAME_COLUMN = 'box_name'
@@ -19,7 +19,8 @@ BOXNAME_COLUMN = 'box_name'
 ROOT_BOX_COLUMN = 'rootBox'
 ROOT_BOX_FOUND_CONDITION_COLUMN = 'rootBox_Found_Condition'
 
-CUT_COLUMN_LIST = [APPNAME_COLUMN, UAC_APPNAME_COLUMN, JOBNAME_COLUMN, BOXNAME_COLUMN, ROOT_BOX_COLUMN]
+#CUT_COLUMN_LIST = [APPNAME_COLUMN, UAC_APPNAME_COLUMN, JOBNAME_COLUMN, BOXNAME_COLUMN, ROOT_BOX_COLUMN]
+CUT_COLUMN_LIST = [JOBNAME_COLUMN, BOXNAME_COLUMN, ROOT_BOX_COLUMN]
 
 FOUND_CONDITION_COLUMN_OUTPUT = 'Found_Condition'
 

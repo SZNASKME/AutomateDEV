@@ -3,7 +3,7 @@ import os
 import json
 import pandas as pd
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from utils.readExcel import getDataExcel
 from utils.createFile import createExcel, createJson

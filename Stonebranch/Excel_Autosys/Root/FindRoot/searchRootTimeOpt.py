@@ -2,7 +2,7 @@ import sys
 import os
 import pandas as pd
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from utils.readExcel import getDataExcel
 from utils.createFile import createJson, createExcel
@@ -57,6 +57,8 @@ def searchRootTime(df):
                     'jobName': row.jobName,
                     'jobType': replaceNan(row.jobType),
                     'rootBox': 'Self Start',
+                    'rootDateCondition': replaceNan(row.date_conditions),
+                    'rootDayOfWeek': replaceNan(row.days_of_week),
                     'rootBoxStartTime': replaceNan(row.start_times),
                     'rootBoxCondition': replaceNan(row.condition),
                     'rootBoxRunCalendar': replaceNan(row.run_calendar),
@@ -68,11 +70,15 @@ def searchRootTime(df):
                     'jobType': replaceNan(row.jobType),
                     'jobBox': row.box_name,
                     'rootBox': start_row_job_name,
+                    'rootDateCondition': replaceNan(start_row['date_conditions']),
+                    'rootDayOfWeek': replaceNan(start_row['days_of_week']),
                     'rootBoxType': replaceNan(start_row['jobType']),
                     'rootBoxStartTime': replaceNan(start_row['start_times']),
                     'rootBoxCondition': replaceNan(start_row['condition']),
                     'rootBoxRunCalendar': replaceNan(start_row['run_calendar']),
                     'rootBoxExcludeCalendar': replaceNan(start_row['exclude_calendar']),
+                    'jobDateCondition': replaceNan(row.date_conditions),
+                    'jobDayOfWeek': replaceNan(row.days_of_week),
                     'jobStartTime': replaceNan(row.start_times),
                     'jobCondition': replaceNan(row.condition),
                     'jobRunCalendar': replaceNan(row.run_calendar),
@@ -89,9 +95,9 @@ def main():
     insert_start_list = searchRootTime(df_selected)
     createJson('RootTime.json', insert_start_list)
     df_insert_start = pd.DataFrame(insert_start_list, 
-                                   columns=['jobName', 'jobType', 'jobBox', 'rootBox', 'rootBoxType', 'rootBoxStartTime', 
+                                   columns=['jobName', 'jobType', 'jobBox', 'rootBox', 'rootBoxType', 'rootDateCondition','rootDayOfWeek','rootBoxStartTime', 
                                             'rootBoxCondition','rootBoxRunCalendar', 'rootBoxExcludeCalendar', 
-                                            'jobStartTime', 'jobCondition', 'jobRunCalendar', 'jobExcludeCalendar'])
+                                            'jobDateCondition', 'jobDayOfWeek', 'jobStartTime', 'jobCondition', 'jobRunCalendar', 'jobExcludeCalendar'])
     createExcel('RootTime.xlsx', ('Start Root Time', df_insert_start))
     
     print("Process completed successfully.")

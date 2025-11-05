@@ -2,7 +2,7 @@ import sys
 import os
 import pandas as pd
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from utils.readExcel import getDataExcel
 from utils.createFile import createExcel
@@ -55,7 +55,7 @@ def main():
     df_job = getDataExcel()
     print(df_job)
     df_same_condition = compareCondition(df_job)
-    createExcel('box_job_same_condition.xlsx', ('box_job_same_condition', df_same_condition))
+    createExcel('box_job_same_condition_XXXX.xlsx', ('box_job_same_condition', df_same_condition))
 
 
 
