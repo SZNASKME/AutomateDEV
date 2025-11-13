@@ -47,7 +47,7 @@ def findingmachineAndJob(df):
         
         # Handle Self Start mainbox
         if main_box == '*Self Start' or main_box == 'Self Start':
-            main_box = job_name
+            main_box = '*' + job_name
         
         if machine is None or pd.isna(machine) or machine == '':
             machine = 'No Machine Assigned'
@@ -124,6 +124,7 @@ def createDeploymentSets(df):
     machine_main_box_dict = {}
     job_details_dict = {}
     main_box_jobs_dict = {}
+    box_jobs_dict = {}  # เก็บ BOX jobs แยกต่างต่าง
     
     for row in df.itertuples(index=False):
         job_name = getattr(row, JOBNAME_COLUMN)
@@ -133,33 +134,38 @@ def createDeploymentSets(df):
         machine = getattr(row, MACHINE_COLUMN)
         owner = getattr(row, OWNER_COLUMN)
 
-        if job_type == 'BOX':
-            continue
-        
         # Handle Self Start mainbox
         if main_box == '*Self Start' or main_box == 'Self Start':
             main_box = job_name
             
-        if machine is None or pd.isna(machine) or machine == '':
-            machine = 'No Machine Assigned'
-            
-        # Store job details
+        # Store job details for all jobs (including BOX)
         job_details_dict[job_name] = {
             'job_name': job_name,
             'job_type': job_type,
             'box_name': box_name,
             'main_box': main_box,
-            'machine': machine,
+            'machine': machine if pd.notna(machine) and machine != '' else 'No Machine Assigned',
             'owner': owner
         }
         
-        # Build mapping dictionaries
+        # BOX jobs ไม่มี machine - เก็บแยกต่างหาก
+        if job_type == 'BOX':
+            box_jobs_dict.setdefault(main_box, []).append(job_name)
+            continue
+        
+        # สำหรับ non-BOX jobs เท่านั้น
+        if machine is None or pd.isna(machine) or machine == '':
+            machine = 'No Machine Assigned'
+        
+        # Build mapping dictionaries (เฉพาะ non-BOX jobs)
         main_box_machine_dict.setdefault(main_box, set()).add(machine)
         machine_main_box_dict.setdefault(machine, set()).add(main_box)
         main_box_jobs_dict.setdefault(main_box, []).append(job_name)
     
     def canDeployMainBox(main_box, additional_machines=set()):
         """Check if all machines required by main_box are available"""
+        if main_box not in main_box_machine_dict:
+            return True  # BOX-only mainbox can always be deployed
         required_machines = main_box_machine_dict[main_box]
         all_available_machines = deployed_machines.union(additional_machines)
         return required_machines.issubset(all_available_machines)
@@ -167,12 +173,37 @@ def createDeploymentSets(df):
     def getUndeployedMainBoxes():
         """Get main boxes that still have undeployed jobs"""
         undeployed = []
+        # Check non-BOX jobs
         for main_box in main_box_machine_dict.keys():
-            undeployed_jobs = [job_name for job_name in main_box_jobs_dict[main_box] 
+            undeployed_jobs = [job_name for job_name in main_box_jobs_dict.get(main_box, []) 
                              if job_name not in deployed_jobs]
             if undeployed_jobs:
                 undeployed.append(main_box)
+        
+        # Check BOX-only mainboxes
+        for main_box in box_jobs_dict.keys():
+            if main_box not in main_box_machine_dict:  # BOX-only mainbox
+                undeployed_box_jobs = [job_name for job_name in box_jobs_dict[main_box] 
+                                     if job_name not in deployed_jobs]
+                if undeployed_box_jobs:
+                    undeployed.append(main_box)
+        
         return undeployed
+    
+    def getJobsInMainBox(main_box):
+        """Get all jobs (including BOX) in a mainbox"""
+        jobs = []
+        # Add non-BOX jobs
+        for job_name in main_box_jobs_dict.get(main_box, []):
+            if job_name not in deployed_jobs:
+                jobs.append(job_details_dict[job_name])
+        
+        # Add BOX jobs
+        for job_name in box_jobs_dict.get(main_box, []):
+            if job_name not in deployed_jobs:
+                jobs.append(job_details_dict[job_name])
+        
+        return jobs
     
     set_number = 1
     
@@ -195,19 +226,16 @@ def createDeploymentSets(df):
         current_set_mainboxes = []
         
         for main_box in related_mainboxes:
-            jobs_in_mainbox = [job_details_dict[job_name] for job_name in main_box_jobs_dict[main_box] 
-                              if job_name not in deployed_jobs]
+            jobs_in_mainbox = getJobsInMainBox(main_box)
             
             if jobs_in_mainbox:
                 current_set_jobs.extend(jobs_in_mainbox)
                 current_set_mainboxes.append(main_box)
         
         if current_set_jobs:
-            deploy_type = f'Single Machine ({len(current_set_mainboxes)} MainBoxes)'
-            
             deployment_sets.append({
                 'set_number': set_number,
-                'deployment_type': deploy_type,
+                'deployment_type': f'Single Machine ({len(current_set_mainboxes)} MainBoxes)',
                 'main_boxes': current_set_mainboxes,
                 'machines': [machine],
                 'new_machines': [machine],
@@ -220,54 +248,42 @@ def createDeploymentSets(df):
             deployed_machines.add(machine)
             set_number += 1
     
-    # Phase 2: Deploy mainboxes that can be deployed with already deployed machines (zero new machines)
-    # เรียงลำดับตามจำนวน machines จากน้อยไปมาก
+    # Phase 2: Deploy mainboxes with zero new machines
     while True:
         undeployed_mainboxes = getUndeployedMainBoxes()
         if not undeployed_mainboxes:
             break
             
-        # Find mainboxes that can be deployed with current deployed machines (no new machines needed)
         zero_new_machine_candidates = []
         for main_box in undeployed_mainboxes:
-            if canDeployMainBox(main_box):  # ใช้ deployed machines เท่านั้น
-                machine_count = len(main_box_machine_dict[main_box])
+            if canDeployMainBox(main_box):
+                machine_count = len(main_box_machine_dict.get(main_box, set()))
                 zero_new_machine_candidates.append((main_box, machine_count))
         
         if not zero_new_machine_candidates:
-            break  # ไม่มี mainbox ที่ deploy ได้โดยไม่ต้องเพิ่ม machine ใหม่
+            break
         
-        # เรียงตามจำนวน machines จากน้อยไปมาก (mainbox ที่ใช้ agent น้อยก่อน)
         zero_new_machine_candidates.sort(key=lambda x: x[1])
         
-        print(f"\n=== Phase 2: Zero New Machines ===")
-        print(f"Candidates found: {len(zero_new_machine_candidates)}")
-        for main_box, machine_count in zero_new_machine_candidates:
-            print(f"  - {main_box}: {machine_count} machines")
-        
-        # Deploy mainboxes เรียงจากที่ใช้ machine น้อยไปมาก
         current_set_jobs = []
         current_set_mainboxes = []
         
         for main_box, machine_count in zero_new_machine_candidates:
-            jobs_in_mainbox = [job_details_dict[job_name] for job_name in main_box_jobs_dict[main_box] 
-                              if job_name not in deployed_jobs]
+            jobs_in_mainbox = getJobsInMainBox(main_box)
             
             if jobs_in_mainbox:
                 current_set_jobs.extend(jobs_in_mainbox)
                 current_set_mainboxes.append(main_box)
-                print(f"  Added {main_box} with {machine_count} machines ({len(jobs_in_mainbox)} jobs)")
         
         if current_set_jobs:
-            # Get all machines used by these mainboxes
             all_machines_in_set = set()
             for main_box in current_set_mainboxes:
-                all_machines_in_set.update(main_box_machine_dict[main_box])
+                if main_box in main_box_machine_dict:
+                    all_machines_in_set.update(main_box_machine_dict[main_box])
             
-            # สร้าง deployment type ที่แสดงการเรียงลำดับ
-            machine_counts = [len(main_box_machine_dict[mb]) for mb in current_set_mainboxes]
-            min_machines = min(machine_counts)
-            max_machines = max(machine_counts)
+            machine_counts = [len(main_box_machine_dict.get(mb, set())) for mb in current_set_mainboxes]
+            min_machines = min(machine_counts) if machine_counts else 0
+            max_machines = max(machine_counts) if machine_counts else 0
             
             if min_machines == max_machines:
                 deploy_type = f'Zero New Machines - {min_machines} Machine MainBoxes ({len(current_set_mainboxes)} boxes)'
@@ -279,59 +295,82 @@ def createDeploymentSets(df):
                 'deployment_type': deploy_type,
                 'main_boxes': current_set_mainboxes,
                 'machines': list(all_machines_in_set),
-                'new_machines': [],  # ไม่มี machine ใหม่
+                'new_machines': [],
                 'job_count': len(current_set_jobs),
                 'jobs': current_set_jobs
             })
             
             for job in current_set_jobs:
                 deployed_jobs.add(job['job_name'])
-            # ไม่ต้อง update deployed_machines เพราะไม่มี machine ใหม่
             set_number += 1
-            
-            print(f"  Created deployment set {set_number - 1} with {len(current_set_mainboxes)} mainboxes")
         else:
             break
     
-    # Phase 3: Handle remaining jobs by adding one new machine at a time
+    # Phase 3: Add one new machine at a time
     while True:
         undeployed_mainboxes = getUndeployedMainBoxes()
         if not undeployed_mainboxes:
             break
         
-        # Find the best mainbox to deploy (requires fewest new machines)
-        best_mainbox = min(undeployed_mainboxes, 
+        # Filter out BOX-only mainboxes for machine-based deployment
+        machine_based_mainboxes = [mb for mb in undeployed_mainboxes if mb in main_box_machine_dict]
+        
+        if not machine_based_mainboxes:
+            # Handle remaining BOX-only mainboxes
+            box_only_mainboxes = [mb for mb in undeployed_mainboxes if mb not in main_box_machine_dict]
+            if box_only_mainboxes:
+                current_set_jobs = []
+                current_set_mainboxes = []
+                
+                for main_box in box_only_mainboxes:
+                    jobs_in_mainbox = getJobsInMainBox(main_box)
+                    if jobs_in_mainbox:
+                        current_set_jobs.extend(jobs_in_mainbox)
+                        current_set_mainboxes.append(main_box)
+                
+                if current_set_jobs:
+                    deployment_sets.append({
+                        'set_number': set_number,
+                        'deployment_type': f'BOX Only ({len(current_set_mainboxes)} MainBoxes)',
+                        'main_boxes': current_set_mainboxes,
+                        'machines': [],
+                        'new_machines': [],
+                        'job_count': len(current_set_jobs),
+                        'jobs': current_set_jobs
+                    })
+                    
+                    for job in current_set_jobs:
+                        deployed_jobs.add(job['job_name'])
+                    set_number += 1
+            break
+        
+        best_mainbox = min(machine_based_mainboxes, 
                           key=lambda mb: len(main_box_machine_dict[mb] - deployed_machines))
         
         required_machines = main_box_machine_dict[best_mainbox]
         new_machines_needed = required_machines - deployed_machines
         
         if len(new_machines_needed) == 0:
-            # This shouldn't happen as Phase 2 should catch this
             continue
         
-        # Select one new machine to add
         selected_new_machine = list(new_machines_needed)[0]
-        current_machines_in_set = deployed_machines.union({selected_new_machine})
         
-        # Find all mainboxes that can be deployed with this machine set
         current_set_jobs = []
         current_set_mainboxes = []
         
         for main_box in undeployed_mainboxes:
             if canDeployMainBox(main_box, {selected_new_machine}):
-                jobs_in_mainbox = [job_details_dict[job_name] for job_name in main_box_jobs_dict[main_box] 
-                                  if job_name not in deployed_jobs]
+                jobs_in_mainbox = getJobsInMainBox(main_box)
                 
                 if jobs_in_mainbox:
                     current_set_jobs.extend(jobs_in_mainbox)
                     current_set_mainboxes.append(main_box)
         
         if current_set_jobs:
-            # Get all machines used by selected mainboxes
             all_machines_in_set = set()
             for main_box in current_set_mainboxes:
-                all_machines_in_set.update(main_box_machine_dict[main_box])
+                if main_box in main_box_machine_dict:
+                    all_machines_in_set.update(main_box_machine_dict[main_box])
             
             deployment_sets.append({
                 'set_number': set_number,
@@ -348,7 +387,7 @@ def createDeploymentSets(df):
             deployed_machines.update(all_machines_in_set)
             set_number += 1
         else:
-            break  # Safety break
+            break
     
     return deployment_sets
 
@@ -359,27 +398,73 @@ def analyzeDeploymentSets(deployment_sets):
     detail_list = []
     
     for deploy_set in deployment_sets:
-        new_machines = deploy_set.get('new_machines', deploy_set['machines'])
+        new_machines = deploy_set.get('new_machines', [])
+        
+        # แยกประเภท jobs เป็น 3 กลุ่ม
+        regular_jobs = []     # jobs ทั่วไป (อยู่ใน BOX)
+        box_jobs = []         # BOX jobs
+        standalone_jobs = []  # Standalone jobs (ไม่อยู่ใน BOX และไม่ใช่ BOX)
+        
+        # แยกประเภท MainBox
+        real_mainboxes = []   # MainBoxes ที่เป็น box จริงๆ
+        
+        for job in deploy_set['jobs']:
+            if job['job_type'] == 'BOX':
+                box_jobs.append(job['job_name'])
+            elif job['box_name'] is None or pd.isna(job['box_name']) or job['box_name'] == '':
+                # Job ที่ไม่อยู่ใน BOX และไม่ใช่ BOX = Standalone Job
+                standalone_jobs.append(job['job_name'])
+            else:
+                # Job ที่อยู่ใน BOX = Regular Job
+                regular_jobs.append(job['job_name'])
+        
+        # แยกประเภท MainBox (เฉพาะ MainBox ที่เป็นจริง ไม่รวม Standalone)
+        for main_box in deploy_set['main_boxes']:
+            jobs_in_mainbox = [job for job in deploy_set['jobs'] if job['main_box'] == main_box]
+            
+            # ถ้าไม่ใช่ Standalone (job เดียวที่ main_box == job_name)
+            if not (len(jobs_in_mainbox) == 1 and jobs_in_mainbox[0]['job_name'] == main_box):
+                real_mainboxes.append(main_box)
+        
         summary_list.append({
             'Set Number': deploy_set['set_number'],
             'Deployment Type': deploy_set['deployment_type'],
-            'Main Boxes Count': len(deploy_set['main_boxes']),
+            'Real MainBoxes Count': len(real_mainboxes),
+            'Standalone Jobs Count': len(standalone_jobs),
+            'Regular Jobs Count': len(regular_jobs),
+            'Box Jobs Count': len(box_jobs),
             'Total Machines Count': len(deploy_set['machines']),
             'New Machines Count': len(new_machines),
-            'Jobs Count': deploy_set['job_count'],
-            'Main Boxes': ', '.join(deploy_set['main_boxes']),
+            'Total Jobs Count': deploy_set['job_count'],
+            'Real MainBoxes': ', '.join(real_mainboxes) if real_mainboxes else 'None',
+            'Standalone Jobs': ', '.join(standalone_jobs) if standalone_jobs else 'None',
+            'Regular Jobs': ', '.join(regular_jobs) if regular_jobs else 'None',
+            'Box Jobs': ', '.join(box_jobs) if box_jobs else 'None',
             'All Machines': ', '.join(deploy_set['machines']),
-            'New Machines': ', '.join(new_machines)
+            'New Machines': ', '.join(new_machines) if new_machines else 'None'
         })
         
         for job in deploy_set['jobs']:
+            # กำหนดประเภทของ Job
+            if job['job_type'] == 'BOX':
+                job_category = 'Box Job'
+                main_box_type = 'Real MainBox'
+            elif job['box_name'] is None or pd.isna(job['box_name']) or job['box_name'] == '':
+                job_category = 'Standalone Job'
+                main_box_type = 'Standalone'
+            else:
+                job_category = 'Regular Job'
+                main_box_type = 'Real MainBox'
+            
             detail_list.append({
                 'Set Number': deploy_set['set_number'],
                 'Deployment Type': deploy_set['deployment_type'],
                 'Job Name': job['job_name'],
                 'Job Type': job['job_type'],
+                'Job Category': job_category,
                 'Box Name': job['box_name'],
                 'Main Box': job['main_box'],
+                'Main Box Type': main_box_type,
                 'Machine': job['machine'],
                 'Owner': job['owner']
             })
