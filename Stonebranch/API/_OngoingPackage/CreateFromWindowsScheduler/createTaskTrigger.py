@@ -13,7 +13,7 @@ from utils.readFile import loadJson
 from utils.createFile import createJson, createExcel
 from utils.readExcel import getDataExcel
 
-JSON_PATH = 'C:\\Dev\\AutomateDEV\\Stonebranch\\API\\_OngoingPackage\\CreateFromWindowsScheduler'
+JSON_PATH = 'C:\\Dev\\AutomateDEV\\Stonebranch\\API\\_OngoingPackage\\CreateFromWindowsScheduler\\config\\'
 
 EXCEL_SHEETNAME_DUPLICATE = 'Duplicate Task Names'
 EXCEL_SHEET_TASKNAME = 'Task Creation Log'
@@ -26,10 +26,13 @@ TRIGGER_COLUMN_MAPPING_PATHNAME = 'Trigger_Column_Mapping.json'
 
 WINDOWS_TASKTYPE = "taskWindows"
 COMMAND_TYPE = "Command"
+OUTPUT_TYPE = "OUTERR"
 
 TASKNAME_COLUMN = "name"
 COMMAND_COLUMN = "command"
 AGENT_COLUMN = "agent"
+ARGUMENTS_COLUMN = "arguments"
+WORKING_DIRECTORY_COLUMN = "working_directory"
 
 TRIGGERNAME_COLUMN = "name"
 TRIGGER_TYPE_LIST = ["Daily", "Weekly", "Monthly", "One Time"]
@@ -61,13 +64,20 @@ def restructureWindowsTaskConfigs(task_configs):
     new_task_configs['agentVar'] = '${' + task_configs.get(AGENT_COLUMN, "") + '}'
     
     new_task_configs['commandOrScript'] = COMMAND_TYPE
-    new_task_configs['command'] = task_configs.get(COMMAND_COLUMN, "")
+    
+    if ARGUMENTS_COLUMN in task_configs:
+        new_task_configs['command'] = task_configs.get(COMMAND_COLUMN, "") + " " + task_configs.get(ARGUMENTS_COLUMN, "")
+    else:
+        new_task_configs['command'] = task_configs.get(COMMAND_COLUMN, "")
+    
+    if WORKING_DIRECTORY_COLUMN in task_configs:
+        new_task_configs['runtimeDir'] = task_configs.get(WORKING_DIRECTORY_COLUMN, "")
+        
+    new_task_configs['outputReturnType'] = OUTPUT_TYPE
+    
+    new_task_configs['waitForOutput'] = True
     
     new_task_configs["exitCodes"] = "0"
-    
-    
-    
-    
     
     return new_task_configs
 
@@ -111,7 +121,7 @@ def analyzeTriggerConfigs(trigger_configs):
     
     def calculateTimeFromTriggerDescription(trigger_type, description):
         ## Find Time Format (HH:MM:SS) in String ## 
-        if trigger_type == "Daily" and "every" in description:
+        if trigger_type == "Daily" or "Weekly" and "every" in description:
             time_pattern = r'\b(\d{2}:\d{2}:\d{2})\b'
             time_match = re.search(time_pattern, description)
             if time_match:
@@ -138,15 +148,25 @@ def analyzeTriggerConfigs(trigger_configs):
                     if 'trigger_time' not in analysis_result:
                         analysis_result['trigger_time'] = []
                     if calculated_time:
-                        analysis_result['trigger_time'].append(calculated_time)
+                        analysis_result['trigger_time'].append((calculated_time, trigger_detail['description']))
         elif number_of_digits == trigger_type_count.get("Weekly", 0):
             analysis_result['trigger_type'] = "Weekly"
+            for trigger_detail in trigger_details_list:
+                if trigger_detail['type'] == "Weekly":
+                    calculated_time = calculateTimeFromTriggerDescription("Weekly", trigger_detail['description'])
+                    if 'trigger_time' not in analysis_result:
+                        analysis_result['trigger_time'] = []
+                    if calculated_time:
+                        analysis_result['trigger_time'].append((calculated_time, trigger_detail['description']))
         elif number_of_digits == trigger_type_count.get("Monthly", 0):
             analysis_result['trigger_type'] = "Monthly"
         elif number_of_digits == trigger_type_count.get("One Time", 0):
             analysis_result['trigger_type'] = "One Time"
         else:
-            analysis_result['trigger_type'] = "Mixed"
+            
+            # example: Daily: 2 || Weekly: 1 || Monthly: 1
+            trigger_string = ' || '.join([f"{k}: {v}" for k, v in trigger_type_count.items()])
+            analysis_result['trigger_type'] = trigger_string
     else:
         analysis_result['trigger_type'] = "None"
             
@@ -162,7 +182,14 @@ def restructureTriggerConfigs(trigger_configs):
             hh_mm = time[:5]
             return hh_mm
         return time
-        
+    
+    def shortenDescription(description):
+        # remove At  in string
+        new_description = description.replace("At ", "")
+        # remove MM/DD/YYYY in string
+        date_pattern = r'\b\d{1,2}/\d{1,2}/\d{4}\b'
+        new_description = re.sub(date_pattern, "", new_description).strip()
+        return new_description
     
     
     new_trigger_configs_list = []
@@ -178,15 +205,16 @@ def restructureTriggerConfigs(trigger_configs):
     
     if trigger_type == "Daily":
         count = 0
-        for trigger_time in trigger_time_list:
+        for trigger_time, description in trigger_time_list:
             time_str = timeFormatConversion(trigger_time, TIME_FORMAT)
-            
+            description_str = shortenDescription(description)
             new_trigger_configs = {}
             new_trigger_configs['name'] = f"{based_trigger_name}_TR00{count+1}"
             new_trigger_configs['tasks'] = [based_trigger_name]
             #new_trigger_configs['timeZone'] = TIMEZONE_DEFAULT
             new_trigger_configs['type'] = TRIGGER_TYPE
             new_trigger_configs['time'] = time_str
+            new_trigger_configs['description'] = description_str
             new_trigger_configs_list.append(new_trigger_configs)
             count += 1
     else:
@@ -224,7 +252,6 @@ def createTaskFromAPI(df, column_mapping):
         #print(task_configs)
         restructured_task_configs = restructureWindowsTaskConfigs(task_configs)
         #print(json.dumps(restructured_task_configs, indent=4))
-        
         task_response = createTaskAPI(restructured_task_configs)
         if task_response.status_code == 200:
             #print(f"Task {restructured_task_configs['name']} created")

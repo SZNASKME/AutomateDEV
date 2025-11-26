@@ -2,8 +2,8 @@
 ################# 30/04/2025 : Add field task status by parinya.c@askme.co.th ####################
 
 param( 
-    [string]$xmlPath = "D:\Stonebranch\Tidlor\Script\",   
-    [string]$outputCsv = "D:\Stonebranch\Tidlor\Script\Output.csv", 
+    [string]$xmlPath = "D:\",   
+    [string]$outputCsv = "D:\Output.csv", 
     [string]$targetPath = "\",                 
     [string]$reSub = "Y"                    
 )
