@@ -286,11 +286,16 @@ def restructureTriggerConfigs(trigger_configs_list):
     elif len(analyze_trigger_type) >= 1:
         time_trigger_count = 0
         manual_trigger_count = 0
-        if "Daily" in analyze_trigger_type:
+        previous_task_name = ""
+        for task_detail in trigger_details_list:
+            ### Reset count if new based task name
+            if previous_task_name != task_detail.get("tasks", ""):
+                time_trigger_count = 0
+                manual_trigger_count = 0
+                previous_task_name = task_detail.get("tasks", "")
+                print("Reset Counts for new Task Name:", previous_task_name)
             
-            for task_detail in trigger_details_list:
-                if task_detail['type'] != "Daily":
-                    continue
+            if task_detail['type'] == "Daily":
                 task_name = task_detail.get("name", "")
                 trigger_task_name = task_detail.get("tasks", "")
                 trigger_time = task_detail.get("time", "")
@@ -314,10 +319,7 @@ def restructureTriggerConfigs(trigger_configs_list):
                 new_trigger_configs_list.append(new_trigger_configs)
                 time_trigger_count += 1
                 
-        if "Weekly" in analyze_trigger_type:
-            for task_detail in trigger_details_list:
-                if task_detail['type'] != "Weekly":
-                    continue
+            if task_detail['type'] == "Weekly":
                 task_name = task_detail.get("name", "")
                 trigger_task_name = task_detail.get("tasks", "")
                 trigger_time = task_detail.get("time", "")
@@ -344,10 +346,7 @@ def restructureTriggerConfigs(trigger_configs_list):
                 new_trigger_configs_list.append(new_trigger_configs)
                 time_trigger_count += 1
         
-        if "Monthly" in analyze_trigger_type:
-            for task_detail in trigger_details_list:
-                if task_detail['type'] != "Monthly":
-                    continue
+            if task_detail['type'] == "Monthly":
                 task_name = task_detail.get("name", "")
                 trigger_task_name = task_detail.get("tasks", "")
                 trigger_time = task_detail.get("time", "")
@@ -376,10 +375,7 @@ def restructureTriggerConfigs(trigger_configs_list):
                 new_trigger_configs_list.append(new_trigger_configs)
                 time_trigger_count += 1
                 
-        if "One Time" in analyze_trigger_type:
-            for task_detail in trigger_details_list:
-                if task_detail['type'] != "One Time":
-                    continue
+            if task_detail['type'] == "One Time":
                 task_name = task_detail.get("name", "")
                 trigger_task_name = task_detail.get("tasks", "")
                 trigger_time = task_detail.get("time", "")
@@ -414,7 +410,7 @@ def restructureTriggerConfigs(trigger_configs_list):
 
 #####################################################################################################
 
-def createTaskFromAPI(df, column_mapping):
+def createTaskFromAPI(df, column_mapping, creating=True):
     
     def renameDuplicateColumns(task_df, original_col, append_col, new_col=None, is_duplicate_name=False):
         task_df = pd.DataFrame(task_df)
@@ -460,22 +456,25 @@ def createTaskFromAPI(df, column_mapping):
             else:
                 is_duplicate_name = False
             task_df = renameDuplicateColumns(task_df, JOB_COLUMN, MACHINE_COLUMN, is_duplicate_name=is_duplicate_name)
-        #print(f"Creating Task: {task} - Total Rows: {len(task_df)}")
         for index, row in task_df.iterrows():
             task_configs = createTaskConfigs(row, column_mapping)
-            #print(task_configs)
             restructured_task_configs = restructureWindowsTaskConfigs(task_configs)
-            #print(json.dumps(restructured_task_configs, indent=4))
+
+            if not creating:
+                task_created_log.append({
+                    "Task Name": restructured_task_configs['name'],
+                    "Status": "Pending",
+                    "Details": "Task creation initiated"
+                })
+                continue
             task_response = createTaskAPI(restructured_task_configs)
             if task_response.status_code == 200:
-                #print(f"Task {restructured_task_configs['name']} created")
                 task_created_log.append({
                     "Task Name": restructured_task_configs['name'],
                     "Status": "Created",
                     "Details": task_response.text
                 })
             else:
-                #print(f"Failed to create Task {restructured_task_configs['name']}: {task_response.text}")
                 task_created_log.append({
                     "Task Name": restructured_task_configs['name'],
                     "Status": "Failed",
@@ -486,7 +485,7 @@ def createTaskFromAPI(df, column_mapping):
     return df_task_log
 
 
-def createTriggerFromAPI(df, column_mapping):
+def createTriggerFromAPI(df, column_mapping, creating=True):
     
     def cloneValuesInList(configs_list, original_key, new_key):
         new_configs_list = []
@@ -557,10 +556,21 @@ def createTriggerFromAPI(df, column_mapping):
         
         #print(json.dumps(trigger_configs_list, indent=4))
         restructured_trigger_configs_list, trigger_not_created_list = restructureTriggerConfigs(trigger_configs_list)
+        
+        if not creating:
+            for restructured_trigger_configs in restructured_trigger_configs_list:
+                trigger_created_log.append({
+                    "Trigger Name": restructured_trigger_configs['name'],
+                    "Task Name": ",".join(restructured_trigger_configs['tasks']),
+                    "Status": "Pending",
+                    "Details": "Trigger creation initiated"
+                })
+            continue
         # print(json.dumps(restructured_trigger_configs_list, indent=4))
         if len(restructured_trigger_configs_list) > 0:
             for restructured_trigger_configs in restructured_trigger_configs_list:
-                #print(json.dumps(restructured_trigger_config, indent=4))
+                
+                
                 trigger_response = createTriggerAPI(restructured_trigger_configs)
                 
                 if trigger_response.status_code == 200:
@@ -609,8 +619,8 @@ def main():
     
     df = getDataExcel()
     df_duplicates = df[df.duplicated([EXCEL_TASKNAME_COLUMN], keep=False)]
-    df_task_log = createTaskFromAPI(df, task_column_mapping)
-    df_trigger_log = createTriggerFromAPI(df, trigger_column_mapping)
+    df_task_log = createTaskFromAPI(df, task_column_mapping, False)
+    df_trigger_log = createTriggerFromAPI(df, trigger_column_mapping, False)
     
     #createExcel(EXCEL_OUTPUT_NAME, (EXCEL_SHEETNAME_DUPLICATE, df_duplicates), (EXCEL_SHEET_TASKNAME, df_task_log))
     #createExcel(EXCEL_OUTPUT_NAME, (EXCEL_SHEETNAME_DUPLICATE, df_duplicates), (EXCEL_SHEET_TRIGGERNAME, df_trigger_log))

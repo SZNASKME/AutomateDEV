@@ -26,10 +26,10 @@ task_configs_temp = {
 
 specific_field_list = [
     "description",
-    "command",
     "group"
 ]
 
+TASKNAME = "Name"
 
 
 def cleanValue(value):
@@ -42,14 +42,14 @@ def cleanValue(value):
 def prepareUpdateTask(df_update, specific_field_list = []):
     df_dict = {}
     for row in df_update.itertuples(index=False):
-        field = row.fieldname
-        if specific_field_list == [] or field in specific_field_list:
-            if row.jobName not in df_dict:
-                df_dict[row.jobName] = {}
-            df_dict[row.jobName][field] = cleanValue(row.new_value)
+        for field in df_update.columns:
+            if specific_field_list == [] or field in specific_field_list:
+                if getattr(row, TASKNAME) not in df_dict:
+                    df_dict[getattr(row, TASKNAME)] = {}
+                df_dict[getattr(row, TASKNAME)][field] = cleanValue(getattr(row, field))
     return df_dict
 
-def prepareUpdateTaskConfigs(task_data, update_fields):
+def prepareUpdateEnLinuxTaskConfigs(task_data, update_fields):
     task_update = copy.deepcopy(task_data)  # Create a copy of the original dictionary
     success_fields = []
     no_change_fields = []
@@ -85,12 +85,37 @@ def prepareUpdateTaskConfigs(task_data, update_fields):
     
     return task_update, success_fields, no_change_fields
 
+def prepareUpdateWinsdowsTaskConfigs(task_data, update_fields):
+    task_update = copy.deepcopy(task_data)  # Create a copy of the original dictionary
+    success_fields = []
+    no_change_fields = []
+    for field, value in update_fields.items():
+        #print(f"{field} - {value}")
+        if field == "description":
+            if task_update.get("summary", "") != value:
+                #if task_update.get("summary", "") == "":
+                task_update["summary"] = value
+                success_fields.append(field)
+            else:
+                no_change_fields.append(field)
+            #print(task_update.get("summary", ""))
+        if field == "group":
+
+            if task_update.get("opswiseGroups", "") != value:
+                task_update["opswiseGroups"] = [value]
+                success_fields.append(field)
+            else:
+                no_change_fields.append(field)
+            
+    
+    return task_update, success_fields, no_change_fields
 
 
 def updateTask(df_update):
     not_found = []
     no_change = []
     success = []
+    error = []
     df_dict = prepareUpdateTask(df_update, specific_field_list)
     #print(json.dumps(df_dict, indent=4))
     print(len(df_dict))
@@ -102,7 +127,8 @@ def updateTask(df_update):
         if response_task.status_code == 200:
             task_data = response_task.json()
             print(taskname)
-            task_update, success_fields, no_change_fields = prepareUpdateTaskConfigs(task_data, update_fields)
+            #task_update, success_fields, no_change_fields = prepareUpdateEnLinuxTaskConfigs(task_data, update_fields)
+            task_update, success_fields, no_change_fields = prepareUpdateWinsdowsTaskConfigs(task_data, update_fields)
             if task_update == task_data:
                 #print(json.dumps(task_data, indent=4))
                 #print(json.dumps(task_update, indent=4))
@@ -124,17 +150,22 @@ def updateTask(df_update):
                     print(f"Task {taskname} updated successfully")
                 else:
                     print(f"Error updating {taskname}")
+                    error.append({
+                        "taskname": taskname,
+                        "message": response.text
+                    })
             else:
                 print(f"Update process disabled")
         else:
             print(f"Error getting {taskname}")
-            not_found.append(taskname)
-        #print("\n")
-    return {
-        "not_found": not_found,
-        "no_change": no_change,
-        "success": success
-    }
+            not_found.append({
+                "taskname": taskname
+            })
+    
+    df_not_found = pd.DataFrame(not_found, columns=["taskname"])
+    df_no_change = pd.DataFrame(no_change, columns=["taskname", "no_change_fields"])
+    df_success = pd.DataFrame(success, columns=["taskname", "success_fields"])
+    return df_not_found, df_no_change, df_success
 
 def main():
     auth = loadJson('Auth.json')
@@ -142,15 +173,21 @@ def main():
     #userpass = auth['ASKME_STB']
     updateAuth(userpass['USERNAME'], userpass['PASSWORD'])
     domain_url = loadJson('Domain.json')
-    domain = domain_url['1.226']
+    domain = domain_url['1.181']
     #domain = domain_url['1.86']
     updateURI(domain)
     
     df_update = getDataExcel()
     #print(df_update)
-    result = updateTask(df_update)
-    print(json.dumps(result, indent=4))
-    createJson("updateTaskResult_250127.json", result)
+    df_not_found, df_no_change, df_success = updateTask(df_update)
+    print(df_not_found)
+    print(df_no_change)
+    print(df_success)
+    createExcel("Update_Task_Select_Field_Result.xlsx",
+        ("Not_Found", df_not_found),
+        ("No_Change", df_no_change),
+        ("Success", df_success)
+    )
     
 if __name__ == '__main__':
     main()
