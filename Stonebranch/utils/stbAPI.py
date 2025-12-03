@@ -262,11 +262,12 @@ def updateTriggerAPI(trigger_configs, show_response = True, format_str ='json'):
     if api_auth is not None:
         config = {ACCESS_TOKEN: api_auth}
         uri = createURI(TRIGGER_URI, config)
+        
     header = formatHeader('Content-Type', format_str)
     if api_auth is not None:
         response = requests.put(url = uri, json = trigger_configs, headers = header)
     else:
-        response = requests.put(url = uri, json = trigger_configs, auth = auth, headers = header)
+        response = requests.put(url = TRIGGER_URI, json = trigger_configs, auth = auth, headers = header)
     if show_response:
         status = http.HTTPStatus(response.status_code)
         print(f"{response.status_code} - {status.phrase}: {status.description}")

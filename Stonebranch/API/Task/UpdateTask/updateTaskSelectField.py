@@ -100,9 +100,11 @@ def prepareUpdateWinsdowsTaskConfigs(task_data, update_fields):
                 no_change_fields.append(field)
             #print(task_update.get("summary", ""))
         if field == "group":
-
-            if task_update.get("opswiseGroups", "") != value:
-                task_update["opswiseGroups"] = [value]
+            if task_update.get("opswiseGroups", "") != [value]:
+                if value == "":
+                    task_update["opswiseGroups"] = []
+                else:
+                    task_update["opswiseGroups"] = [value]
                 success_fields.append(field)
             else:
                 no_change_fields.append(field)
@@ -139,15 +141,17 @@ def updateTask(df_update):
                 })
                 continue
             #print(update_fields)
-            success.append({
-                "taskname": taskname,
-                "success_fields": success_fields
-            })
+
             if ENABLE_UPDATE:
                 print(f"Updating {taskname}")
+                print(json.dumps(task_update, indent=4, ensure_ascii=False))
                 response = updateTaskAPI(task_update, False)
                 if response.status_code == 200:
                     print(f"Task {taskname} updated successfully")
+                    success.append({
+                        "taskname": taskname,
+                        "success_fields": success_fields
+                    })
                 else:
                     print(f"Error updating {taskname}")
                     error.append({
@@ -165,7 +169,8 @@ def updateTask(df_update):
     df_not_found = pd.DataFrame(not_found, columns=["taskname"])
     df_no_change = pd.DataFrame(no_change, columns=["taskname", "no_change_fields"])
     df_success = pd.DataFrame(success, columns=["taskname", "success_fields"])
-    return df_not_found, df_no_change, df_success
+    df_error = pd.DataFrame(error, columns=["taskname", "message"])
+    return df_not_found, df_no_change, df_success, df_error
 
 def main():
     auth = loadJson('Auth.json')
@@ -179,14 +184,12 @@ def main():
     
     df_update = getDataExcel()
     #print(df_update)
-    df_not_found, df_no_change, df_success = updateTask(df_update)
-    print(df_not_found)
-    print(df_no_change)
-    print(df_success)
+    df_not_found, df_no_change, df_success, df_error = updateTask(df_update)
     createExcel("Update_Task_Select_Field_Result.xlsx",
         ("Not_Found", df_not_found),
         ("No_Change", df_no_change),
-        ("Success", df_success)
+        ("Success", df_success),
+        ("Error", df_error)
     )
     
 if __name__ == '__main__':
