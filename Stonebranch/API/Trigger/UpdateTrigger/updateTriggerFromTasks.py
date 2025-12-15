@@ -59,7 +59,26 @@ def prepareUpdateTrigger(df_update, specific_field_list = [], ignore_empty = Tru
 
 
 def prepareUpdateTriggerConfigs(trigger_data, update_fields):
+    
+    def getTimeDetail(detail_str):
+        # Example detail_str: "08:00:00 every 1 day" "14:00:00 on day 5,6,7,8 of January,February,March,April,May,June,July,August,September,October,November,December"
+        # Get only "HH:MM" in string
+        time_part = detail_str.split(' ')[0]
+        hh_mm = ':'.join(time_part.split(':')[:2])
+        return hh_mm
+    
+    def timeDescription(time_str, current_description):
+        # Example time_str: "08:00"
+        # Example current_description: "08:00:00 every 1 day" "14:00:00 on day 5,6,7,8 of January,February,March,April,May,June,July,August,September,October,November,December"
+        # Return description with time part updated
+        time_part = current_description.split(' ')[1:]  # Get parts after time
+        new_description = f"{time_str}:00 " + ' '.join(time_part)
+        return new_description
+    
+    
     trigger_update = copy.deepcopy(trigger_data)  # Create a copy of the original dictionary
+    #print(trigger_update)
+    print(update_fields)
     success_fields = []
     no_change_fields = []
     for field, value in update_fields.items():
@@ -84,8 +103,22 @@ def prepareUpdateTriggerConfigs(trigger_data, update_fields):
                 no_change_fields.append(field)
                 
         if field == "Detail":
-            if trigger_update.get("detail", "") != value:
-                trigger_update["description"] = value
+            current_description = trigger_update.get('description', '')
+            current_time = trigger_update.get('time', '')
+            new_time = getTimeDetail(value)
+            
+            if current_description:
+                current_time_from_desc = getTimeDetail(current_description)
+            else:
+                current_time_from_desc = current_time
+            
+            
+            print(f"Updating Detail to {value} from {current_description} (time check: {current_time} vs {new_time}, desc_time: {current_time_from_desc})")
+            
+            # เปรียบเทียบทั้ง description และ time
+            if current_description != value or current_time != new_time:
+                time_desc = timeDescription(current_time, trigger_update["description"])
+                trigger_update["description"] = time_desc
                 success_fields.append(field)
             else:
                 no_change_fields.append(field)
@@ -116,6 +149,7 @@ def updateTrigger(df_update, list_trigger_data):
         if tasks[0] in update_list:
             taskname = tasks[0]
             update_configs = getUpdateFieldFromTaskName(taskname, update_dict)
+            
             # trigger_data = response_trigger.json()
             #print(triggername)
             trigger_update, success_fields, no_change_fields = prepareUpdateTriggerConfigs(row, update_configs)
@@ -155,6 +189,7 @@ def updateTrigger(df_update, list_trigger_data):
             not_found.append({
                 "triggername": triggername
             })
+        print("\n")
     
     df_not_found = pd.DataFrame(not_found, columns=["triggername"])
     df_no_change = pd.DataFrame(no_change, columns=["triggername", "no_change_fields"])
