@@ -65,15 +65,18 @@ def getTriggerListFromTasks(task_list_dict):
     
     for trigger in trigger_list:
         trigger_name = trigger['name']
+        trigger_type = trigger['type']
         task_list = trigger.get('tasks', [])
+        trigger_description = trigger.get('description', '')
         
         for task in task_list:
             if task in task_list_dict.keys():
                 trigger_info = {
                     'Trigger Name': trigger_name,
                     'Task Name': task,
-                    'Task Agent': task_list_dict[task]
-                    
+                    'Task Agent': task_list_dict[task],
+                    'Trigger Type': trigger_type,
+                    'Trigger Description': trigger_description
                 }
                 trigger_list_data.append(trigger_info)
     
