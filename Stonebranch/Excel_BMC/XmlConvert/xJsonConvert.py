@@ -12,7 +12,7 @@ from utils.readFile import loadText
 
 
 #XML_PATH = './Stonebranch/Excel_BMC/XmlConvert/XML-NONPROD-CTE2-13-08-2024.xml'
-XML_OUTPUT_FILE = 'xJsonOutput.json'
+JSON_OUTPUT_FILE = 'xJsonOutput.json'
 EXCEL_OUTPUT_FILE = 'xJsonOutput.xlsx'
 
 ROOT_KEY = 'DEFTABLE'
