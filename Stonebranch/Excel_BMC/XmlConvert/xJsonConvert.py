@@ -12,6 +12,8 @@ from utils.readFile import loadText
 
 
 #XML_PATH = './Stonebranch/Excel_BMC/XmlConvert/XML-NONPROD-CTE2-13-08-2024.xml'
+XML_OUTPUT_FILE = 'xJsonOutput.json'
+EXCEL_OUTPUT_FILE = 'xJsonOutput.xlsx'
 
 ROOT_KEY = 'DEFTABLE'
 JSON_COLUMN_CHAR = '@'
@@ -97,10 +99,10 @@ def main():
     json_data = xmltodict.parse(XML_text)
     
     xjson_dict = prepareXJson(json_data)
-    createJson('XmlConvert_POC2.json', xjson_dict)
+    createJson(JSON_OUTPUT_FILE, xjson_dict)
     
     df_list = XJsonToDataFrame(xjson_dict)
-    createExcel('XmlConvert_POC2.xlsx', *df_list)
+    createExcel(EXCEL_OUTPUT_FILE, *df_list)
 
 if __name__ == '__main__':
     main()
