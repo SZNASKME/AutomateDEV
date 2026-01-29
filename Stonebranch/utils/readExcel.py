@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 
 SHEET_NAME = "Sheet"
 
@@ -27,6 +28,9 @@ def inputMethod(prompt, method='excel'):
     elif method == 'sharepoint':
         folderpath, filename, sheetname = getFolderFilenameAndSheetname(prompt)
         return {'folderpath': folderpath, 'filename': filename, 'sheetname': sheetname }
+    elif method == 'folder':
+        folderpath, sheetname = getPathAndSheetname(prompt)
+        return {'folderpath': folderpath, 'sheetname': sheetname }
     else:
         return None
     
@@ -111,6 +115,62 @@ def getDataExcelAllSheet(prompt="Enter PATH of the file and sheetname [pathfile/
     print('Excel data read successfully')
     return dfs
 
+
+def getDataSheetMultiExcelFile(prompt="Enter PATH of the folder, sheetname [folderpath/sheetname]: ", all_sheets=False):
+    
+    def getExcelProcessAllFiles(folderpath, sheetname=None):
+        print('Reading excel files in folder...')
+        excel_files = [f for f in os.listdir(folderpath) if f.endswith(('.xlsx', '.xls'))]
+        if not excel_files:
+            print('No excel files found in the folder')
+            return None
+        
+        dfs_sheets = {}
+        for excel_file in excel_files:
+            pathfile = os.path.join(folderpath, excel_file)
+            print(f'Reading file: {excel_file}')
+            dfs_sheet = getExcelProcess(pathfile, sheetname)
+            if dfs_sheet is not None:
+                dfs_sheets[excel_file] = dfs_sheet
+            else:
+                print(f'Error reading file: {excel_file}')
+        
+        print('All excel files processed successfully')
+        return dfs_sheets
+    
+    def getExcelProcessAllFilesAndSheets(folderpath):
+        print('Reading excel files in folder...')
+        excel_files = [f for f in os.listdir(folderpath) if f.endswith(('.xlsx', '.xls'))]
+        if not excel_files:
+            print('No excel files found in the folder')
+            return None
+        
+        dfs_sheets = {}
+        for excel_file in excel_files:
+            pathfile = os.path.join(folderpath, excel_file)
+            print(f'Reading file: {excel_file}')
+            excel_file_obj = pd.ExcelFile(pathfile)
+            sheet_names = excel_file_obj.sheet_names
+            dfs_sheets[excel_file] = {}
+            for sheet_name in sheet_names:
+                print(f'  Reading sheet: {sheet_name}')
+                df_sheet = pd.read_excel(pathfile, sheet_name=sheet_name, engine='openpyxl')
+                dfs_sheets[excel_file][sheet_name] = df_sheet
+        
+        print('All excel files and sheets processed successfully')
+        return dfs_sheets
+
+    excel_configs = inputMethod(prompt, method='folder')
+    if all_sheets:
+        dfs_sheets = getExcelProcessAllFilesAndSheets(excel_configs['folderpath'])
+    else:
+        dfs_sheets = getExcelProcessAllFiles(excel_configs['folderpath'], excel_configs['sheetname'])
+        
+    return dfs_sheets
+        
+
+
+
 # def getDataExcelOnline(prompt="Enter Sharepoint Folder PATH of the file, and sheetname [folderpath|filename|sheetname]: "):
 #     excel_configs = inputMethod(prompt, 'sharepoint')
 #     print('Loading Sharepoint credentials...')
@@ -156,3 +216,5 @@ def readAllExcelSheetRecord(dfs):
         print(f"Sheet: {sheet_name} | Number of records: {record_count}")
     print("Summary of records per sheet:", record_summary)
     return dfs, record_summary
+
+
