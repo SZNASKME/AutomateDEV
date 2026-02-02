@@ -40,69 +40,47 @@ def _safe_load_text(path: str) -> str:
 
 def _strip_c_style_block_comments(text: str) -> str:
     """Remove C-style block comments (/* ... */) while preserving content inside quotes."""
-    out = []
-    i = 0
-    in_block_comment = False
-    in_single_quote = False
-    in_double_quote = False
-    while i < len(text):
-        ch = text[i]
-        nxt = text[i + 1] if i + 1 < len(text) else ''
-
-        if in_block_comment:
-            if ch == '*' and nxt == '/':
-                in_block_comment = False
-                i += 2
+    result = []
+    lines = text.splitlines()
+    
+    for line in lines:
+        # Skip if line is inside quotes (simple check)
+        in_string = False
+        cleaned_line = []
+        i = 0
+        
+        while i < len(line):
+            # Check for string literals
+            if line[i] in ('"', "'"):
+                quote_char = line[i]
+                cleaned_line.append(line[i])
+                i += 1
+                # Find closing quote
+                while i < len(line):
+                    cleaned_line.append(line[i])
+                    if line[i] == quote_char and (i == 0 or line[i-1] != '\\'):
+                        break
+                    i += 1
+                i += 1
                 continue
+            
+            # Check for comment start
+            if i < len(line) - 1 and line[i:i+2] == '/*':
+                # Find comment end on same line
+                end = line.find('*/', i + 2)
+                if end != -1:
+                    i = end + 2
+                    continue
+                else:
+                    # Comment continues to end of line
+                    break
+            
+            cleaned_line.append(line[i])
             i += 1
-            continue
-
-        # Handle quote state transitions (ignore comment markers inside quotes)
-        if in_single_quote:
-            out.append(ch)
-            if ch == "\\" and i + 1 < len(text):
-                # keep escaped char
-                out.append(text[i + 1])
-                i += 2
-                continue
-            if ch == "'":
-                in_single_quote = False
-            i += 1
-            continue
-
-        if in_double_quote:
-            out.append(ch)
-            if ch == "\\" and i + 1 < len(text):
-                out.append(text[i + 1])
-                i += 2
-                continue
-            if ch == '"':
-                in_double_quote = False
-            i += 1
-            continue
-
-        # Not in comment/quote
-        if ch == '/' and nxt == '*':
-            in_block_comment = True
-            i += 2
-            continue
-
-        if ch == "'":
-            in_single_quote = True
-            out.append(ch)
-            i += 1
-            continue
-
-        if ch == '"':
-            in_double_quote = True
-            out.append(ch)
-            i += 1
-            continue
-
-        out.append(ch)
-        i += 1
-
-    return ''.join(out)
+        
+        result.append(''.join(cleaned_line).rstrip())
+    
+    return '\n'.join(result)
 
 
 def _collapse_blank_line_runs(lines: list[str], threshold: int = 2, keep: int = 1) -> list[str]:
@@ -134,7 +112,11 @@ def _collapse_blank_line_runs(lines: list[str], threshold: int = 2, keep: int = 
 
     return out
 
-
+def _strip_trailing_numbers(text: str, pattern: str = r'\s*\d{8}\s*$') -> str:
+    """Remove trailing 8-digit numbers from each line."""
+    lines = text.splitlines()
+    cleaned = [re.sub(pattern, '', line) for line in lines]
+    return '\n'.join(cleaned)
 
 def cleanFile(inputFilePath, outputFilePath, config):
     # Load the source file
@@ -147,7 +129,12 @@ def cleanFile(inputFilePath, outputFilePath, config):
         fileContent = _strip_c_style_block_comments(fileContent)
         # Remove trailing whitespace created by comment stripping
         fileContent = '\n'.join([line.rstrip() for line in fileContent.splitlines()])
-        
+    
+    # Remove trailing 8-digit numbers
+    if config.get("remove_trailing_numbers", False):
+        pattern = config.get("trailing_number_pattern", r'\s*\d{8}\s*$')
+        fileContent = _strip_trailing_numbers(fileContent, pattern)
+    
     # Remove Empty Lines
     if config.get("remove_empty_lines", False):
         # If there are more than 2 consecutive blank lines, keep only 1.
@@ -173,14 +160,14 @@ def cleanFile(inputFilePath, outputFilePath, config):
 
 
 if __name__ == "__main__":
-    inputFilePath = "C:\\Dev\\STB\\Source\\M2FLAT-TSO4.txt"
-    outputFilePath = "C:\\Dev\\AutomateDEV\\Stonebranch\\Convert\\CleanSourceFile\\outputfile.txt"
+    inputFilePath = "C:\\Dev\\STB\\Source\\M2FLAT_TSO2.txt"
+    outputFilePath = "C:\\Dev\\AutomateDEV\\Stonebranch\\Convert\\CleanSourceFile\\outputfile_PRD.txt"
     config = {
         "remove_empty_lines": True,
         "trim_whitespace": False,
         "remove_special_characters": False,
         "remove_commented_lines": True,
-        "comment_pattern": r'/\*.*\*/'
+        "remove_trailing_numbers": True,
     }
 
     cleanFile(inputFilePath, outputFilePath, config)
